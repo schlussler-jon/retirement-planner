@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
 # Add Rust to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Copy requirements and install Python dependencies
+# Copy requirements and install Python dependencies TEST
 COPY requirements.txt .
 RUN . $HOME/.cargo/env && pip install --no-cache-dir -r requirements.txt
 
