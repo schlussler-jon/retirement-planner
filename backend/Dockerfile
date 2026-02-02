@@ -17,14 +17,17 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 COPY requirements.txt .
 RUN . $HOME/.cargo/env && pip install --no-cache-dir -r requirements.txt
 
-# Copy all application code explicitly
-COPY app ./app
+# Copy all application code
+COPY api ./api
 COPY auth ./auth
 COPY db ./db
 COPY drive ./drive
 COPY models ./models
-COPY api ./api
+COPY engine ./engine
+COPY tax ./tax
+COPY budget ./budget
 
 EXPOSE 8000
 
-CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT
+# Run using api.main not app.main
+CMD uvicorn api.main:app --host 0.0.0.0 --port $PORT
