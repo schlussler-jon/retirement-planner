@@ -1,0 +1,190 @@
+{
+  "scenario_id": "jon_rebecca_base_plan",
+  "scenario_name": "Jon & Rebecca Base Retirement Plan",
+  "description": "Conservative retirement planning with CalPERS pensions and Social Security. Arizona residence with moderate spending.",
+  "global_settings": {
+    "projection_start_month": "2026-01",
+    "projection_end_year": 2056,
+    "residence_state": "AZ"
+  },
+  "people": [
+    {
+      "person_id": "jon",
+      "name": "Jon",
+      "birth_date": "1963-06-09",
+      "life_expectancy_years": 83
+    },
+    {
+      "person_id": "rebecca",
+      "name": "Rebecca",
+      "birth_date": "1966-08-01",
+      "life_expectancy_years": 90
+    }
+  ],
+  "income_streams": [
+    {
+      "stream_id": "jon_pension",
+      "type": "pension",
+      "owner_person_id": "jon",
+      "start_month": "2026-01",
+      "monthly_amount_at_start": 8625.0,
+      "cola_percent_annual": 0.02,
+      "cola_month": 5
+    },
+    {
+      "stream_id": "rebecca_pension",
+      "type": "pension",
+      "owner_person_id": "rebecca",
+      "start_month": "2026-01",
+      "monthly_amount_at_start": 3488.0,
+      "cola_percent_annual": 0.02,
+      "cola_month": 5
+    },
+    {
+      "stream_id": "jon_ssa",
+      "type": "social_security",
+      "owner_person_id": "jon",
+      "start_month": "2026-01",
+      "monthly_amount_at_start": 2597.0,
+      "cola_percent_annual": 0.025,
+      "cola_month": 1
+    },
+    {
+      "stream_id": "rebecca_ssa",
+      "type": "social_security",
+      "owner_person_id": "rebecca",
+      "start_month": "2028-09",
+      "monthly_amount_at_start": 2000.0,
+      "cola_percent_annual": 0.025,
+      "cola_month": 1
+    }
+  ],
+  "accounts": [
+    {
+      "account_id": "jon_401k",
+      "name": "Jon 401k",
+      "tax_bucket": "tax_deferred",
+      "starting_balance": 65000.0,
+      "annual_return_rate": 0.06,
+      "monthly_contribution": 0.0,
+      "monthly_withdrawal": 0.0
+    },
+    {
+      "account_id": "rebecca_401k",
+      "name": "Rebecca 401k",
+      "tax_bucket": "tax_deferred",
+      "starting_balance": 11000.0,
+      "annual_return_rate": 0.06,
+      "monthly_contribution": 0.0,
+      "monthly_withdrawal": 0.0
+    },
+    {
+      "account_id": "jon_457b",
+      "name": "Jon 457b",
+      "tax_bucket": "tax_deferred",
+      "starting_balance": 330000.0,
+      "annual_return_rate": 0.06,
+      "monthly_contribution": 0.0,
+      "monthly_withdrawal": 1900.0
+    },
+    {
+      "account_id": "rebecca_457b",
+      "name": "Rebecca 457b",
+      "tax_bucket": "tax_deferred",
+      "starting_balance": 245000.0,
+      "annual_return_rate": 0.06,
+      "monthly_contribution": 0.0,
+      "monthly_withdrawal": 0.0
+    },
+    {
+      "account_id": "savings",
+      "name": "Synchrony High Yield Savings",
+      "tax_bucket": "taxable",
+      "starting_balance": 341085.0,
+      "annual_return_rate": 0.038,
+      "monthly_contribution": 0.0,
+      "monthly_withdrawal": 0.0
+    },
+    {
+      "account_id": "fidelity",
+      "name": "Fidelity Brokerage",
+      "tax_bucket": "taxable",
+      "starting_balance": 220000.0,
+      "annual_return_rate": 0.09,
+      "monthly_contribution": 0.0,
+      "monthly_withdrawal": 0.0
+    }
+  ],
+  "budget": {
+    "categories": [
+      {
+        "category_name": "Housing (Mortgage/Rent)",
+        "category_type": "fixed",
+        "monthly_amount": 1500.0,
+        "include": true
+      },
+      {
+        "category_name": "Utilities (Power/Water/Propane/Trash)",
+        "category_type": "fixed",
+        "monthly_amount": 600.0,
+        "include": true
+      },
+      {
+        "category_name": "Home/Auto/Other Insurance",
+        "category_type": "fixed",
+        "monthly_amount": 800.0,
+        "include": true
+      },
+      {
+        "category_name": "Groceries",
+        "category_type": "fixed",
+        "monthly_amount": 800.0,
+        "include": true
+      },
+      {
+        "category_name": "Transportation & Fuel",
+        "category_type": "fixed",
+        "monthly_amount": 500.0,
+        "include": true
+      },
+      {
+        "category_name": "Healthcare & Rx",
+        "category_type": "fixed",
+        "monthly_amount": 700.0,
+        "include": true
+      },
+      {
+        "category_name": "Phone/Internet/Subscriptions",
+        "category_type": "flexible",
+        "monthly_amount": 200.0,
+        "include": true
+      },
+      {
+        "category_name": "Personal & Household",
+        "category_type": "flexible",
+        "monthly_amount": 225.0,
+        "include": true
+      },
+      {
+        "category_name": "Dining & Entertainment",
+        "category_type": "flexible",
+        "monthly_amount": 300.0,
+        "include": true
+      },
+      {
+        "category_name": "Travel",
+        "category_type": "flexible",
+        "monthly_amount": 200.0,
+        "include": true
+      }
+    ],
+    "inflation_annual_percent": 0.025,
+    "survivor_flexible_reduction_percent": 0.25,
+    "survivor_reduction_mode": "flex_only"
+  },
+  "tax_settings": {
+    "filing_status": "married_filing_jointly",
+    "standard_deduction_override": null,
+    "tax_year_ruleset": 2024
+  }
+}

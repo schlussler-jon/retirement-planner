@@ -1,0 +1,306 @@
+"""
+Output data models for projection results.
+
+These models represent the calculated outputs from running a retirement projection:
+- Monthly projections (balances, income, cashflow)
+- Annual summaries (yearly rollups)
+- Net income projections (after-tax income vs spending)
+- Tax summaries
+"""
+
+from typing import Dict, List, Optional
+from pydantic import BaseModel, Field
+
+
+class MonthlyProjection(BaseModel):
+    """
+    Complete financial snapshot for a single month.
+    
+    This is the analog to the "Monthly Projection" sheet in the Excel workbook.
+    """
+    month: str = Field(
+        ...,
+        pattern=r'^\d{4}-\d{2}$',
+        description="Month in YYYY-MM format"
+    )
+    income_by_stream: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Income amounts by stream_id"
+    )
+    withdrawals_by_account: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Withdrawal amounts by account_id"
+    )
+    withdrawals_by_tax_bucket: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Total withdrawals grouped by tax bucket"
+    )
+    balances_by_account: Dict[str, float] = Field(
+        default_factory=dict,
+        description="End-of-month balances by account_id"
+    )
+    balances_by_tax_bucket: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Total balances grouped by tax bucket"
+    )
+    total_investments: float = Field(
+        default=0.0,
+        description="Sum of all account balances"
+    )
+    total_gross_cashflow: float = Field(
+        default=0.0,
+        description="Total income + withdrawals for the month"
+    )
+    filing_status: Optional[str] = Field(
+        None,
+        description="Filing status for this month (may change with death dates)"
+    )
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "month": "2026-01",
+                    "income_by_stream": {
+                        "pension_jon": 8625.0,
+                        "pension_rebecca": 3488.0,
+                        "ssa_jon": 2597.0
+                    },
+                    "withdrawals_by_account": {
+                        "jon_457b": 1900.0
+                    },
+                    "withdrawals_by_tax_bucket": {
+                        "tax_deferred": 1900.0
+                    },
+                    "balances_by_account": {
+                        "jon_401k": 65325.0,
+                        "rebecca_401k": 11055.0,
+                        "jon_457b": 328100.0
+                    },
+                    "balances_by_tax_bucket": {
+                        "tax_deferred": 404480.0,
+                        "taxable": 561085.0
+                    },
+                    "total_investments": 965565.0,
+                    "total_gross_cashflow": 16610.0,
+                    "filing_status": "married_filing_jointly"
+                }
+            ]
+        }
+    }
+
+
+class AnnualSummary(BaseModel):
+    """
+    Annual rollup of income and investments.
+    
+    This is the analog to the "Annual Income Investment Summary" sheet.
+    """
+    year: int = Field(
+        ...,
+        ge=2000,
+        le=2100,
+        description="Year"
+    )
+    total_income_year: float = Field(
+        default=0.0,
+        description="Total gross income for the year"
+    )
+    end_of_year_total_investments: float = Field(
+        default=0.0,
+        description="Total investment balance at year end"
+    )
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "year": 2026,
+                    "total_income_year": 199320.0,
+                    "end_of_year_total_investments": 1052400.0
+                }
+            ]
+        }
+    }
+
+
+class TaxSummary(BaseModel):
+    """
+    Tax calculation summary for a year.
+    
+    Includes SSA taxation, AGI, and federal/state taxes.
+    """
+    year: int = Field(
+        ...,
+        description="Tax year"
+    )
+    total_ssa_income: float = Field(
+        default=0.0,
+        description="Total Social Security income received"
+    )
+    taxable_ssa_income: float = Field(
+        default=0.0,
+        description="Amount of SSA income subject to tax (0-85%)"
+    )
+    other_ordinary_income: float = Field(
+        default=0.0,
+        description="Pensions, withdrawals from tax-deferred accounts, etc."
+    )
+    agi: float = Field(
+        default=0.0,
+        description="Adjusted Gross Income"
+    )
+    standard_deduction: float = Field(
+        default=0.0,
+        description="Standard deduction amount"
+    )
+    taxable_income: float = Field(
+        default=0.0,
+        description="Income after standard deduction"
+    )
+    federal_tax: float = Field(
+        default=0.0,
+        description="Total federal income tax"
+    )
+    state_tax: float = Field(
+        default=0.0,
+        description="Total state income tax"
+    )
+    total_tax: float = Field(
+        default=0.0,
+        description="Federal + state tax"
+    )
+    effective_tax_rate: float = Field(
+        default=0.0,
+        description="Total tax / AGI"
+    )
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "year": 2026,
+                    "total_ssa_income": 55164.0,
+                    "taxable_ssa_income": 46889.4,
+                    "other_ordinary_income": 144156.0,
+                    "agi": 191045.4,
+                    "standard_deduction": 29200.0,
+                    "taxable_income": 161845.4,
+                    "federal_tax": 26543.0,
+                    "state_tax": 4776.14,
+                    "total_tax": 31319.14,
+                    "effective_tax_rate": 0.164
+                }
+            ]
+        }
+    }
+
+
+class NetIncomeProjection(BaseModel):
+    """
+    Monthly net income vs spending analysis.
+    
+    This is the analog to the "Net Income Projection" sheet.
+    Shows surplus/deficit after taxes and spending.
+    """
+    month: str = Field(
+        ...,
+        pattern=r'^\d{4}-\d{2}$',
+        description="Month in YYYY-MM format"
+    )
+    gross_cashflow: float = Field(
+        default=0.0,
+        description="Total income before taxes"
+    )
+    estimated_federal_tax: float = Field(
+        default=0.0,
+        description="Estimated federal tax for this month"
+    )
+    estimated_state_tax: float = Field(
+        default=0.0,
+        description="Estimated state tax for this month"
+    )
+    estimated_total_tax: float = Field(
+        default=0.0,
+        description="Total estimated tax (federal + state)"
+    )
+    net_income_after_tax: float = Field(
+        default=0.0,
+        description="Gross income - taxes"
+    )
+    inflation_adjusted_spending: float = Field(
+        default=0.0,
+        description="Monthly spending with inflation applied"
+    )
+    survivor_spending_applied: Optional[float] = Field(
+        None,
+        description="Adjusted spending if survivor reduction applies"
+    )
+    surplus_deficit: float = Field(
+        default=0.0,
+        description="Net income - spending (positive = surplus, negative = deficit)"
+    )
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "month": "2026-01",
+                    "gross_cashflow": 16610.0,
+                    "federal_tax_monthly_estimate": 2211.92,
+                    "state_tax_monthly_estimate": 398.01,
+                    "net_income_after_tax": 14000.07,
+                    "inflation_adjusted_spending": 5825.0,
+                    "survivor_spending_applied": None,
+                    "surplus_deficit": 8175.07
+                }
+            ]
+        }
+    }
+
+
+class ProjectionResults(BaseModel):
+    """
+    Complete results from a retirement projection run.
+    
+    This is the top-level output containing all calculated tables.
+    """
+    monthly_projections: List[MonthlyProjection] = Field(
+        default_factory=list,
+        description="Month-by-month projection data"
+    )
+    annual_summaries: List[AnnualSummary] = Field(
+        default_factory=list,
+        description="Year-by-year summary data"
+    )
+    tax_summaries: List[TaxSummary] = Field(
+        default_factory=list,
+        description="Annual tax calculations"
+    )
+    net_income_projections: List[NetIncomeProjection] = Field(
+        default_factory=list,
+        description="Monthly net income vs spending"
+    )
+    
+    def get_final_portfolio_value(self) -> float:
+        """Get the total investments in the final month."""
+        if not self.monthly_projections:
+            return 0.0
+        return self.monthly_projections[-1].total_investments
+    
+    def get_total_surplus_deficit(self) -> float:
+        """Calculate cumulative surplus/deficit over all months."""
+        return sum(ni.surplus_deficit for ni in self.net_income_projections)
+    
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "monthly_projections": [],
+                    "annual_summaries": [],
+                    "tax_summaries": [],
+                    "net_income_projections": []
+                }
+            ]
+        }
+    }

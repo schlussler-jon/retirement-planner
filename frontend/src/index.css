@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── base resets ── */
+@layer base {
+  html {
+    font-family: 'Raleway', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Make scrollbars match the dark theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0f1623;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #243352;
+    border-radius: 3px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2e4468;
+  }
+
+  /* Focus ring — gold on dark */
+  [type='text']:focus,
+  [type='email']:focus,
+  [type='number']:focus,
+  [type='date']:focus,
+  select:focus,
+  input:focus,
+  textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #c9a84c40;
+    border-color: #c9a84c;
+  }
+}
