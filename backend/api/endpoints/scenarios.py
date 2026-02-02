@@ -11,7 +11,7 @@ import json
 
 from models.scenario import Scenario
 from db.models import get_db, ScenarioModel
-from auth.session_redis import get_user_from_session
+from auth.session import get_user_from_session
 
 router = APIRouter(prefix="/scenarios", tags=["scenarios"])
 
