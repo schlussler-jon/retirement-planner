@@ -2,7 +2,7 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install system dependencies and Rust (needed for pydantic-core)
+# Install system dependencies and Rust
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
@@ -11,19 +11,20 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Add Rust to PATH
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Copy requirements and install Python dependencies TEST
+# Install Python dependencies
 COPY requirements.txt .
 RUN . $HOME/.cargo/env && pip install --no-cache-dir -r requirements.txt
 
-# Copy all backend code (app, auth, db, drive, models, etc.)
-COPY . .
+# Copy all application code explicitly
+COPY app ./app
+COPY auth ./auth
+COPY db ./db
+COPY drive ./drive
+COPY models ./models
+COPY api ./api
 
-# Expose port
 EXPOSE 8000
 
-# Run the application (use shell form to expand $PORT)
 CMD uvicorn app.main:app --host 0.0.0.0 --port $PORT
-
