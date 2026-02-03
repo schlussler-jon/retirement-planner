@@ -63,7 +63,8 @@ async def auth_callback(request: Request, response: Response):
         session_id = create_session(user, token['access_token'])
         
 	# Redirect to frontend (production or local)
-	frontend_url = settings.frontend_url or "http://localhost:3000"
+	frontend_url = settings.frontend_url
+	logger.info(f"Redirecting to frontend: {frontend_url}")  # ADD THIS LINE
 	response = RedirectResponse(url=frontend_url)
         response.set_cookie(
             key=settings.session_cookie_name,
