@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(() => {
     // The backend's /api/auth/login returns a redirect to Google.
     // We open it in the current tab so the cookie lands on our origin.
-    window.location.href = '/api/auth/login'
+    window.location.href = 'https://retirement-planner-production.up.railway.app/api/auth/login'
   }, [])
 
   /** POST /api/auth/logout then wait for React Query to invalidate. */
