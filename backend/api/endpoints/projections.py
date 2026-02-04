@@ -19,7 +19,7 @@ from budget import (
     get_financial_summary,
     get_annual_summaries,
 )
-from .scenarios_inmemory import scenarios_db
+from .scenarios import scenarios_db
 
 logger = logging.getLogger(__name__)
 
