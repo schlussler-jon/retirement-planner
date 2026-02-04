@@ -59,7 +59,8 @@ app.add_middleware(
     session_cookie='oauth_session',  # Different name to avoid conflicts
     max_age=3600,  # 1 hour
     same_site='none',  # Allow cross-domain
-    https_only=True  # Require HTTPS
+    https_only=True,  # Require HTTPS
+    domain='.my-moneyplan.com'  # ADD THIS LINE - note the leading dot
 )
 
 # Include routers
