@@ -71,9 +71,9 @@ async def auth_callback(request: Request, response: Response):
             value=session_id,
             max_age=settings.session_max_age,
             httponly=True,
-            samesite='lax'
-        )
-        
+            secure=True,        # Required for SameSite=None
+            samesite='none'     # Allow cross-domain cookies
+        )        
         logger.info(f"User logged in: {user.email}")
         
         return response
