@@ -53,7 +53,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.add_middleware(SessionMiddleware, secret_key=get_oauth_settings().session_secret_key)
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=get_oauth_settings().session_secret_key,
+    session_cookie='oauth_session',  # Different name to avoid conflicts
+    max_age=3600,  # 1 hour
+    same_site='none',  # Allow cross-domain
+    https_only=True  # Require HTTPS
+)
 
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["Health"])
