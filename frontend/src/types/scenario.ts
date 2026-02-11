@@ -62,11 +62,28 @@ export interface InvestmentAccount {
 
 // ─── Budget Models (models/budget.py) ────────────────────────────────────
 
+export const EXPENSE_CATEGORIES = [
+  "Housing",
+  "Utilities & Communications",
+  "Food & Household",
+  "Transportation",
+  "Insurance & Healthcare",
+  "Debt Payments",
+  "Savings & Investing",
+  "Family & Personal",
+  "Entertainment & Lifestyle",
+  "Giving & Miscellaneous"
+] as const
+
+export type ExpenseCategory = typeof EXPENSE_CATEGORIES[number]
+
 export interface BudgetCategory {
   category_name: string
-  category_type: CategoryType
-  monthly_amount: number           // >= 0
+  category_type: 'fixed' | 'flexible'
+  monthly_amount: number
   include: boolean
+  main_category: ExpenseCategory
+  end_month?: string | null  // YYYY-MM format
 }
 
 export interface BudgetSettings {
