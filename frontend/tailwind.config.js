@@ -10,36 +10,41 @@ export default {
       sans: ['"Raleway"', 'system-ui', 'sans-serif'],
     },
     extend: {
-      colors: {
-        // Base slate palette
-        slate: {
-          950: '#080c14',
-          900: '#0f1623',
-          850: '#141c2e',
-          800: '#1a2440',
-          700: '#243352',
-          600: '#2e4468',
-          500: '#4a6fa5',
-          400: '#7a9cc6',
-          300: '#a8c4de',
-          200: '#cbd8e8',
-          100: '#e4ecf4',
-          50:  '#f2f6fa',
-        },
-        // Gold accent
-        gold: {
-          900: '#7a6520',
-          800: '#9a7f28',
-          700: '#b89a35',
-          600: '#c9a84c',
-          500: '#d4b76a',
-          400: '#dfc888',
-          300: '#e8d5a5',
-          200: '#f0e4c2',
-          100: '#f7f0de',
-          50:  '#fbf8f0',
-        },
-        // Semantic colors
+    colors: {
+  // Base slate palette - BRIGHTER text colors
+      slate: {
+        950: '#080c14',
+        900: '#0f1623',
+        850: '#141c2e',
+        800: '#1a2440',
+        700: '#3a4a68',  // Brighter for better contrast
+        600: '#4a5f88',  // Brighter for better contrast
+        500: '#6a8ab5',  // Brighter for better contrast
+        400: '#8fadd0',  // Brighter
+        300: '#b5cbea',  // Brighter
+        200: '#d0dff0',  // Brighter
+        100: '#e8f0f8',  // Brighter
+        50:  '#f5f8fc',  // Brighter
+      },
+  // Gold accent - MUCH BRIGHTER
+      gold: {
+        900: '#9a7f28',
+        800: '#b89a35',
+        700: '#d4b054',  // Brighter
+        600: '#e5c76f',  // Much brighter - main accent
+        500: '#f0d98d',  // Brighter
+        400: '#f5e5a8',  // Brighter
+        300: '#f8ecc0',  // Brighter
+        200: '#fbf3d8',  // Brighter
+        100: '#fdf9ec',  // Brighter
+        50:  '#fefcf7',  // Brighter
+      },
+  // Semantic colors - BRIGHTER
+  success: '#4ade80',  // Brighter green
+  danger: '#fb7185',   // Brighter red
+  warning: '#fcd34d',  // Brighter yellow
+  info: '#7dd3fc',     // Brighter blue
+},        // Semantic colors
         success: '#34d399',
         danger: '#f87171',
         warning: '#fbbf24',
