@@ -54,9 +54,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-# Add session middleware - SINGLE instance only
-app.add_middleware(SessionMiddleware, secret_key=get_oauth_settings().session_secret_key)
 
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=get_oauth_settings().session_secret_key,
+    same_site='none',
+    https_only=True
+)
 
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["Health"])
