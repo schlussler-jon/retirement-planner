@@ -39,17 +39,12 @@ export default {
         100: '#fdf9ec',  // Brighter
         50:  '#fefcf7',  // Brighter
       },
-  // Semantic colors - BRIGHTER
-  success: '#4ade80',  // Brighter green
-  danger: '#fb7185',   // Brighter red
-  warning: '#fcd34d',  // Brighter yellow
-  info: '#7dd3fc',     // Brighter blue
-},        // Semantic colors
-        success: '#34d399',
-        danger: '#f87171',
-        warning: '#fbbf24',
-        info: '#60a5fa',
-      },
+      // Semantic colors - BRIGHTER
+      success: '#4ade80',  // Brighter green
+      danger: '#fb7185',   // Brighter red
+      warning: '#fcd34d',  // Brighter yellow
+      info: '#7dd3fc',     // Brighter blue
+    },
       backgroundImage: {
         'gradient-dark': 'linear-gradient(135deg, #0f1623 0%, #141c2e 50%, #0f1623 100%)',
       },
