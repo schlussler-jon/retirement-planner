@@ -51,13 +51,13 @@ function generateCSV(results: ProjectionResponse): string {
   ]
 
   const rows = net.map(row => [
-    row.month,
-    row.gross_cashflow.toFixed(2),
-    row.federal_tax_monthly_estimate.toFixed(2),
-    row.state_tax_monthly_estimate.toFixed(2),
-    row.net_income_after_tax.toFixed(2),
-    row.inflation_adjusted_spending.toFixed(2),
-    row.surplus_deficit.toFixed(2),
+    row.month ?? 0,
+    (row.gross_cashflow ?? 0).toFixed(2),
+    (row.federal_tax_monthly_estimate ?? 0).toFixed(2),
+    (row.state_tax_monthly_estimate ?? 0).toFixed(2),
+    (row.net_income_after_tax ?? 0).toFixed(2),
+    (row.inflation_adjusted_spending ?? 0).toFixed(2),
+    (row.surplus_deficit ?? 0).toFixed(2),
     (portfolioByMonth.get(row.month) ?? 0).toFixed(2),
   ])
 
