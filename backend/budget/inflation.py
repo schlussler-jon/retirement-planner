@@ -5,9 +5,10 @@ Handles:
 - Annual inflation applied to all spending categories
 - Survivor spending reduction when one person passes away
 - Monthly spending projections
+- Category end dates (when expenses stop)
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 from models import BudgetSettings, BudgetCategory, Person
 
 
@@ -18,6 +19,7 @@ class BudgetState:
     Budget amounts change over time due to:
     1. Annual inflation (applied to all categories)
     2. Survivor spending reduction (when someone passes away)
+    3. Categories ending (when they reach their end_month)
     """
     
     def __init__(self, budget_settings: BudgetSettings):
@@ -40,6 +42,33 @@ class BudgetState:
         
         # Track survivor reduction state
         self.survivor_reduction_applied = False
+        
+        # Track which categories have ended
+        self.ended_categories: Set[str] = set()
+    
+    def check_category_end_dates(self, year_month: str) -> None:
+        """
+        Check if any categories should end this month.
+        
+        Args:
+            year_month: Current month in YYYY-MM format (e.g., "2045-06")
+        """
+        for category in self.settings.categories:
+            # Skip if already ended or not included
+            if category.category_name in self.ended_categories:
+                continue
+            if not category.include:
+                continue
+            
+            # Check if this category has an end date
+            if category.end_month:
+                # Compare YYYY-MM strings directly
+                if year_month >= category.end_month:
+                    # Remove from current amounts
+                    if category.category_name in self.current_amounts:
+                        del self.current_amounts[category.category_name]
+                    # Mark as ended
+                    self.ended_categories.add(category.category_name)
     
     def apply_inflation_if_due(self, year_month: str, month_num: int) -> None:
         """
@@ -125,6 +154,14 @@ class BudgetState:
             
             category_name = category.category_name
             
+            # Skip if category already ended
+            if category_name in self.ended_categories:
+                continue
+            
+            # Skip if not in current amounts
+            if category_name not in self.current_amounts:
+                continue
+            
             if reduction_mode == "all":
                 # Reduce all categories
                 self.current_amounts[category_name] *= (1 - reduction_percent)
@@ -180,8 +217,8 @@ class BudgetProcessor:
         """
         Process budget for a single month.
         
-        This applies inflation (if due) and survivor reduction (if needed),
-        then returns the total monthly spending.
+        This checks for ended categories, applies inflation (if due) and 
+        survivor reduction (if needed), then returns the total monthly spending.
         
         Args:
             year_month: Current month in YYYY-MM format
@@ -190,6 +227,9 @@ class BudgetProcessor:
         Returns:
             Total monthly spending for this month
         """
+        # Check if any categories should end this month
+        self.state.check_category_end_dates(year_month)
+        
         # Apply inflation (January only)
         self.state.apply_inflation_if_due(year_month, month_num)
         
