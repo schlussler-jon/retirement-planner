@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const userQuery    = useCurrentUser(statusQuery.data?.authenticated ?? false)
   const logoutMut    = useLogoutMutation()
 
-  const isAuthenticated = statusQuery.data?.authenticated ?? false
+  const isAuthenticated = true  // Bypass auth - everyone is authenticated
   const isLoading       = statusQuery.isLoading
 
   /** Kick off the OAuth dance — browser navigates away. */
