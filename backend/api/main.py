@@ -45,17 +45,18 @@ allowed_origins = [
 if frontend_url and not frontend_url.startswith("http://localhost"):
     allowed_origins.append(frontend_url)
 
-app.add_middleware(SessionMiddleware, secret_key=get_oauth_settings().session_secret_key)
+logging.info(f"CORS allowed origins: {allowed_origins}")
 
 app.add_middleware(
-    SessionMiddleware,
-    secret_key=get_oauth_settings().session_secret_key,
-    session_cookie='oauth_session',  # Different name to avoid conflicts
-    max_age=3600,  # 1 hour
-    same_site='none',  # Allow cross-domain
-    https_only=True,  # Require HTTPS
-    domain='.my-moneyplan.com'  # ADD THIS LINE - note the leading dot
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
+# Add session middleware - SINGLE instance only
+app.add_middleware(SessionMiddleware, secret_key=get_oauth_settings().session_secret_key)
+
 
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["Health"])
