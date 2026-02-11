@@ -1,13 +1,11 @@
 /**
  * BudgetTab
  *
- * Budget categories rendered as a compact single-row list (checkbox +
- * name + type + amount + delete).  Below the list: a live monthly
- * total summary, then the inflation and survivor-reduction settings.
+ * Budget categories with main category, name, type, amount, optional end date.
  */
 
 import type { BudgetSettings, BudgetCategory } from '@/types/scenario'
-import { CATEGORY_TYPES }                      from '@/types/scenario'
+import { CATEGORY_TYPES, EXPENSE_CATEGORIES }  from '@/types/scenario'
 
 interface Props {
   budget: BudgetSettings
@@ -25,7 +23,17 @@ export default function BudgetTab({ budget, onChange }: Props) {
   const setCats = (categories: BudgetCategory[]) => onChange({ ...budget, categories })
 
   const addCategory = () =>
-    setCats([...budget.categories, { category_name: '', category_type: 'fixed', monthly_amount: 0, include: true }])
+    setCats([
+      ...budget.categories,
+      {
+        category_name: '',
+        category_type: 'fixed',
+        monthly_amount: 0,
+        include: true,
+        main_category: 'Giving & Miscellaneous',
+        end_month: null
+      }
+    ])
 
   const removeCategory = (idx: number) =>
     setCats(budget.categories.filter((_, i) => i !== idx))
@@ -52,19 +60,34 @@ export default function BudgetTab({ budget, onChange }: Props) {
       {/* category rows */}
       <div className={`divide-y divide-slate-800 ${budget.categories.length > 0 ? 'mb-4' : ''}`}>
         {budget.categories.map((cat, idx) => (
-          <div key={idx} className="py-2.5 first:pt-0">
-            <div className="flex items-center gap-2.5">
+          <div key={idx} className="py-3 first:pt-0">
+            {/* Row 1: checkbox, category dropdown, name */}
+            <div className="flex items-center gap-2.5 mb-2">
               {/* include toggle */}
               <input type="checkbox" checked={cat.include}
                 onChange={e => updateCategory(idx, c => ({ ...c, include: e.target.checked }))}
                 className="w-4 h-4 rounded border-slate-700 bg-slate-800 cursor-pointer accent-gold-600 shrink-0" />
 
+              {/* main category dropdown */}
+              <select value={cat.main_category || 'Giving & Miscellaneous'}
+                onChange={e => updateCategory(idx, c => ({ ...c, main_category: e.target.value as BudgetCategory['main_category'] }))}
+                className="w-56 shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white font-sans text-sm cursor-pointer">
+                {EXPENSE_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+              </select>
+
               {/* name */}
               <input type="text" value={cat.category_name}
                 onChange={e => updateCategory(idx, c => ({ ...c, category_name: e.target.value }))}
-                placeholder="e.g. Housing"
+                placeholder="e.g. Mortgage Payment"
                 className="flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white font-sans text-sm placeholder-slate-600" />
 
+              {/* delete */}
+              <button onClick={() => removeCategory(idx)}
+                className="font-sans text-slate-600 hover:text-danger text-lg leading-none transition-colors shrink-0" title="Remove category">×</button>
+            </div>
+
+            {/* Row 2: type, amount, end date */}
+            <div className="flex items-center gap-2.5 ml-6">
               {/* type */}
               <select value={cat.category_type}
                 onChange={e => updateCategory(idx, c => ({ ...c, category_type: e.target.value as BudgetCategory['category_type'] }))}
@@ -83,9 +106,14 @@ export default function BudgetTab({ budget, onChange }: Props) {
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-white font-sans text-sm" />
               </div>
 
-              {/* delete */}
-              <button onClick={() => removeCategory(idx)}
-                className="font-sans text-slate-600 hover:text-danger text-lg leading-none transition-colors shrink-0" title="Remove category">×</button>
+              {/* end date */}
+              <div className="flex items-center gap-2">
+                <label className="font-sans text-slate-500 text-xs whitespace-nowrap">Ends:</label>
+                <input type="month" value={cat.end_month || ''}
+                  onChange={e => updateCategory(idx, c => ({ ...c, end_month: e.target.value || null }))}
+                  placeholder="YYYY-MM"
+                  className="w-40 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white font-sans text-sm" />
+              </div>
             </div>
           </div>
         ))}
