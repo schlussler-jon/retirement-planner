@@ -29,17 +29,34 @@ class FilingStatus(str, Enum):
     HEAD_OF_HOUSEHOLD = "head_of_household"
 
 
+# Predefined expense categories
+EXPENSE_CATEGORIES = [
+    "Housing",
+    "Utilities & Communications",
+    "Food & Household",
+    "Transportation",
+    "Insurance & Healthcare",
+    "Debt Payments",
+    "Savings & Investing",
+    "Family & Personal",
+    "Entertainment & Lifestyle",
+    "Giving & Miscellaneous"
+]
+
+
 class BudgetCategory(BaseModel):
     """
     A single budget category (e.g., Housing, Groceries).
     
     Attributes:
-        category_name: Display name
+        category_name: Display name (or subcategory within main category)
         category_type: Fixed or flexible
         monthly_amount: Base monthly spending amount
         include: Whether to include in budget calculations
+        main_category: One of the predefined expense categories
+        end_month: Optional month when expense stops (YYYY-MM format)
     """
-    category_name: str = Field(..., min_length=1, description="Category name")
+    category_name: str = Field(..., min_length=1, description="Category name or description")
     category_type: CategoryType = Field(..., description="Fixed or flexible spending")
     monthly_amount: float = Field(
         ...,
@@ -50,21 +67,61 @@ class BudgetCategory(BaseModel):
         default=True,
         description="Whether to include this category in calculations"
     )
+    main_category: str = Field(
+        default="Giving & Miscellaneous",
+        description="Main expense category"
+    )
+    end_month: Optional[str] = Field(
+        None,
+        description="Month when expense stops (YYYY-MM format), e.g., '2035-06' for June 2035"
+    )
+    
+    @field_validator('main_category')
+    @classmethod
+    def validate_main_category(cls, v: str) -> str:
+        """Ensure main_category is one of the predefined categories."""
+        if v not in EXPENSE_CATEGORIES:
+            raise ValueError(f"main_category must be one of: {', '.join(EXPENSE_CATEGORIES)}")
+        return v
+    
+    @field_validator('end_month')
+    @classmethod
+    def validate_end_month(cls, v: Optional[str]) -> Optional[str]:
+        """Validate end_month format if provided."""
+        if v is not None:
+            # Basic format check: YYYY-MM
+            parts = v.split('-')
+            if len(parts) != 2:
+                raise ValueError("end_month must be in YYYY-MM format")
+            try:
+                year = int(parts[0])
+                month = int(parts[1])
+                if not (1 <= month <= 12):
+                    raise ValueError("Month must be between 1 and 12")
+                if not (2020 <= year <= 2100):
+                    raise ValueError("Year must be between 2020 and 2100")
+            except ValueError as e:
+                raise ValueError(f"Invalid end_month format: {e}")
+        return v
     
     model_config = {
         "json_schema_extra": {
             "examples": [
                 {
-                    "category_name": "Housing (Mortgage/Rent)",
+                    "category_name": "Mortgage Payment",
                     "category_type": "fixed",
-                    "monthly_amount": 1500.0,
-                    "include": True
+                    "monthly_amount": 2500.0,
+                    "include": True,
+                    "main_category": "Housing",
+                    "end_month": "2045-12"
                 },
                 {
-                    "category_name": "Travel",
+                    "category_name": "Travel Budget",
                     "category_type": "flexible",
                     "monthly_amount": 300.0,
-                    "include": True
+                    "include": True,
+                    "main_category": "Entertainment & Lifestyle",
+                    "end_month": None
                 }
             ]
         }
@@ -135,22 +192,28 @@ class BudgetSettings(BaseModel):
                 {
                     "categories": [
                         {
-                            "category_name": "Housing",
+                            "category_name": "Mortgage",
                             "category_type": "fixed",
                             "monthly_amount": 1500.0,
-                            "include": True
+                            "include": True,
+                            "main_category": "Housing",
+                            "end_month": "2045-06"
                         },
                         {
                             "category_name": "Groceries",
                             "category_type": "fixed",
                             "monthly_amount": 800.0,
-                            "include": True
+                            "include": True,
+                            "main_category": "Food & Household",
+                            "end_month": None
                         },
                         {
                             "category_name": "Travel",
                             "category_type": "flexible",
                             "monthly_amount": 400.0,
-                            "include": True
+                            "include": True,
+                            "main_category": "Entertainment & Lifestyle",
+                            "end_month": None
                         }
                     ],
                     "inflation_annual_percent": 0.025,
