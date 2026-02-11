@@ -45,13 +45,7 @@ allowed_origins = [
 if frontend_url and not frontend_url.startswith("http://localhost"):
     allowed_origins.append(frontend_url)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app.add_middleware(SessionMiddleware, secret_key=get_oauth_settings().session_secret_key)
 
 app.add_middleware(
     SessionMiddleware,
