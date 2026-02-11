@@ -12,20 +12,20 @@ export default {
     extend: {
     colors: {
   // Base slate palette - BRIGHTER text colors
-      slate: {
-        950: '#080c14',
-        900: '#0f1623',
-        850: '#141c2e',
-        800: '#1a2440',
-        700: '#3a4a68',  // Brighter for better contrast
-        600: '#4a5f88',  // Brighter for better contrast
-        500: '#6a8ab5',  // Brighter for better contrast
-        400: '#8fadd0',  // Brighter
-        300: '#b5cbea',  // Brighter
-        200: '#d0dff0',  // Brighter
-        100: '#e8f0f8',  // Brighter
-        50:  '#f5f8fc',  // Brighter
-      },
+slate: {
+  950: '#080c14',
+  900: '#0f1623',
+  850: '#1e2a42',  // Brightened
+  800: '#2a3754',  // Brightened
+  700: '#4a5f88',  // Keep (was already brightened)
+  600: '#6a7faa',  // Much brighter
+  500: '#8a9fcc',  // Much brighter - common body text
+  400: '#aac0e8',  // Much brighter - secondary text
+  300: '#c5d6f0',  // Brighter
+  200: '#dce6f8',  // Brighter
+  100: '#edf3fc',  // Brighter
+  50:  '#f7f9fd',  // Brighter
+},
   // Gold accent - MUCH BRIGHTER
       gold: {
         900: '#9a7f28',
