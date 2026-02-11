@@ -19,6 +19,9 @@ function updateAt<T>(arr: T[], idx: number, fn: (item: T) => T): T[] {
   return arr.map((item, i) => (i === idx ? fn(item) : item))
 }
 
+// Helper to select all text on focus (replaces leading zero when typing)
+const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => e.target.select()
+
 export default function BudgetTab({ budget, onChange }: Props) {
   const setCats = (categories: BudgetCategory[]) => onChange({ ...budget, categories })
 
@@ -99,6 +102,7 @@ export default function BudgetTab({ budget, onChange }: Props) {
               <div className="relative w-32 shrink-0">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
                 <input type="number" value={cat.monthly_amount} min={0} step={50}
+                  onFocus={handleFocus}
                   onChange={e => {
                     const v = e.target.valueAsNumber
                     updateCategory(idx, c => ({ ...c, monthly_amount: isNaN(v) ? 0 : v }))
@@ -156,6 +160,7 @@ export default function BudgetTab({ budget, onChange }: Props) {
             </label>
             <div className="relative">
               <input type="number" value={toDisplay(budget.inflation_annual_percent)} min={0} max={20} step={0.1}
+                onFocus={handleFocus}
                 onChange={e => {
                   const v = e.target.valueAsNumber
                   onChange({ ...budget, inflation_annual_percent: isNaN(v) ? 0 : toDecimal(v) })
@@ -173,6 +178,7 @@ export default function BudgetTab({ budget, onChange }: Props) {
             </label>
             <div className="relative">
               <input type="number" value={toDisplay(budget.survivor_flexible_reduction_percent)} min={0} max={100} step={5}
+                onFocus={handleFocus}
                 onChange={e => {
                   const v = e.target.valueAsNumber
                   onChange({ ...budget, survivor_flexible_reduction_percent: isNaN(v) ? 0 : toDecimal(v) })

@@ -21,6 +21,9 @@ function updateAt<T>(arr: T[], idx: number, fn: (item: T) => T): T[] {
   return arr.map((item, i) => (i === idx ? fn(item) : item))
 }
 
+// Helper to select all text on focus (replaces leading zero when typing)
+const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => e.target.select()
+
 export default function AccountsTab({ accounts, onChange }: Props) {
   const addAccount = () => {
     onChange([...accounts, {
@@ -102,6 +105,7 @@ export default function AccountsTab({ accounts, onChange }: Props) {
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
                   <input type="number" value={acct.starting_balance} min={0} step={1000}
+                    onFocus={handleFocus}
                     onChange={e => {
                       const v = e.target.valueAsNumber
                       update(idx, a => ({ ...a, starting_balance: isNaN(v) ? 0 : v }))
@@ -115,6 +119,7 @@ export default function AccountsTab({ accounts, onChange }: Props) {
                 </label>
                 <div className="relative">
                   <input type="number" value={toDisplay(acct.annual_return_rate)} min={-50} max={50} step={0.5}
+                    onFocus={handleFocus}
                     onChange={e => {
                       const v = e.target.valueAsNumber
                       update(idx, a => ({ ...a, annual_return_rate: isNaN(v) ? 0 : toDecimal(v) }))
@@ -135,6 +140,7 @@ export default function AccountsTab({ accounts, onChange }: Props) {
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
                   <input type="number" value={acct.monthly_contribution} min={0} step={100}
+                    onFocus={handleFocus}
                     onChange={e => {
                       const v = e.target.valueAsNumber
                       update(idx, a => ({ ...a, monthly_contribution: isNaN(v) ? 0 : v }))
@@ -149,6 +155,7 @@ export default function AccountsTab({ accounts, onChange }: Props) {
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
                   <input type="number" value={acct.monthly_withdrawal} min={0} step={100}
+                    onFocus={handleFocus}
                     onChange={e => {
                       const v = e.target.valueAsNumber
                       update(idx, a => ({ ...a, monthly_withdrawal: isNaN(v) ? 0 : v }))
