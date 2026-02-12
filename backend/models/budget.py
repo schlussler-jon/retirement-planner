@@ -4,7 +4,7 @@ Budget and tax-related data models.
 These models handle spending categories, inflation, survivor reduction, and tax settings.
 """
 
-from typing import Literal, Optional, List
+from typing import Literal, Optional, List, Dict
 from pydantic import BaseModel, Field, field_validator
 from enum import Enum
 
@@ -273,8 +273,8 @@ class StateTaxConfig:
     """
     State tax configuration lookup.
     
-    This class provides state-specific tax information.
-    In v1, we use simplified flat rates or no-tax designations.
+    Supports both flat rates and progressive brackets.
+    Progressive brackets are used when available, otherwise falls back to flat rates.
     """
     
     # States with no income tax
@@ -282,11 +282,67 @@ class StateTaxConfig:
         'AK', 'FL', 'NV', 'NH', 'SD', 'TN', 'TX', 'WA', 'WY'
     }
     
-    # Simplified flat rates for v1 (approximate)
-    # In v2, these would be full progressive brackets
+    # Progressive tax brackets for states (2025 data)
+    # Format: 'STATE': { 'filing_status': [(threshold, rate), ...] }
+    PROGRESSIVE_BRACKETS = {
+        'CA': {
+            'single': [
+                (10099, 0.01),
+                (23942, 0.02),
+                (37788, 0.04),
+                (52455, 0.06),
+                (66295, 0.08),
+                (338639, 0.093),
+                (406364, 0.103),
+                (677275, 0.113),
+                (1000000, 0.123),
+                (float('inf'), 0.133)  # 13.3% on income over $1M
+            ],
+            'married_filing_jointly': [
+                (20198, 0.01),
+                (47884, 0.02),
+                (75576, 0.04),
+                (104910, 0.06),
+                (132590, 0.08),
+                (677278, 0.093),
+                (812728, 0.103),
+                (1000000, 0.113),
+                (1354550, 0.123),
+                (float('inf'), 0.133)  # 13.3% on income over $1.35M
+            ],
+            'head_of_household': [
+                (20212, 0.01),
+                (47887, 0.02),
+                (61730, 0.04),
+                (76343, 0.06),
+                (96920, 0.08),
+                (494503, 0.093),
+                (592005, 0.103),
+                (1000000, 0.113),
+                (1016644, 0.123),
+                (float('inf'), 0.133)
+            ],
+            'married_filing_separately': [
+                (10099, 0.01),
+                (23942, 0.02),
+                (37788, 0.04),
+                (52455, 0.06),
+                (66295, 0.08),
+                (338639, 0.093),
+                (406364, 0.103),
+                (500000, 0.113),
+                (677275, 0.123),
+                (float('inf'), 0.133)
+            ],
+        },
+        # Add more states here as needed
+        # 'NY': { ... },
+        # 'OR': { ... },
+    }
+    
+    # Simplified flat rates for states without progressive brackets
     FLAT_RATES = {
         'AZ': 0.025,  # Arizona approximate effective rate
-        'CA': 0.093,  # California approximate top rate
         'CO': 0.044,  # Colorado flat tax
         'IL': 0.0495, # Illinois flat tax
         'IN': 0.0323, # Indiana flat tax
@@ -298,9 +354,35 @@ class StateTaxConfig:
     }
     
     @classmethod
+    def has_progressive_brackets(cls, state_code: str) -> bool:
+        """Check if a state has progressive tax brackets defined."""
+        return state_code.upper() in cls.PROGRESSIVE_BRACKETS
+    
+    @classmethod
+    def get_progressive_brackets(cls, state_code: str, filing_status: str) -> List[tuple]:
+        """
+        Get progressive tax brackets for a state and filing status.
+        
+        Args:
+            state_code: Two-letter state code
+            filing_status: Filing status (single, married_filing_jointly, etc.)
+            
+        Returns:
+            List of (threshold, rate) tuples, or None if not available
+        """
+        state_code = state_code.upper()
+        if state_code not in cls.PROGRESSIVE_BRACKETS:
+            return None
+        
+        state_brackets = cls.PROGRESSIVE_BRACKETS[state_code]
+        
+        # Map filing status to bracket key (fallback to single if not found)
+        return state_brackets.get(filing_status, state_brackets.get('single'))
+    
+    @classmethod
     def get_state_rate(cls, state_code: str) -> float:
         """
-        Get state tax rate for a given state.
+        Get flat state tax rate (fallback for states without progressive brackets).
         
         Returns:
             0.0 for no-tax states
