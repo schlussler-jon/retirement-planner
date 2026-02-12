@@ -15,6 +15,7 @@ import { useQueryClient }                                                      f
 import { useScenario, useCreateScenario, useUpdateScenario, useSaveToDrive, useScenarios, useValidateScenario, qk } from '@/api/hooks'
 import { saveScenarioToStorage, exportScenarioAsFile } from '@/utils/storage'
 import client                                                                   from '@/api/client'
+import { parseValidationError } from '@/utils/errorParser'
 import type { Scenario, GlobalSettings, Person, IncomeStream, InvestmentAccount, BudgetSettings, TaxSettings } from '@/types/scenario'
 
 import GlobalSettingsTab from '@/components/editor/GlobalSettingsTab'
@@ -141,7 +142,8 @@ export default function ScenarioEditor() {
         setTimeout(() => setSaved(false), 3000)
       }
     } catch (e: any) {
-      setError(e?.response?.data?.detail ?? 'An unexpected error occurred.')
+      const detail = e?.response?.data?.detail
+      setError(detail ? parseValidationError(detail) : 'An unexpected error occurred.')
     } finally {
       setSaving(false)
     }
