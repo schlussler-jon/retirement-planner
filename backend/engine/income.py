@@ -113,6 +113,12 @@ class IncomeProcessor:
                 income_by_stream[stream.stream_id] = 0.0
                 continue
             
+            # Check if stream has ended
+            if stream.end_month and month_is_after(year_month, stream.end_month):
+                # Stream has ended
+                income_by_stream[stream.stream_id] = 0.0
+                continue
+            
             # Get state for this stream
             state = self.states[stream.stream_id]
             
