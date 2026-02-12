@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQueryClient }                                                      from '@tanstack/react-query'
 import { useScenario, useCreateScenario, useUpdateScenario, useSaveToDrive, useScenarios, useValidateScenario, qk } from '@/api/hooks'
+import { saveScenarioToStorage, exportScenarioAsFile } from '@/utils/storage'
 import client                                                                   from '@/api/client'
 import type { Scenario, GlobalSettings, Person, IncomeStream, InvestmentAccount, BudgetSettings, TaxSettings } from '@/types/scenario'
 
@@ -161,6 +162,14 @@ export default function ScenarioEditor() {
       setDriveSaving(false)
     }
   }
+    const handleSaveToLocal = () => {
+      saveScenarioToStorage(scenario)
+      alert(`"${scenario.scenario_name}" saved to LocalStorage!`)
+    }
+
+    const handleExportJSON = () => {
+      exportScenarioAsFile(scenario)
+    }
 
   // ── duplicate ───────────────────────────────────────────────────────────
   const handleDuplicate = async () => {
@@ -268,7 +277,20 @@ export default function ScenarioEditor() {
             >
               {driveSaving ? '☁ Saving…' : '☁ Save to Drive'}
             </button>
-          )}
+            <button
+              onClick={handleSaveToLocal}
+              className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors"
+            >
+              💾 Save to LocalStorage
+            </button>
+
+            <button
+              onClick={handleExportJSON}
+              className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors"
+            >
+              ↓ Export JSON
+            </button> 
+         )}
 
           {/* Duplicate – edit mode only */}
           {!isNew && (
