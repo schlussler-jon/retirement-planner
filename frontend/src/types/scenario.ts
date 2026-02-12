@@ -56,7 +56,11 @@ export interface InvestmentAccount {
   starting_balance: number         // >= 0
   annual_return_rate: number       // -0.5 – 0.5
   monthly_contribution: number     // >= 0
+  contribution_start_month?: string | null    // YYYY-MM (optional)
+  contribution_end_month?: string | null      // YYYY-MM (optional)
   monthly_withdrawal: number       // >= 0
+  withdrawal_start_month?: string | null      // YYYY-MM (optional)
+  withdrawal_end_month?: string | null        // YYYY-MM (optional)
   /** Computed by backend — read-only. */
   monthly_return_rate?: number
 }

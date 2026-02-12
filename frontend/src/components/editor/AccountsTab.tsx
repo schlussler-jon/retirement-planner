@@ -33,7 +33,11 @@ export default function AccountsTab({ accounts, onChange }: Props) {
       starting_balance: 0,
       annual_return_rate: 0.06,
       monthly_contribution: 0,
+      contribution_start_month: null,
+      contribution_end_month: null,
       monthly_withdrawal: 0,
+      withdrawal_start_month: null,
+      withdrawal_end_month: null,
     }])
   }
 
@@ -132,7 +136,7 @@ export default function AccountsTab({ accounts, onChange }: Props) {
             </div>
 
             {/* row 3: contribution · withdrawal */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                   Monthly Contribution ($)
@@ -163,6 +167,50 @@ export default function AccountsTab({ accounts, onChange }: Props) {
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm" />
                 </div>
                 <p className="font-sans text-slate-600 text-xs mt-1">Withdrawals are taxable income (except Roth).</p>
+              </div>
+            </div>
+
+            {/* row 4: contribution dates · withdrawal dates */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                  Contribution Start
+                </label>
+                <input type="month" value={acct.contribution_start_month || ''}
+                  onChange={e => update(idx, a => ({ ...a, contribution_start_month: e.target.value || null }))}
+                  placeholder="YYYY-MM"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
+                <p className="font-sans text-slate-600 text-xs mt-1">When to start</p>
+              </div>
+              <div>
+                <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                  Contribution End
+                </label>
+                <input type="month" value={acct.contribution_end_month || ''}
+                  onChange={e => update(idx, a => ({ ...a, contribution_end_month: e.target.value || null }))}
+                  placeholder="YYYY-MM"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
+                <p className="font-sans text-slate-600 text-xs mt-1">When to stop</p>
+              </div>
+              <div>
+                <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                  Withdrawal Start
+                </label>
+                <input type="month" value={acct.withdrawal_start_month || ''}
+                  onChange={e => update(idx, a => ({ ...a, withdrawal_start_month: e.target.value || null }))}
+                  placeholder="YYYY-MM"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
+                <p className="font-sans text-slate-600 text-xs mt-1">When to start</p>
+              </div>
+              <div>
+                <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                  Withdrawal End
+                </label>
+                <input type="month" value={acct.withdrawal_end_month || ''}
+                  onChange={e => update(idx, a => ({ ...a, withdrawal_end_month: e.target.value || null }))}
+                  placeholder="YYYY-MM"
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
+                <p className="font-sans text-slate-600 text-xs mt-1">When to stop</p>
               </div>
             </div>
           </div>
