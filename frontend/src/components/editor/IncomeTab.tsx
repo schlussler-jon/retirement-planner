@@ -17,7 +17,6 @@ interface Props {
 
 const MONTHS      = Array.from({ length: 12 }, (_, i) => i + 1)
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
-const START_YEARS = Array.from({ length: 11 }, (_, i) => 2024 + i)
 
 const toDisplay = (d: number) => Math.round(d * 10000) / 100  // 0.025 → 2.5
 const toDecimal = (p: number) => p / 100                        // 2.5 → 0.025
@@ -68,10 +67,7 @@ export default function IncomeTab({ streams, people, onChange }: Props) {
 
       <div className={`divide-y divide-slate-800 ${streams.length > 0 ? 'mb-4' : ''}`}>
         {streams.map((stream, idx) => {
-          const parts  = stream.start_month.split('-')
-          const sYear  = parseInt(parts[0], 10) || 2026
-          const sMonth = parseInt(parts[1], 10) || 1
-          const owner  = people.find(p => p.person_id === stream.owner_person_id)
+          const owner = people.find(p => p.person_id === stream.owner_person_id)
 
           return (
             <div key={idx} className="py-4 first:pt-0">
@@ -116,29 +112,26 @@ export default function IncomeTab({ streams, people, onChange }: Props) {
                 </div>
               </div>
 
-              {/* row 2: start year · start month · monthly amount · end date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              {/* row 2: start date · end date · monthly amount */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">Start Year</label>
-                  <select value={sYear}
-                    onChange={e => {
-                      const y = Number(e.target.value)
-                      update(idx, s => ({ ...s, start_month: `${y}-${String(sMonth).padStart(2,'0')}` }))
-                    }}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer">
-                    {START_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                  </select>
+                  <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                    Start Date <span className="text-danger">*</span>
+                  </label>
+                  <input type="month" value={stream.start_month}
+                    onChange={e => update(idx, s => ({ ...s, start_month: e.target.value }))}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
+                  <p className="font-sans text-slate-600 text-xs mt-1">When income starts</p>
                 </div>
                 <div>
-                  <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">Start Month</label>
-                  <select value={sMonth}
-                    onChange={e => {
-                      const m = Number(e.target.value)
-                      update(idx, s => ({ ...s, start_month: `${sYear}-${String(m).padStart(2,'0')}` }))
-                    }}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer">
-                    {MONTHS.map(m => <option key={m} value={m}>{MONTH_NAMES[m-1]}</option>)}
-                  </select>
+                  <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                    End Date (Optional)
+                  </label>
+                  <input type="month" value={stream.end_month || ''}
+                    onChange={e => update(idx, s => ({ ...s, end_month: e.target.value || null }))}
+                    placeholder="YYYY-MM"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
+                  <p className="font-sans text-slate-600 text-xs mt-1">When income stops</p>
                 </div>
                 <div>
                   <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -154,16 +147,6 @@ export default function IncomeTab({ streams, people, onChange }: Props) {
                       }}
                       className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm" />
                   </div>
-                </div>
-                <div>
-                  <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-                    End Date (Optional)
-                  </label>
-                  <input type="month" value={stream.end_month || ''}
-                    onChange={e => update(idx, s => ({ ...s, end_month: e.target.value || null }))}
-                    placeholder="YYYY-MM"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
-                  <p className="font-sans text-slate-600 text-xs mt-1">When income stops</p>
                 </div>
               </div>
 
