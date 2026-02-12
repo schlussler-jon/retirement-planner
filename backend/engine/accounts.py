@@ -7,6 +7,7 @@ Operations are applied in a specific order each month (documented below).
 
 from typing import Dict
 from models import InvestmentAccount, TaxBucket
+from .timeline import month_is_before, month_is_after
 
 
 class AccountState:
@@ -29,24 +30,78 @@ class AccountState:
         self.account = account
         self.balance = account.starting_balance
     
-    def apply_contribution(self) -> None:
+    def should_contribute(self, year_month: str) -> bool:
         """
-        Apply monthly contribution.
+        Check if contributions should happen this month.
+        
+        Args:
+            year_month: Current month in YYYY-MM format
+            
+        Returns:
+            True if contributions should be applied this month
+        """
+        # Check start date
+        if self.account.contribution_start_month:
+            if month_is_before(year_month, self.account.contribution_start_month):
+                return False
+        
+        # Check end date
+        if self.account.contribution_end_month:
+            if month_is_after(year_month, self.account.contribution_end_month):
+                return False
+        
+        return True
+    
+    def should_withdraw(self, year_month: str) -> bool:
+        """
+        Check if withdrawals should happen this month.
+        
+        Args:
+            year_month: Current month in YYYY-MM format
+            
+        Returns:
+            True if withdrawals should be applied this month
+        """
+        # Check start date
+        if self.account.withdrawal_start_month:
+            if month_is_before(year_month, self.account.withdrawal_start_month):
+                return False
+        
+        # Check end date
+        if self.account.withdrawal_end_month:
+            if month_is_after(year_month, self.account.withdrawal_end_month):
+                return False
+        
+        return True
+    
+    def apply_contribution(self, year_month: str) -> None:
+        """
+        Apply monthly contribution if within date range.
         
         Increases the account balance by the fixed monthly contribution amount.
+        
+        Args:
+            year_month: Current month in YYYY-MM format
         """
-        self.balance += self.account.monthly_contribution
+        if self.should_contribute(year_month):
+            self.balance += self.account.monthly_contribution
     
-    def apply_withdrawal(self) -> float:
+    def apply_withdrawal(self, year_month: str) -> float:
         """
-        Apply monthly withdrawal.
+        Apply monthly withdrawal if within date range.
         
         CRITICAL: Withdrawals are POSITIVE numbers that REDUCE the balance.
         All withdrawals are considered INCOME/CASHFLOW to the user.
         
+        Args:
+            year_month: Current month in YYYY-MM format
+            
         Returns:
             The withdrawal amount (this becomes income)
         """
+        if not self.should_withdraw(year_month):
+            return 0.0
+        
         withdrawal = self.account.monthly_withdrawal
         
         # Reduce balance (withdrawal is a positive number)
@@ -105,14 +160,17 @@ class AccountProcessor:
             for account in accounts
         }
     
-    def process_month(self) -> tuple[Dict[str, float], Dict[str, float]]:
+    def process_month(self, year_month: str) -> tuple[Dict[str, float], Dict[str, float]]:
         """
         Process all accounts for a single month.
         
         CRITICAL ORDER (must be followed exactly):
-        1. Apply contributions to all accounts
-        2. Apply withdrawals to all accounts (these become income)
+        1. Apply contributions to all accounts (if within date range)
+        2. Apply withdrawals to all accounts (if within date range - these become income)
         3. Apply growth to all accounts
+        
+        Args:
+            year_month: Current month in YYYY-MM format
         
         Returns:
             Tuple of:
@@ -122,15 +180,15 @@ class AccountProcessor:
         withdrawals: Dict[str, float] = {}
         balances: Dict[str, float] = {}
         
-        # Step 1: Contributions
+        # Step 1: Contributions (check date range)
         for account in self.accounts:
             state = self.states[account.account_id]
-            state.apply_contribution()
+            state.apply_contribution(year_month)
         
-        # Step 2: Withdrawals (these become income!)
+        # Step 2: Withdrawals (check date range - these become income!)
         for account in self.accounts:
             state = self.states[account.account_id]
-            withdrawal = state.apply_withdrawal()
+            withdrawal = state.apply_withdrawal(year_month)
             withdrawals[account.account_id] = withdrawal
         
         # Step 3: Growth

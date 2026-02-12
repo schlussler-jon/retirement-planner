@@ -81,7 +81,7 @@ class ProjectionEngine:
             
             # Process accounts (contributions, withdrawals, growth)
             withdrawals_by_account, balances_by_account = (
-                self.account_processor.process_month()
+                self.account_processor.process_month(year_month)
             )
             
             # Calculate totals
