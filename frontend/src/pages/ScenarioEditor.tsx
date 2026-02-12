@@ -162,14 +162,15 @@ export default function ScenarioEditor() {
       setDriveSaving(false)
     }
   }
-    const handleSaveToLocal = () => {
-      saveScenarioToStorage(scenario)
-      alert(`"${scenario.scenario_name}" saved to LocalStorage!`)
-    }
 
-    const handleExportJSON = () => {
-      exportScenarioAsFile(scenario)
-    }
+  const handleSaveToLocal = () => {
+    saveScenarioToStorage(scenario)
+    alert(`"${scenario.scenario_name}" saved to LocalStorage!`)
+  }
+
+  const handleExportJSON = () => {
+    exportScenarioAsFile(scenario)
+  }
 
   // ── duplicate ───────────────────────────────────────────────────────────
   const handleDuplicate = async () => {
@@ -277,20 +278,27 @@ export default function ScenarioEditor() {
             >
               {driveSaving ? '☁ Saving…' : '☁ Save to Drive'}
             </button>
+          )}
+
+          {/* Save to LocalStorage */}
+          {!isNew && (
             <button
               onClick={handleSaveToLocal}
               className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors"
             >
               💾 Save to LocalStorage
             </button>
+          )}
 
+          {/* Export JSON */}
+          {!isNew && (
             <button
               onClick={handleExportJSON}
               className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors"
             >
               ↓ Export JSON
-            </button> 
-         )}
+            </button>
+          )}
 
           {/* Duplicate – edit mode only */}
           {!isNew && (
