@@ -9,7 +9,7 @@
 
 export type TaxBucket = 'taxable' | 'tax_deferred' | 'roth'
 
-export type IncomeStreamType = 'pension' | 'social_security' | 'other'
+export type IncomeStreamType = 'pension' | 'social_security' | 'salary' | 'self_employment' | 'other'
 
 export type CategoryType = 'fixed' | 'flexible'
 
@@ -43,6 +43,7 @@ export interface IncomeStream {
   type: IncomeStreamType
   owner_person_id: string
   start_month: string              // YYYY-MM
+  end_month?: string | null        // YYYY-MM (optional)
   monthly_amount_at_start: number  // > 0
   cola_percent_annual: number      // 0–0.5  (e.g. 0.02 = 2 %)
   cola_month: number               // 1–12
@@ -132,6 +133,8 @@ export const TAX_BUCKETS: { value: TaxBucket; label: string }[] = [
 export const INCOME_STREAM_TYPES: { value: IncomeStreamType; label: string }[] = [
   { value: 'pension',          label: 'Pension' },
   { value: 'social_security',  label: 'Social Security' },
+  { value: 'salary',           label: 'Salary' },
+  { value: 'self_employment',  label: 'Self Employment' },
   { value: 'other',            label: 'Other' },
 ]
 

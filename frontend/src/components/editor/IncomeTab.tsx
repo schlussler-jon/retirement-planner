@@ -26,6 +26,9 @@ function updateAt<T>(arr: T[], idx: number, fn: (item: T) => T): T[] {
   return arr.map((item, i) => (i === idx ? fn(item) : item))
 }
 
+// Helper to select all text on focus (replaces leading zero when typing)
+const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => e.target.select()
+
 export default function IncomeTab({ streams, people, onChange }: Props) {
   const addStream = () => {
     onChange([...streams, {
@@ -33,6 +36,7 @@ export default function IncomeTab({ streams, people, onChange }: Props) {
       type: 'pension',
       owner_person_id: people.length > 0 ? people[0].person_id : '',
       start_month: '2026-01',
+      end_month: null,
       monthly_amount_at_start: 0,
       cola_percent_annual: 0,
       cola_month: 1,
@@ -112,8 +116,8 @@ export default function IncomeTab({ streams, people, onChange }: Props) {
                 </div>
               </div>
 
-              {/* row 2: start year · start month · monthly amount */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+              {/* row 2: start year · start month · monthly amount · end date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <div>
                   <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">Start Year</label>
                   <select value={sYear}
@@ -143,12 +147,23 @@ export default function IncomeTab({ streams, people, onChange }: Props) {
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
                     <input type="number" value={stream.monthly_amount_at_start} min={0} step={100}
+                      onFocus={handleFocus}
                       onChange={e => {
                         const v = e.target.valueAsNumber
                         update(idx, s => ({ ...s, monthly_amount_at_start: isNaN(v) ? 0 : v }))
                       }}
                       className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm" />
                   </div>
+                </div>
+                <div>
+                  <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                    End Date (Optional)
+                  </label>
+                  <input type="month" value={stream.end_month || ''}
+                    onChange={e => update(idx, s => ({ ...s, end_month: e.target.value || null }))}
+                    placeholder="YYYY-MM"
+                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
+                  <p className="font-sans text-slate-600 text-xs mt-1">When income stops</p>
                 </div>
               </div>
 
@@ -160,6 +175,7 @@ export default function IncomeTab({ streams, people, onChange }: Props) {
                   </label>
                   <div className="relative">
                     <input type="number" value={toDisplay(stream.cola_percent_annual)} min={0} max={50} step={0.1}
+                      onFocus={handleFocus}
                       onChange={e => {
                         const v = e.target.valueAsNumber
                         update(idx, s => ({ ...s, cola_percent_annual: isNaN(v) ? 0 : toDecimal(v) }))
