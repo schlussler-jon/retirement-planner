@@ -195,6 +195,11 @@ class InvestmentAccount(BaseModel):
         * taxable → taxable ordinary income (v1 simplified)
         * roth → non-taxable income
     
+    Contribution and Withdrawal Timing:
+    - Optional start/end dates control when contributions and withdrawals occur
+    - Useful for modeling: contributing while working, withdrawing in retirement
+    - Format: YYYY-MM (e.g., "2045-06" for June 2045)
+    
     Operation Order Per Month:
     1. Apply contributions (+)
     2. Apply withdrawals (-)
@@ -219,11 +224,50 @@ class InvestmentAccount(BaseModel):
         ge=0,
         description="Fixed monthly contribution amount (positive number)"
     )
+    contribution_start_month: Optional[str] = Field(
+        None,
+        pattern=r'^\d{4}-\d{2}$',
+        description="Optional start month for contributions in YYYY-MM format"
+    )
+    contribution_end_month: Optional[str] = Field(
+        None,
+        pattern=r'^\d{4}-\d{2}$',
+        description="Optional end month for contributions in YYYY-MM format"
+    )
     monthly_withdrawal: float = Field(
         default=0.0,
         ge=0,
         description="Fixed monthly withdrawal amount (positive number reduces balance)"
     )
+    withdrawal_start_month: Optional[str] = Field(
+        None,
+        pattern=r'^\d{4}-\d{2}$',
+        description="Optional start month for withdrawals in YYYY-MM format"
+    )
+    withdrawal_end_month: Optional[str] = Field(
+        None,
+        pattern=r'^\d{4}-\d{2}$',
+        description="Optional end month for withdrawals in YYYY-MM format"
+    )
+    
+    @field_validator('contribution_start_month', 'contribution_end_month', 
+                     'withdrawal_start_month', 'withdrawal_end_month')
+    @classmethod
+    def validate_month_format(cls, v: Optional[str]) -> Optional[str]:
+        """Validate YYYY-MM format for date fields if provided."""
+        if v is None:
+            return None
+        try:
+            year, month = v.split('-')
+            year_int = int(year)
+            month_int = int(month)
+            if not (1900 <= year_int <= 2100):
+                raise ValueError("Year must be between 1900 and 2100")
+            if not (1 <= month_int <= 12):
+                raise ValueError("Month must be between 01 and 12")
+            return v
+        except (ValueError, AttributeError):
+            raise ValueError("Month must be in YYYY-MM format")
     
     @computed_field
     @property
@@ -241,7 +285,11 @@ class InvestmentAccount(BaseModel):
                     "starting_balance": 65000.0,
                     "annual_return_rate": 0.06,
                     "monthly_contribution": 0.0,
-                    "monthly_withdrawal": 0.0
+                    "contribution_start_month": None,
+                    "contribution_end_month": None,
+                    "monthly_withdrawal": 0.0,
+                    "withdrawal_start_month": None,
+                    "withdrawal_end_month": None
                 },
                 {
                     "account_id": "jon_457b",
@@ -250,7 +298,11 @@ class InvestmentAccount(BaseModel):
                     "starting_balance": 330000.0,
                     "annual_return_rate": 0.06,
                     "monthly_contribution": 0.0,
-                    "monthly_withdrawal": 1900.0
+                    "contribution_start_month": None,
+                    "contribution_end_month": None,
+                    "monthly_withdrawal": 1900.0,
+                    "withdrawal_start_month": None,
+                    "withdrawal_end_month": None
                 },
                 {
                     "account_id": "savings",
@@ -259,7 +311,11 @@ class InvestmentAccount(BaseModel):
                     "starting_balance": 341085.0,
                     "annual_return_rate": 0.038,
                     "monthly_contribution": 0.0,
-                    "monthly_withdrawal": 0.0
+                    "contribution_start_month": None,
+                    "contribution_end_month": None,
+                    "monthly_withdrawal": 0.0,
+                    "withdrawal_start_month": None,
+                    "withdrawal_end_month": None
                 }
             ]
         }
