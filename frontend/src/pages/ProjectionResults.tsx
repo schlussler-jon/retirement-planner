@@ -107,9 +107,14 @@ export default function ProjectionResults() {
             <h1 className="font-display text-3xl text-white">Projection Results</h1>
             <p className="font-sans text-slate-500 text-sm mt-1">{scenario?.scenario_name ?? '…'}</p>
           </div>
-          <Link to={`/scenarios/${id}`} className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors">
-            ← Back to Editor
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link to={`/scenarios/${id}`} className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors">
+              ← Back to Editor
+            </Link>
+            <Link to={`/scenarios/${id}/summary`} className="font-sans text-gold-500 hover:text-gold-400 border border-gold-600 hover:border-gold-500 px-4 py-2 rounded-lg text-sm transition-colors">
+              📊 Executive Summary
+            </Link>
+          </div>
         </div>
 
         {projMut.isError ? (

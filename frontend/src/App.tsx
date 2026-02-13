@@ -18,6 +18,7 @@ import Home                             from '@/pages/Home'
 import Scenarios                        from '@/pages/Scenarios'
 import ScenarioEditor                   from '@/pages/ScenarioEditor'
 import ProjectionResults                from '@/pages/ProjectionResults'
+import ExecutiveSummary                from '@/pages/ExecutiveSummary'
 import Compare                          from '@/pages/Compare'
 
 export default function App() {
@@ -45,6 +46,8 @@ export default function App() {
             element={<ProtectedRoute><Layout><ScenarioEditor /></Layout></ProtectedRoute>} />
 
           <Route path="/scenarios/:id/results"
+          <Route path="/scenarios/:id/summary" 
+            element={<ProtectedRoute><Layout><ExecutiveSummary /></Layout></ProtectedRoute>} />
             element={<ProtectedRoute><Layout><ProjectionResults /></Layout></ProtectedRoute>} />
 
           {/* ── 404 ── */}
