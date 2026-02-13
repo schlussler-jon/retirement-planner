@@ -42,7 +42,11 @@ export default function ExecutiveSummary() {
     categoriesLength: scenario?.budget_settings?.categories?.length,
     hasAccounts: !!scenario?.accounts,
     accountsLength: scenario?.accounts?.length,
-    monthlyLength: monthly.length
+    monthlyLength: monthly.length,
+    projectionKeys: projection ? Object.keys(projection) : [],
+    projectionMonthlyDataType: typeof projection?.monthly_data,
+    projectionMonthlyDataIsArray: Array.isArray(projection?.monthly_data),
+    rawProjection: projection
   })
   const startingPortfolio = monthly.length > 0 ? monthly[0].total_investments : 0
   const endingPortfolio = monthly.length > 0 ? monthly[monthly.length - 1].total_investments : 0
