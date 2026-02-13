@@ -32,7 +32,7 @@ export default function ExecutiveSummary() {
     )
   }
 
-  const monthly = projection.monthly_data || []
+  const monthly = projection.monthly_projections || []
   const summary = projection.financial_summary || { total_surplus_deficit: 0, average_monthly_surplus_deficit: 0, months_in_surplus: 0, months_in_deficit: 0 }
   console.log('DEBUG Executive Summary:', {
     hasScenario: !!scenario,
