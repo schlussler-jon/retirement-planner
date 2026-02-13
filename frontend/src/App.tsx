@@ -46,9 +46,9 @@ export default function App() {
             element={<ProtectedRoute><Layout><ScenarioEditor /></Layout></ProtectedRoute>} />
 
           <Route path="/scenarios/:id/results"
+            element={<ProtectedRoute><Layout><ProjectionResults /></Layout></ProtectedRoute>} />
           <Route path="/scenarios/:id/summary" 
             element={<ProtectedRoute><Layout><ExecutiveSummary /></Layout></ProtectedRoute>} />
-            element={<ProtectedRoute><Layout><ProjectionResults /></Layout></ProtectedRoute>} />
 
           {/* ── 404 ── */}
           <Route path="*"
