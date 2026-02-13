@@ -14,7 +14,7 @@ const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
 export default function ExecutiveSummary() {
   const { id = '' } = useParams()
   const { data: scenario, isLoading: scenarioLoading } = useScenario(id)
-  const { data: projection, isLoading: projectionLoading } = useProjection(id)
+  const { data: projection, isLoading: projectionLoading } = useProjection(id, true)
 
   if (scenarioLoading || projectionLoading) {
     return (
