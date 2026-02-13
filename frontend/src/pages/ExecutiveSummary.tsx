@@ -163,8 +163,8 @@ export default function ExecutiveSummary() {
 
         {/* Section 3: Visual Suite */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <ExpensePieChart categories={scenario.budget_settings.categories} />
-          <TaxBucketChart accounts={scenario.investment_accounts} />
+          <ExpensePieChart categories={scenario.budget_settings?.categories || []} />
+          <TaxBucketChart accounts={scenario.investment_accounts || []} />
         </div>
 
         {/* Section 4: Analysis & Insights */}
