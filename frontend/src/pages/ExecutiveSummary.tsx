@@ -40,8 +40,8 @@ export default function ExecutiveSummary() {
     hasBudgetSettings: !!scenario?.budget_settings,
     hasCategories: !!scenario?.budget_settings?.categories,
     categoriesLength: scenario?.budget_settings?.categories?.length,
-    hasAccounts: !!scenario?.investment_accounts,
-    accountsLength: scenario?.investment_accounts?.length,
+    hasAccounts: !!scenario?.accounts,
+    accountsLength: scenario?.accounts?.length,
     monthlyLength: monthly.length
   })
   const startingPortfolio = monthly.length > 0 ? monthly[0].total_investments : 0
@@ -174,7 +174,7 @@ export default function ExecutiveSummary() {
         {/* Section 3: Visual Suite */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ExpensePieChart categories={scenario.budget_settings?.categories || []} />
-          <TaxBucketChart accounts={scenario.investment_accounts || []} />
+          <TaxBucketChart accounts={scenario.accounts || []} />
         </div>
 
         {/* Section 4: Analysis & Insights */}
