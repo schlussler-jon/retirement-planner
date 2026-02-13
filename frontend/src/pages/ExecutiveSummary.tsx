@@ -33,7 +33,7 @@ export default function ExecutiveSummary() {
   }
 
   const monthly = projection.monthly_data || []
-  const summary = projection.financial_summary
+  const summary = projection.financial_summary || { total_surplus_deficit: 0, average_monthly_surplus_deficit: 0, months_in_surplus: 0, months_in_deficit: 0 }
   const startingPortfolio = monthly.length > 0 ? monthly[0].total_investments : 0
   const endingPortfolio = monthly.length > 0 ? monthly[monthly.length - 1].total_investments : 0
 
