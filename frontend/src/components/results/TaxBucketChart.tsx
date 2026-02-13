@@ -1,3 +1,5 @@
+// Safety checks for undefined accounts
+
 /**
  * TaxBucketChart
  * 
