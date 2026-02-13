@@ -107,14 +107,9 @@ export default function ProjectionResults() {
             <h1 className="font-display text-3xl text-white">Projection Results</h1>
             <p className="font-sans text-slate-500 text-sm mt-1">{scenario?.scenario_name ?? '…'}</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link to={`/scenarios/${id}`} className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors">
-              ← Back to Editor
-            </Link>
-            <Link to={`/scenarios/${id}/summary`} className="font-sans text-gold-500 hover:text-gold-400 border border-gold-600 hover:border-gold-500 px-4 py-2 rounded-lg text-sm transition-colors">
-              📊 Executive Summary
-            </Link>
-          </div>
+          <Link to={`/scenarios/${id}`} className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors">
+            ← Back to Editor
+          </Link>
         </div>
 
         {projMut.isError ? (
@@ -155,24 +150,14 @@ export default function ProjectionResults() {
             <span className="text-slate-600 ml-2">· {results.calculation_time_ms.toFixed(0)} ms</span>
           </p>
         </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => id && projMut.mutate(id)}
-            className="font-sans text-slate-500 hover:text-gold-400 text-sm border border-slate-700 hover:border-gold-600 px-4 py-2 rounded-lg transition-colors duration-150"
-          >
-            ↻ Re-run
-          </button>
-          <button
-            onClick={() => downloadCSV(results)}
-            className="font-sans text-slate-500 hover:text-gold-400 text-sm border border-slate-700 hover:border-gold-600 px-4 py-2 rounded-lg transition-colors duration-150"
-          >
-            ↓ Export CSV
-          </button>
-          <Link to={`/scenarios/${id}`}
-            className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors">
-            ← Back to Editor
-          </Link>
-        </div>
+          <div className="flex items-center gap-3">
+            <Link to={`/scenarios/${id}`} className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors">
+              ← Back to Editor
+            </Link>
+            <Link to={`/scenarios/${id}/summary`} className="font-sans text-gold-500 hover:text-gold-400 border border-gold-600 hover:border-gold-500 px-4 py-2 rounded-lg text-sm transition-colors">
+              📊 Executive Summary
+            </Link>
+          </div>
       </div>
 
       {/* summary cards */}
