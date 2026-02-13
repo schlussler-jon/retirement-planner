@@ -41,6 +41,10 @@ export default function TaxBucketChart({ accounts }: Props) {
     roth: 0,
   }
 
+  if (!accounts || !Array.isArray(accounts)) {
+    accounts = []
+  }
+
   accounts.forEach(acc => {
     bucketTotals[acc.tax_bucket] += acc.starting_balance
   })

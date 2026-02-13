@@ -34,6 +34,16 @@ export default function ExecutiveSummary() {
 
   const monthly = projection.monthly_data || []
   const summary = projection.financial_summary || { total_surplus_deficit: 0, average_monthly_surplus_deficit: 0, months_in_surplus: 0, months_in_deficit: 0 }
+  console.log('DEBUG Executive Summary:', {
+    hasScenario: !!scenario,
+    hasProjection: !!projection,
+    hasBudgetSettings: !!scenario?.budget_settings,
+    hasCategories: !!scenario?.budget_settings?.categories,
+    categoriesLength: scenario?.budget_settings?.categories?.length,
+    hasAccounts: !!scenario?.investment_accounts,
+    accountsLength: scenario?.investment_accounts?.length,
+    monthlyLength: monthly.length
+  })
   const startingPortfolio = monthly.length > 0 ? monthly[0].total_investments : 0
   const endingPortfolio = monthly.length > 0 ? monthly[monthly.length - 1].total_investments : 0
 

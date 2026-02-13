@@ -33,6 +33,10 @@ export default function ExpensePieChart({ categories }: Props) {
   // Group by main category and sum amounts
   const categoryTotals = new Map<string, number>()
   
+  if (!categories || !Array.isArray(categories)) {
+    categories = []
+  }
+  
   categories.forEach(cat => {
     if (!cat.include) return
     const current = categoryTotals.get(cat.main_category) || 0
