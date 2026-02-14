@@ -11,7 +11,11 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.24.0",
+    "@types/d3-sankey": "^0.12.5",
+    "@types/d3-selection": "^3.0.11",
     "axios": "^1.6.7",
+    "d3-sankey": "^0.12.3",
+    "d3-selection": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.22.3",

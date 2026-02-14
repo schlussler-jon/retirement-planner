@@ -8,6 +8,7 @@ import { useParams, Link } from 'react-router-dom'
 import { useProjection, useScenario } from '@/api/hooks'
 import ExpensePieChart from '@/components/results/ExpensePieChart'
 import TaxBucketChart from '@/components/results/TaxBucketChart'
+import SankeyChart from '@/components/results/SankeyChart'
 
 const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
 
@@ -34,6 +35,48 @@ export default function ExecutiveSummary() {
 
   const monthly = projection.monthly_projections || []
   const summary = projection.financial_summary || { total_surplus_deficit: 0, average_monthly_surplus_deficit: 0, months_in_surplus: 0, months_in_deficit: 0 }
+
+  // Aggregate data for Sankey chart
+  // Create person ID to name mapping
+  const personMap = new Map<string, string>()
+  scenario.people?.forEach(person => {
+    personMap.set(person.person_id, person.name)
+  })
+
+  // Create income stream ID to descriptive name mapping
+  const incomeStreamMap = new Map<string, string>()
+  scenario.income_streams?.forEach(stream => {
+    const typeName = stream.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+    const ownerName = personMap.get(stream.owner_person_id) || 'Unknown'
+    incomeStreamMap.set(stream.stream_id, `${typeName} (${ownerName})`)
+  })
+
+  const incomeBySource: Record<string, number> = {}
+  const expensesByCategory: Record<string, number> = {}
+  let totalFederalTax = 0
+  let totalStateTax = 0
+  monthly.forEach(month => {
+    // Aggregate income by source
+    Object.entries(month.income_by_stream || {}).forEach(([streamId, amount]) => {
+      const streamName = incomeStreamMap.get(streamId) || streamId
+      incomeBySource[streamName] = (incomeBySource[streamName] || 0) + amount
+    })
+
+    // Aggregate expenses by individual item name
+    scenario.budget_settings?.categories?.forEach(cat => {
+      if (cat.include) {
+        expensesByCategory[cat.category_name] = (expensesByCategory[cat.category_name] || 0) + cat.monthly_amount
+      }
+    })
+  })
+
+  // Get total taxes from projection tax summaries
+  projection.tax_summaries?.forEach(yearTax => {
+    totalFederalTax += yearTax.federal_tax || 0
+    totalStateTax += yearTax.state_tax || 0
+  })
+
+  const netSavings = summary.total_surplus_deficit || 0
   console.log('DEBUG Executive Summary:', {
     hasScenario: !!scenario,
     hasProjection: !!projection,
@@ -179,6 +222,17 @@ export default function ExecutiveSummary() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           <ExpensePieChart categories={scenario.budget_settings?.categories || []} />
           <TaxBucketChart accounts={scenario.accounts || []} />
+        </div>
+
+        {/* Cash Flow Sankey */}
+        <div className="mb-6">
+          <SankeyChart
+            incomeBySource={incomeBySource}
+            expensesByCategory={expensesByCategory}
+            federalTax={totalFederalTax}
+            stateTax={totalStateTax}
+            savings={netSavings}
+          />
         </div>
 
         {/* Section 4: Analysis & Insights */}
