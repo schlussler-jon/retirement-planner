@@ -77,7 +77,7 @@ export default function AccountsTab({ accounts, onChange }: Props) {
                 <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                   Account Name <span className="text-danger">*</span>
                 </label>
-                <input type="text" value={acct.name}
+                <input type="text" required value={acct.name}
                   onChange={e => update(idx, a => ({ ...a, name: e.target.value }))}
                   placeholder="e.g. 401k"
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600" />
