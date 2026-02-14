@@ -3,7 +3,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 
 interface InvestmentAccount {
-  account_name: string
+  name: string
   starting_balance: number
   tax_bucket: 'taxable' | 'tax_deferred' | 'roth'
 }
@@ -43,7 +43,7 @@ export default function TaxBucketChart({ accounts }: Props) {
   const data = accounts
     .filter(acc => acc.starting_balance > 0)
     .map(acc => ({
-      name: acc.account_name,
+      name: acc.name,
       value: acc.starting_balance,
       color: TAX_BUCKET_COLORS[acc.tax_bucket],
       bucket: TAX_BUCKET_LABELS[acc.tax_bucket]
