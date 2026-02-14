@@ -214,7 +214,7 @@ export default function ExecutiveSummary() {
             </div>
 
             {/* Tax Strategy */}
-            {scenario.investment_accounts.length > 0 && (
+            {scenario.accounts.length > 0 && (
               <div>
                 <h3 className="font-sans text-sm font-semibold text-gold-500 mb-2">
                   → Tax Diversification Opportunity
