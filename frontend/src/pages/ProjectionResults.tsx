@@ -191,7 +191,7 @@ export default function ProjectionResults() {
 
           {/* Portfolio – full width */}
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-            <PortfolioChart data={monthly} />
+            <PortfolioChart data={monthly} accounts={scenario?.accounts || []} />
           </div>
 
           {/* Cash Flow + Income Composition – side by side on lg */}
