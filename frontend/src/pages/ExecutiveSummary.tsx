@@ -51,6 +51,15 @@ export default function ExecutiveSummary() {
     incomeStreamMap.set(stream.stream_id, `${typeName} (${ownerName})`)
   })
 
+  // Create income source name to type mapping for Sankey coloring
+  const incomeSourceTypes: Record<string, string> = {}
+  scenario.income_streams?.forEach(stream => {
+    const typeName = stream.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
+    const ownerName = personMap.get(stream.owner_person_id) || 'Unknown'
+    const sourceName = `${typeName} (${ownerName})`
+    incomeSourceTypes[sourceName] = stream.type
+  })
+
   const incomeBySource: Record<string, number> = {}
   const expensesByCategory: Record<string, number> = {}
   let totalFederalTax = 0
@@ -228,6 +237,7 @@ export default function ExecutiveSummary() {
         <div className="mb-6">
           <SankeyChart
             incomeBySource={incomeBySource}
+            incomeSourceTypes={incomeSourceTypes}
             expensesByCategory={expensesByCategory}
             federalTax={totalFederalTax}
             stateTax={totalStateTax}

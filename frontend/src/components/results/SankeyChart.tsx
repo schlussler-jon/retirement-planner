@@ -15,13 +15,15 @@ interface SankeyLink {
 
 interface Props {
   incomeBySource: Record<string, number>
+  incomeSourceTypes: Record<string, IncomeStreamType>  // NEW: map source name to type
   expensesByCategory: Record<string, number>
   federalTax: number
   stateTax: number
   savings: number
 }
+type IncomeStreamType = 'pension' | 'social_security' | 'salary' | 'self_employment' | 'other'
 
-export default function SankeyChart({ incomeBySource, expensesByCategory, federalTax, stateTax, savings }: Props) {
+export default function SankeyChart({ incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
@@ -41,7 +43,8 @@ export default function SankeyChart({ incomeBySource, expensesByCategory, federa
     Object.entries(incomeBySource).forEach(([source, amount]) => {
       if (amount > 0) {
         incomeNodes[source] = nodeIndex
-        nodes.push({ name: source, category: 'income' })
+        const incomeType = incomeSourceTypes[source] || 'other'
+        nodes.push({ name: source, category: incomeType })
         nodeIndex++
       }
     })
@@ -151,10 +154,14 @@ export default function SankeyChart({ incomeBySource, expensesByCategory, federa
 
     // Color mapping
     const colorMap: Record<string, string> = {
-      income: '#4ECDC4',   // Teal
-      tax: '#FF6B6B',      // Coral/Red
-      expense: '#FFD700',  // Gold
-      savings: '#32CD32'   // Green
+      pension: '#9370DB',           // Medium purple
+      social_security: '#4ECDC4',   // Teal
+      salary: '#FF69B4',            // Hot pink
+      self_employment: '#FFA500',   // Orange
+      other: '#FFFF00',             // Sky blue
+      tax: '#FF6B6B',               // Coral/Red
+      expense: '#FFD700',           // Gold
+      savings: '#32CD32'            // Green
     }
 
     // Draw links
@@ -196,9 +203,9 @@ export default function SankeyChart({ incomeBySource, expensesByCategory, federa
       .attr('fill', '#e2e8f0')
       .text((d: any) => {
         const totalIncome = sankeyNodes
-          .filter((n: any) => n.category === 'income')
+          .filter((n: any) => ['pension', 'social_security', 'salary', 'self_employment', 'other'].includes(n.category))
           .reduce((sum: number, n: any) => sum + (n.value || 0), 0)
-        const percentage = ((d.value / totalIncome) * 100).toFixed(0)
+        const percentage = totalIncome > 0 ? ((d.value / totalIncome) * 100).toFixed(0) : '0'
         return `${d.name} ($${(d.value / 1000).toFixed(0)}K, ${percentage}%)`
       })
   }, [incomeBySource, expensesByCategory, federalTax, stateTax, savings])
