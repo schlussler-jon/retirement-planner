@@ -38,6 +38,7 @@ export default function AccountsTab({ accounts, onChange }: Props) {
       monthly_withdrawal: 0,
       withdrawal_start_month: null,
       withdrawal_end_month: null,
+      receives_surplus: false,
     }])
   }
 
@@ -211,6 +212,25 @@ export default function AccountsTab({ accounts, onChange }: Props) {
                   placeholder="YYYY-MM"
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm" />
                 <p className="font-sans text-slate-600 text-xs mt-1">When to stop</p>
+              </div>
+            </div>
+            {/* row 5: receives surplus checkbox */}
+            <div className="mt-4 flex items-center gap-3">
+              <input 
+                type="checkbox" 
+                id={`receives-surplus-${idx}`}
+                checked={acct.receives_surplus || false}
+                onChange={e => update(idx, a => ({ ...a, receives_surplus: e.target.checked }))}
+                className="w-4 h-4 bg-slate-800 border-slate-700 rounded text-gold-500 focus:ring-gold-500 focus:ring-offset-slate-900"
+              />
+              <label htmlFor={`receives-surplus-${idx}`} className="font-sans text-white text-sm cursor-pointer">
+                Receives Monthly Surplus/Deficit
+              </label>
+              <div className="group relative">
+                <span className="text-slate-500 text-xs cursor-help">ⓘ</span>
+                <div className="invisible group-hover:visible absolute left-6 top-0 z-10 w-64 bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs text-slate-300">
+                  When checked, any monthly surplus will be added to this account, and any deficit will be withdrawn from it.
+                </div>
               </div>
             </div>
           </div>

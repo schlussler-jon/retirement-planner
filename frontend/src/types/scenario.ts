@@ -61,6 +61,7 @@ export interface InvestmentAccount {
   monthly_withdrawal: number       // >= 0
   withdrawal_start_month?: string | null      // YYYY-MM (optional)
   withdrawal_end_month?: string | null        // YYYY-MM (optional)
+  receives_surplus: boolean        // If true, surplus/deficit flows into/out of this account
   /** Computed by backend — read-only. */
   monthly_return_rate?: number
 }

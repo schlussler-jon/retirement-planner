@@ -249,7 +249,11 @@ class InvestmentAccount(BaseModel):
         pattern=r'^\d{4}-\d{2}$',
         description="Optional end month for withdrawals in YYYY-MM format"
     )
-    
+    receives_surplus: bool = Field(
+        default=False,
+        description="If True, monthly surplus/deficit flows into/out of this account"
+    )
+
     @field_validator('contribution_start_month', 'contribution_end_month', 
                      'withdrawal_start_month', 'withdrawal_end_month')
     @classmethod
