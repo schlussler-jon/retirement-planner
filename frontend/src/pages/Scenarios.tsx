@@ -1,22 +1,14 @@
 /**
  * Scenarios – list page
- *
- * Three-tab layout:
- *   LocalStorage – scenarios saved in browser (persists across refreshes)
- *   In Memory    – scenarios in backend memory (lost on restart)
- *   Google Drive – scenarios saved to Drive
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Link }     from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { useScenarios, useDeleteScenario, qk } from '@/api/hooks'
 import client from '@/api/client'
 import type { Scenario } from '@/types/scenario'
-import DrivePanel from '@/components/DrivePanel'
 import {
-  loadScenariosFromStorage,
-  deleteScenarioFromStorage,
   exportScenarioAsFile,
   importScenarioFromFile,
   saveScenarioToStorage
@@ -29,19 +21,10 @@ export default function Scenarios() {
   const scenarios      = scenariosQuery.data?.scenarios ?? []
 
   const [dupStatus,  setDupStatus]  = useState<Record<string, 'loading' | 'done' | 'error'>>({})
-  const [localScenarios, setLocalScenarios] = useState<Scenario[]>([])
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
-  // Load localStorage scenarios on mount
-  useEffect(() => {
-    setLocalScenarios(loadScenariosFromStorage())
-  }, [])
-
-  // ── sorted alphabetically ─────────────────────────────────────────────
-  const sortedMemory = [...scenarios].sort((a, b) =>
-    a.scenario_name.localeCompare(b.scenario_name)
-  )
-  const sortedLocal = [...localScenarios].sort((a, b) =>
+  // Sort scenarios alphabetically
+  const sortedScenarios = [...scenarios].sort((a, b) =>
     a.scenario_name.localeCompare(b.scenario_name)
   )
 
@@ -50,18 +33,10 @@ export default function Scenarios() {
     setTimeout(() => setDupStatus(prev => { const n = { ...prev }; delete n[id]; return n }), ms)
   }
 
-  const refreshLocal = () => setLocalScenarios(loadScenariosFromStorage())
-
   // ── handlers ──────────────────────────────────────────────────────────
   const handleDelete = async (id: string, name: string) => {
     if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
     await deleteMut.mutateAsync(id)
-  }
-
-  const handleDeleteLocal = (id: string, name: string) => {
-    if (!window.confirm(`Delete "${name}" from local storage?`)) return
-    deleteScenarioFromStorage(id)
-    refreshLocal()
   }
 
   const handleDuplicate = async (id: string, name: string) => {
@@ -100,13 +75,11 @@ export default function Scenarios() {
 
     try {
       const scenario = await importScenarioFromFile(file)
-      saveScenarioToStorage(scenario)
       
-      // Also load to backend so it can be edited
+      // Load to backend so it can be edited
       await client.post('/scenarios', scenario)
       await qc.invalidateQueries({ queryKey: qk.scenarios() })
       
-      refreshLocal()
       setImportStatus('success')
       setTimeout(() => setImportStatus('idle'), 3000)
     } catch (error) {
@@ -117,17 +90,6 @@ export default function Scenarios() {
 
     // Reset file input
     e.target.value = ''
-  }
-
-  const handleLoadToMemory = async (scenario: Scenario) => {
-    try {
-      await client.post('/scenarios', scenario)
-      await qc.invalidateQueries({ queryKey: qk.scenarios() })
-      alert(`"${scenario.scenario_name}" loaded to memory!`)
-    } catch (error) {
-      console.error('Failed to load to memory:', error)
-      alert('Failed to load scenario to memory')
-    }
   }
 
   // ── render ────────────────────────────────────────────────────────────
@@ -173,11 +135,10 @@ export default function Scenarios() {
 
       {/* list card */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-        {/* ── LocalStorage scenarios ── */}
-        {sortedLocal.length === 0 ? (
+        {sortedScenarios.length === 0 ? (
           <div className="px-6 py-16 text-center">
             <p className="font-sans text-slate-600 text-sm">
-              No scenarios in local storage yet.{' '}
+              No scenarios yet.{' '}
               <Link to="/scenarios/new" className="text-gold-500 hover:text-gold-400 transition-colors">
                 Create your first one
               </Link>
@@ -186,7 +147,7 @@ export default function Scenarios() {
           </div>
         ) : (
           <ul className="divide-y divide-slate-800">
-            {sortedLocal.map((sc) => (
+            {sortedScenarios.map((sc) => (
               <li key={sc.scenario_id}
                 className="px-6 py-5 flex items-center justify-between hover:bg-slate-800/30 transition-colors">
                 {/* left: name + id */}
@@ -194,7 +155,7 @@ export default function Scenarios() {
                   <p className="font-sans text-white text-sm font-medium">{sc.scenario_name}</p>
                   <p className="font-sans text-slate-600 text-xs mt-0.5 font-mono">{sc.scenario_id}</p>
                   <p className="font-sans text-slate-500 text-xs mt-1">
-                    {sc.people.length} people · {sc.income_streams.length} income streams · {sc.accounts.length} accounts
+                    {sc.people_count} people · {sc.income_streams_count} income streams · {sc.accounts_count} accounts
                   </p>
                 </div>
                 {/* right: actions */}
@@ -203,13 +164,22 @@ export default function Scenarios() {
                     className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
                     Open →
                   </Link>
+                  <Link to={`/scenarios/${sc.scenario_id}/results`}
+                    className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
+                    View Results →
+                  </Link>
+                  <button
+                    onClick={() => handleDuplicate(sc.scenario_id, sc.scenario_name)}
+                    className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
+                    Duplicate
+                  </button>
                   <button
                     onClick={() => handleExport(sc)}
                     className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
                     Export JSON
                   </button>
                   <button
-                    onClick={() => handleDeleteLocal(sc.scenario_id, sc.scenario_name)}
+                    onClick={() => handleDelete(sc.scenario_id, sc.scenario_name)}
                     className="font-sans text-slate-600 hover:text-danger text-xs transition-colors">
                     Delete
                   </button>

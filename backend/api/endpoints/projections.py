@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Optional
 import logging
 import time
 
-from models import Scenario, MonthlyProjection, TaxSummary, NetIncomeProjection
+from models import Scenario, MonthlyProjection, TaxSummary, NetIncomeProjection, InvestmentAccount
 from engine import ProjectionEngine, AnnualAggregator
 from tax import calculate_taxes_for_projection
 from budget import (
@@ -25,6 +25,56 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+def apply_surplus_to_accounts(
+    monthly_projections: List[MonthlyProjection],
+    net_income_projections: List[NetIncomeProjection],
+    accounts: List[InvestmentAccount]
+) -> None:
+    """
+    Apply monthly surplus/deficit to designated account balances.
+    
+    Modifies monthly_projections in-place by adjusting balances_by_account
+    to reflect cumulative surplus flowing into the receives_surplus account.
+    
+    Args:
+        monthly_projections: Monthly projection results (modified in-place)
+        net_income_projections: Net income projections with surplus calculated
+        accounts: Investment accounts from scenario
+    """
+    # Find the account that receives surplus
+    surplus_account = next(
+        (acc for acc in accounts if acc.receives_surplus),
+        None
+    )
+    
+    if not surplus_account:
+        # No account designated - surplus stays as uninvested cash
+        return
+
+    logger.info(f"Applying surplus to account: {surplus_account.name} (ID: {surplus_account.account_id})")
+    
+    # Track cumulative surplus across all months
+    cumulative_surplus = 0.0
+    
+    for monthly_proj, net_income_proj in zip(monthly_projections, net_income_projections):
+        # Add this month's surplus to cumulative total
+        cumulative_surplus += net_income_proj.surplus_deficit
+        
+        # Update the designated account's balance
+        account_id = surplus_account.account_id
+        if account_id in monthly_proj.balances_by_account:
+            monthly_proj.balances_by_account[account_id] += cumulative_surplus
+            logger.info(f"Month {monthly_proj.month}: Added ${cumulative_surplus:,.0f} to {surplus_account.name}. New balance: ${monthly_proj.balances_by_account[account_id]:,.0f}")
+        else:
+            logger.warning(f"Account {account_id} not found in balances for month {monthly_proj.month}")
+        
+        # Also update total investments
+        monthly_proj.total_investments += cumulative_surplus
+        
+        # Update tax bucket totals
+        bucket = surplus_account.tax_bucket
+        if bucket in monthly_proj.balances_by_tax_bucket:
+            monthly_proj.balances_by_tax_bucket[bucket] += cumulative_surplus
 
 class ProjectionRequest(BaseModel):
     """Request model for projection calculation."""
@@ -72,6 +122,7 @@ async def calculate_projection(
         500: Calculation error
     """
     # Get scenario
+    logger.info(f"=== PROJECTION ENDPOINT CALLED for scenario: {scenario_id} ===")
     scenario = scenarios_db.get(scenario_id)
     if scenario is None:
         raise HTTPException(
@@ -125,6 +176,16 @@ async def calculate_projection(
         
         logger.info(f"Calculated net income for {len(net_income_projections)} months")
         
+        # Apply surplus/deficit to designated account
+        apply_surplus_to_accounts(
+            monthly_projections,
+            net_income_projections,
+            scenario.accounts
+        )
+        
+        logger.info("Applied surplus/deficit to designated account")
+        
+        # Generate annual summaries        
         # Generate annual summaries
         aggregator = AnnualAggregator(monthly_projections)
         annual_summaries = aggregator.aggregate()
@@ -234,7 +295,14 @@ async def quick_projection(scenario_id: str):
             tax_summaries,
             spending_amounts
         )
-        
+
+        # Apply surplus/deficit to designated account
+        apply_surplus_to_accounts(
+            monthly_projections,
+            net_income_projections,
+            scenario.accounts
+        )
+            
         # Get summary only
         financial_summary = get_financial_summary(net_income_projections)
         

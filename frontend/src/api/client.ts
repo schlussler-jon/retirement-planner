@@ -9,7 +9,9 @@
 import axios from 'axios'
 
 const client = axios.create({
-  baseURL: 'https://retirement-planner-production.up.railway.app/api',
+  baseURL: window.location.hostname === 'localhost' 
+  ? 'http://localhost:8000/api'
+  : 'https://retirement-planner-production.up.railway.app/api',
   timeout: 30_000,            // 30 s — projections can take a moment
   withCredentials: true,      // send HttpOnly session cookie on every request
   headers: {
