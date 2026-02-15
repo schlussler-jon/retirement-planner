@@ -90,8 +90,12 @@ export default function TaxBucketChart({ accounts }: Props) {
             contentStyle={{ 
               backgroundColor: '#1e293b', 
               border: '1px solid #475569',
-              borderRadius: '8px'
+              borderRadius: '8px',
+              color: '#fff',
+              fontSize: '11px'
             }}
+            labelStyle={{ color: '#e2e8f0' }}
+            itemStyle={{ color: '#fff' }}
           />
           <Legend 
             formatter={(value, entry: any) => `${value} (${entry.payload.bucket}) - ${formatCurrency(entry.payload.value)}`}
