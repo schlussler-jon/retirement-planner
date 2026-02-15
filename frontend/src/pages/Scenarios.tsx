@@ -28,7 +28,6 @@ export default function Scenarios() {
   const qc             = useQueryClient()
   const scenarios      = scenariosQuery.data?.scenarios ?? []
 
-  const [activeTab,  setActiveTab]  = useState<'local' | 'memory'>('local')
   const [dupStatus,  setDupStatus]  = useState<Record<string, 'loading' | 'done' | 'error'>>({})
   const [localScenarios, setLocalScenarios] = useState<Scenario[]>([])
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -102,6 +101,11 @@ export default function Scenarios() {
     try {
       const scenario = await importScenarioFromFile(file)
       saveScenarioToStorage(scenario)
+      
+      // Also load to backend so it can be edited
+      await client.post('/scenarios', scenario)
+      await qc.invalidateQueries({ queryKey: qk.scenarios() })
+      
       refreshLocal()
       setImportStatus('success')
       setTimeout(() => setImportStatus('idle'), 3000)
@@ -167,141 +171,53 @@ export default function Scenarios() {
         </div>
       </div>
 
-      {/* tab strip */}
-      <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 mb-4">
-        {(['local', 'memory'] as const).map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)}
-            className={`
-              flex-1 font-sans text-xs font-semibold px-3 py-2 rounded-lg
-              transition-colors duration-150
-              ${activeTab === tab
-                ? 'bg-slate-800 text-gold-500'
-                : 'text-slate-500 hover:text-slate-300'
-              }
-            `}>
-            {tab === 'local' ? 'LocalStorage' : 'In Memory'}
-          </button>
-        ))}
-      </div>
-
       {/* list card */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
-
-        {/* ── LocalStorage tab ── */}
-        {activeTab === 'local' && (
-          sortedLocal.length === 0 ? (
-            <div className="px-6 py-16 text-center">
-              <p className="font-sans text-slate-600 text-sm">
-                No scenarios in local storage yet.{' '}
-                <Link to="/scenarios/new" className="text-gold-500 hover:text-gold-400 transition-colors">
-                  Create your first one
-                </Link>
-                {' '}or import a JSON file.
-              </p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-slate-800">
-              {sortedLocal.map((sc) => (
-                <li key={sc.scenario_id}
-                  className="px-6 py-5 flex items-center justify-between hover:bg-slate-800/30 transition-colors">
-
-                  {/* left: name + id */}
-                  <div>
-                    <p className="font-sans text-white text-sm font-medium">{sc.scenario_name}</p>
-                    <p className="font-sans text-slate-600 text-xs mt-0.5 font-mono">{sc.scenario_id}</p>
-                    <p className="font-sans text-slate-500 text-xs mt-1">
-                      {sc.people.length} people · {sc.income_streams.length} income streams · {sc.accounts.length} accounts
-                    </p>
-                  </div>
-
-                  {/* right: actions */}
-                  <div className="flex items-center gap-3 shrink-0">
-                    <Link to={`/scenarios/${sc.scenario_id}`}
-                      className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
-                      Open →
-                    </Link>
-                    <button
-                      onClick={() => handleLoadToMemory(sc)}
-                      className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
-                      Load to Memory
-                    </button>
-                    <button
-                      onClick={() => handleExport(sc)}
-                      className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
-                      Export JSON
-                    </button>
-                    <button
-                      onClick={() => handleDeleteLocal(sc.scenario_id, sc.scenario_name)}
-                      className="font-sans text-slate-600 hover:text-danger text-xs transition-colors">
-                      Delete
-                    </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )
+        {/* ── LocalStorage scenarios ── */}
+        {sortedLocal.length === 0 ? (
+          <div className="px-6 py-16 text-center">
+            <p className="font-sans text-slate-600 text-sm">
+              No scenarios in local storage yet.{' '}
+              <Link to="/scenarios/new" className="text-gold-500 hover:text-gold-400 transition-colors">
+                Create your first one
+              </Link>
+              {' '}or import a JSON file.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-slate-800">
+            {sortedLocal.map((sc) => (
+              <li key={sc.scenario_id}
+                className="px-6 py-5 flex items-center justify-between hover:bg-slate-800/30 transition-colors">
+                {/* left: name + id */}
+                <div>
+                  <p className="font-sans text-white text-sm font-medium">{sc.scenario_name}</p>
+                  <p className="font-sans text-slate-600 text-xs mt-0.5 font-mono">{sc.scenario_id}</p>
+                  <p className="font-sans text-slate-500 text-xs mt-1">
+                    {sc.people.length} people · {sc.income_streams.length} income streams · {sc.accounts.length} accounts
+                  </p>
+                </div>
+                {/* right: actions */}
+                <div className="flex items-center gap-3 shrink-0">
+                  <Link to={`/scenarios/${sc.scenario_id}`}
+                    className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
+                    Open →
+                  </Link>
+                  <button
+                    onClick={() => handleExport(sc)}
+                    className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
+                    Export JSON
+                  </button>
+                  <button
+                    onClick={() => handleDeleteLocal(sc.scenario_id, sc.scenario_name)}
+                    className="font-sans text-slate-600 hover:text-danger text-xs transition-colors">
+                    Delete
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
         )}
-
-        {/* ── In Memory tab ── */}
-        {activeTab === 'memory' && (
-          sortedMemory.length === 0 ? (
-            <div className="px-6 py-16 text-center">
-              <p className="font-sans text-slate-600 text-sm">
-                No scenarios yet.{' '}
-                <Link to="/scenarios/new" className="text-gold-500 hover:text-gold-400 transition-colors">
-                  Create your first one
-                </Link>
-              </p>
-            </div>
-          ) : (
-            <ul className="divide-y divide-slate-800">
-              {sortedMemory.map((sc) => {
-                const ds = dupStatus[sc.scenario_id]
-                return (
-                  <li key={sc.scenario_id}
-                    className="px-6 py-5 flex items-center justify-between hover:bg-slate-800/30 transition-colors">
-
-                    {/* left: name + id + counts */}
-                    <div>
-                      <p className="font-sans text-white text-sm font-medium">{sc.scenario_name}</p>
-                      <p className="font-sans text-slate-600 text-xs mt-0.5 font-mono">{sc.scenario_id}</p>
-                      <p className="font-sans text-slate-500 text-xs mt-1">
-                        {sc.people_count} people · {sc.income_streams_count} income streams · {sc.accounts_count} accounts
-                      </p>
-                    </div>
-
-                    {/* right: feedback + actions */}
-                    <div className="flex items-center gap-3 shrink-0">
-                      {ds === 'done'  && <span className="font-sans text-success text-xs">✓ Duplicated</span>}
-                      {ds === 'error' && <span className="font-sans text-danger  text-xs">Failed</span>}
-
-                      <Link to={`/scenarios/${sc.scenario_id}`}
-                        className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
-                        Open →
-                      </Link>
-                      <Link to={`/scenarios/${sc.scenario_id}/results`}
-                        className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
-                        Run →
-                      </Link>
-                      <button
-                        onClick={() => handleDuplicate(sc.scenario_id, sc.scenario_name)}
-                        disabled={ds === 'loading'}
-                        className="font-sans text-slate-500 hover:text-gold-400 disabled:text-slate-700 disabled:cursor-not-allowed text-xs transition-colors">
-                        {ds === 'loading' ? '…' : 'Duplicate'}
-                      </button>
-                      <button
-                        onClick={() => handleDelete(sc.scenario_id, sc.scenario_name)}
-                        className="font-sans text-slate-600 hover:text-danger text-xs transition-colors">
-                        Delete
-                      </button>
-                    </div>
-                  </li>
-                )
-              })}
-            </ul>
-          )
-        )}
-
       </div>
     </div>
   )

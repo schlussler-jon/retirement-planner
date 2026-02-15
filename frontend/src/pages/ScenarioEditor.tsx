@@ -125,16 +125,18 @@ export default function ScenarioEditor() {
   }, [scenario.scenario_name, isNew, idTouched])
 
   // ── save ────────────────────────────────────────────────────────────
-  const handleSave = async () => {
+const handleSave = async () => {
     setError(null)
     setSaved(false)
     setSaving(true)
     try {
       if (isNew) {
         await createMut.mutateAsync(scenario)
+        saveScenarioToStorage(scenario)  // Save to LocalStorage too
         navigate(`/scenarios/${scenario.scenario_id}`)
       } else {
         await updateMut.mutateAsync(scenario)
+        saveScenarioToStorage(scenario)  // Save to LocalStorage too
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
       }
@@ -145,7 +147,6 @@ export default function ScenarioEditor() {
       setSaving(false)
     }
   }
-
 
   const handleSaveToLocal = () => {
     saveScenarioToStorage(scenario)
@@ -253,16 +254,6 @@ export default function ScenarioEditor() {
             </span>
           )}
 
-          {/* Save to LocalStorage */}
-          {!isNew && (
-            <button
-              onClick={handleSaveToLocal}
-              className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors"
-            >
-              💾 Save to LocalStorage
-            </button>
-          )}
-
           {/* Export JSON */}
           {!isNew && (
             <button
@@ -308,7 +299,7 @@ export default function ScenarioEditor() {
               transition-colors duration-150
             "
           >
-            {saving ? 'Saving…' : isNew ? 'Create Scenario' : 'Save Changes'}
+            {saving ? 'Saving…' : isNew ? 'Create Scenario' : 'Save Scenario'}
           </button>
         </div>
       </div>
