@@ -49,7 +49,18 @@ export default function Help() {
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-8 py-8">
-        
+                  {/* Back Button */}
+          <div className="mb-4">
+            <a 
+              href="/scenarios" 
+              className="inline-flex items-center text-slate-400 hover:text-white transition-colors text-sm"
+            >
+              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Back to Scenarios
+            </a>
+          </div>
         <Section title="Getting Started" defaultOpen={true}>
           <h3 className="text-white text-base font-semibold mb-2">Welcome to the Retirement Planner!</h3>
           <p className="text-slate-300 text-sm mb-3">
