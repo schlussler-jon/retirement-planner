@@ -88,7 +88,7 @@ export default function ExpensePieChart({ categories }: Props) {
           />
           <Legend 
             formatter={(value, entry: any) => `${value} - ${formatCurrency(entry.payload.value)}`}
-            wrapperStyle={{ fontSize: '12px' }}
+            wrapperStyle={{ fontSize: '10px' }}
           />
         </PieChart>
       </ResponsiveContainer>

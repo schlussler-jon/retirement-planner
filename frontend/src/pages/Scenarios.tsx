@@ -28,7 +28,7 @@ export default function Scenarios() {
   const qc             = useQueryClient()
   const scenarios      = scenariosQuery.data?.scenarios ?? []
 
-  const [activeTab,  setActiveTab]  = useState<'local' | 'memory' | 'drive'>('local')
+  const [activeTab,  setActiveTab]  = useState<'local' | 'memory'>('local')
   const [dupStatus,  setDupStatus]  = useState<Record<string, 'loading' | 'done' | 'error'>>({})
   const [localScenarios, setLocalScenarios] = useState<Scenario[]>([])
   const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle')
@@ -169,7 +169,7 @@ export default function Scenarios() {
 
       {/* tab strip */}
       <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 mb-4">
-        {(['local', 'memory', 'drive'] as const).map(tab => (
+        {(['local', 'memory'] as const).map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`
               flex-1 font-sans text-xs font-semibold px-3 py-2 rounded-lg
@@ -179,7 +179,7 @@ export default function Scenarios() {
                 : 'text-slate-500 hover:text-slate-300'
               }
             `}>
-            {tab === 'local' ? 'LocalStorage' : tab === 'memory' ? 'In Memory' : 'Google Drive'}
+            {tab === 'local' ? 'LocalStorage' : 'In Memory'}
           </button>
         ))}
       </div>
@@ -302,10 +302,6 @@ export default function Scenarios() {
           )
         )}
 
-        {/* ── Google Drive tab ── */}
-        {activeTab === 'drive' && (
-          <DrivePanel memoryScenarios={scenarios} />
-        )}
       </div>
     </div>
   )

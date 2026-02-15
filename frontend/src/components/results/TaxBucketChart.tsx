@@ -95,7 +95,7 @@ export default function TaxBucketChart({ accounts }: Props) {
           />
           <Legend 
             formatter={(value, entry: any) => `${value} (${entry.payload.bucket}) - ${formatCurrency(entry.payload.value)}`}
-            wrapperStyle={{ fontSize: '12px' }}
+            wrapperStyle={{ fontSize: '10px' }}
           />
         </PieChart>
       </ResponsiveContainer>
