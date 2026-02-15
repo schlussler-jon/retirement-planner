@@ -55,7 +55,7 @@ export default function TaxBucketChart({ accounts }: Props) {
   if (data.length === 0) {
     return (
       <div className="bg-slate-900 rounded-lg p-6">
-        <h3 className="font-sans text-lg font-semibold text-white mb-4">Tax Bucket Distribution</h3>
+        <h3 className="font-sans text-lg font-semibold text-white mb-4">Beginning Portfolio Distribution</h3>
         <p className="font-sans text-slate-500 text-sm">No investment accounts</p>
       </div>
     )
@@ -63,7 +63,7 @@ export default function TaxBucketChart({ accounts }: Props) {
 
   return (
     <div className="bg-slate-900 rounded-lg p-6">
-      <h3 className="font-sans text-lg font-semibold text-white mb-2">Tax Bucket Distribution</h3>
+      <h3 className="font-sans text-lg font-semibold text-white mb-2">Beginning Portfolio Distribution</h3>
       <p className="font-sans text-slate-400 text-sm mb-4">Total: {formatCurrency(total)}</p>
       
       <ResponsiveContainer width="100%" height={300}>
