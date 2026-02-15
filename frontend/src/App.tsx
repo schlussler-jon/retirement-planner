@@ -18,6 +18,7 @@ import Home                             from '@/pages/Home'
 import Scenarios                        from '@/pages/Scenarios'
 import ScenarioEditor                   from '@/pages/ScenarioEditor'
 import ProjectionResults                from '@/pages/ProjectionResults'
+import Help from '@/pages/Help'
 import ExecutiveSummary                from '@/pages/ExecutiveSummary'
 import Compare                          from '@/pages/Compare'
 
@@ -51,6 +52,7 @@ export default function App() {
             element={<ProtectedRoute><Layout><ExecutiveSummary /></Layout></ProtectedRoute>} />
 
           {/* ── 404 ── */}
+          <Route path="/help" element={<Help />} />
           <Route path="*"
             element={
               <div className="min-h-screen bg-slate-950 flex items-center justify-center">
