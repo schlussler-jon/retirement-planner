@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { sankey, sankeyLinkHorizontal } from 'd3-sankey'
 import { select } from 'd3-selection'
 
@@ -25,6 +25,7 @@ type IncomeStreamType = 'pension' | 'social_security' | 'salary' | 'self_employm
 
 export default function SankeyChart({ incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null)
 
   useEffect(() => {
     if (!svgRef.current) return
@@ -164,7 +165,7 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       savings: '#32CD32'            // Green
     }
 
-    // Draw links
+// Draw links
     svg.append('g')
       .selectAll('path')
       .data(sankeyLinks)
@@ -177,8 +178,21 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       .attr('stroke-width', (d: any) => Math.max(1, d.width))
       .attr('fill', 'none')
       .attr('opacity', 0.3)
+      .style('cursor', 'pointer')
+      .on('mouseenter', (event: any, d: any) => {
+        const sourceNode = sankeyNodes[d.source.index]
+        const targetNode = sankeyNodes[d.target.index]
+        const content = `${sourceNode.name} → ${targetNode.name}: $${(d.value / 1000).toFixed(0)}K`
+        setTooltip({ x: event.clientX, y: event.clientY, content })
+      })
+      .on('mousemove', (event: any) => {
+        setTooltip(prev => prev ? { ...prev, x: event.clientX, y: event.clientY } : null)
+      })
+      .on('mouseleave', () => {
+        setTooltip(null)
+      })
 
-    // Draw nodes
+// Draw nodes
     svg.append('g')
       .selectAll('rect')
       .data(sankeyNodes)
@@ -189,6 +203,21 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       .attr('width', (d: any) => d.x1 - d.x0)
       .attr('fill', (d: any) => colorMap[d.category || 'income'] || '#999')
       .attr('opacity', 0.8)
+      .style('cursor', 'pointer')
+      .on('mouseenter', (event: any, d: any) => {
+        const totalIncome = sankeyNodes
+          .filter((n: any) => ['pension', 'social_security', 'salary', 'self_employment', 'other'].includes(n.category))
+          .reduce((sum: number, n: any) => sum + (n.value || 0), 0)
+        const percentage = totalIncome > 0 ? ((d.value / totalIncome) * 100).toFixed(0) : '0'
+        const content = `${d.name}: $${(d.value / 1000).toFixed(0)}K (${percentage}%)`
+        setTooltip({ x: event.clientX, y: event.clientY, content })
+      })
+      .on('mousemove', (event: any) => {
+        setTooltip(prev => prev ? { ...prev, x: event.clientX, y: event.clientY } : null)
+      })
+      .on('mouseleave', () => {
+        setTooltip(null)
+      })
 
     // Draw labels
     svg.append('g')
@@ -210,13 +239,38 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       })
   }, [incomeBySource, expensesByCategory, federalTax, stateTax, savings])
 
-  return (
-    <div className="bg-slate-900 rounded-lg p-6">
-      <h3 className="font-sans text-lg font-semibold text-white mb-2">Cash Flow</h3>
-      <p className="font-sans text-slate-400 text-sm mb-4">Where your money comes from and where it goes</p>
-      <div className="overflow-x-auto">
-        <svg ref={svgRef}></svg>
+return (
+    <>
+      <div className="bg-slate-900 rounded-lg p-6">
+        <h3 className="font-sans text-lg font-semibold text-white mb-2">Cash Flow</h3>
+        <p className="font-sans text-slate-400 text-sm mb-4">Where your money comes from and where it goes</p>
+        <div className="overflow-x-auto">
+          <svg ref={svgRef}></svg>
+        </div>
       </div>
-    </div>
+      
+      {/* Tooltip */}
+      {tooltip && (
+        <div
+          style={{
+            position: 'fixed',
+            left: tooltip.x + 10,
+            top: tooltip.y + 10,
+            background: '#1e293b',
+            border: '1px solid #334155',
+            borderRadius: '8px',
+            padding: '8px 12px',
+            color: '#fff',
+            fontSize: '13px',
+            fontWeight: 600,
+            pointerEvents: 'none',
+            zIndex: 1000,
+            boxShadow: '0 4px 16px rgba(0,0,0,0.5)'
+          }}
+        >
+          {tooltip.content}
+        </div>
+      )}
+    </>
   )
 }
