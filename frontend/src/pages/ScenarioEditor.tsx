@@ -12,7 +12,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQueryClient }                                                      from '@tanstack/react-query'
-import { useScenario, useCreateScenario, useUpdateScenario, useSaveToDrive, useScenarios, useValidateScenario, qk } from '@/api/hooks'
+import { useScenario, useCreateScenario, useUpdateScenario, useScenarios, useValidateScenario, qk } from '@/api/hooks'
 import { saveScenarioToStorage, exportScenarioAsFile } from '@/utils/storage'
 import client                                                                   from '@/api/client'
 import { parseValidationError } from '@/utils/errorParser'
@@ -90,7 +90,6 @@ export default function ScenarioEditor() {
   const scenarioQuery  = useScenario(id ?? '', !isNew)
   const createMut      = useCreateScenario()
   const updateMut      = useUpdateScenario()
-  const saveDriveMut   = useSaveToDrive()
   const validateMut    = useValidateScenario()
   const scenariosQuery = useScenarios()
   const qc             = useQueryClient()
@@ -101,8 +100,6 @@ export default function ScenarioEditor() {
   const [saved,              setSaved]              = useState(false)
   const [error,              setError]              = useState<string | null>(null)
   const [idTouched,          setIdTouched]          = useState(false)
-  const [driveSaving,        setDriveSaving]        = useState(false)
-  const [driveSaved,         setDriveSaved]         = useState(false)
   const [dupLoading,         setDupLoading]         = useState(false)
   const [validating,         setValidating]         = useState(false)
   const [validationErrors,   setValidationErrors]   = useState<string[]>([])
@@ -149,21 +146,6 @@ export default function ScenarioEditor() {
     }
   }
 
-  // ── save to drive ──────────────────────────────────────────────────────
-  const handleSaveToDrive = async () => {
-    setError(null)
-    setDriveSaved(false)
-    setDriveSaving(true)
-    try {
-      await saveDriveMut.mutateAsync(scenario)
-      setDriveSaved(true)
-      setTimeout(() => setDriveSaved(false), 3000)
-    } catch (e: any) {
-      setError(e?.response?.data?.detail ?? 'Failed to save to Google Drive.')
-    } finally {
-      setDriveSaving(false)
-    }
-  }
 
   const handleSaveToLocal = () => {
     saveScenarioToStorage(scenario)
@@ -271,17 +253,6 @@ export default function ScenarioEditor() {
             </span>
           )}
 
-          {/* Save to Drive – edit mode only */}
-          {!isNew && (
-            <button
-              onClick={handleSaveToDrive}
-              disabled={driveSaving}
-              className="font-sans text-slate-500 hover:text-gold-400 disabled:text-slate-700 disabled:cursor-not-allowed text-sm transition-colors"
-            >
-              {driveSaving ? '☁ Saving…' : '☁ Save to Drive'}
-            </button>
-          )}
-
           {/* Save to LocalStorage */}
           {!isNew && (
             <button
@@ -351,11 +322,6 @@ export default function ScenarioEditor() {
       {saved && (
         <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 mb-4">
           <p className="font-sans text-success text-sm">✓ Changes saved successfully.</p>
-        </div>
-      )}
-      {driveSaved && (
-        <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 mb-4">
-          <p className="font-sans text-success text-sm">✓ Saved to Google Drive.</p>
         </div>
       )}
       {validationPassed && (
