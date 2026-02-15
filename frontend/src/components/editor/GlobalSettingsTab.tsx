@@ -9,6 +9,12 @@
 import type { GlobalSettings } from '@/types/scenario'
 import { US_STATES }            from '@/types/scenario'
 
+// States with implemented tax calculations or no state income tax
+const SUPPORTED_STATE_CODES = [
+  'AZ', 'CA', 'CO',                         // Implemented state taxes
+  'AK', 'FL', 'NV', 'NH', 'SD', 'TN', 'TX', 'WA', 'WY'  // No state income tax
+]
+
 interface Props {
   settings: GlobalSettings
   onChange: (s: GlobalSettings) => void
@@ -70,9 +76,10 @@ export default function GlobalSettingsTab({ settings, onChange }: Props) {
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">Residence State</label>
           <select value={settings.residence_state} onChange={e => onChange({ ...settings, residence_state: e.target.value })}
             className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer">
-            {US_STATES.map(s => <option key={s.code} value={s.code}>{s.name} ({s.code})</option>)}
+{US_STATES.filter(s => SUPPORTED_STATE_CODES.includes(s.code)).map(s => <option key={s.code} value={s.code}>{s.name} ({s.code})</option>)}
+
           </select>
-          <p className="font-sans text-slate-600 text-xs mt-1">Used for state income tax calculations.</p>
+          <p className="font-sans text-slate-600 text-xs mt-1">Showing states with tax support (AZ, CA, CO) and no-income-tax states.</p>
         </div>
       </div>
     </div>
