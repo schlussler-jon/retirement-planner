@@ -3,9 +3,6 @@ Analysis endpoint.
 
 Generates AI-powered financial analysis for scenarios.
 """
-import os
-import sys
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 import logging
@@ -18,9 +15,8 @@ from budget import (
     calculate_net_income_projections,
     get_financial_summary,
 )
-from services.ai_analyzer import generate_financial_analysis
+from ...services.ai_analyzer import generate_financial_analysis  # Relative import - go up 3 levels
 from .scenarios import scenarios_db
-
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
