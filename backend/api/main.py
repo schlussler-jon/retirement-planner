@@ -3,6 +3,10 @@ Main FastAPI application.
 
 This is the REST API that wraps the retirement planning calculation engine.
 """
+from dotenv import load_dotenv
+load_dotenv()  # Load .env file
+
+import os
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +18,7 @@ from .endpoints import scenarios, projections, health, auth, drive
 from auth.oauth import configure_oauth
 from auth.config import get_oauth_settings
 from starlette.middleware.sessions import SessionMiddleware
+from .endpoints import scenarios, projections, health, auth, drive, analysis
 
 # Configure logging
 logging.basicConfig(
@@ -68,7 +73,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(scenarios.router, prefix="/api", tags=["Scenarios"])
 app.include_router(projections.router, prefix="/api", tags=["Projections"])
 app.include_router(drive.router, prefix="/api/drive", tags=["Google Drive"])
-
+app.include_router(analysis.router, prefix="/api", tags=["Analysis"])
 
 @app.on_event("startup")
 async def startup_event():

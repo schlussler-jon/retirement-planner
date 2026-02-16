@@ -20,6 +20,7 @@ class OAuthSettings(BaseSettings):
     google_client_secret: str = ""
     google_redirect_uri: str = "http://localhost:8000/api/auth/callback"
     frontend_url: str = "http://localhost:3000"  # Frontend URL for OAuth redirects
+    openai_api_key: str = ""  # Add this line
 
     
     # OAuth Scopes

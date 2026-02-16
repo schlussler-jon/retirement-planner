@@ -5,7 +5,7 @@
  */
 
 import { useParams, Link } from 'react-router-dom'
-import { useProjection, useScenario } from '@/api/hooks'
+import { useProjection, useScenario, useAnalysis } from '@/api/hooks'
 import ExpensePieChart from '@/components/results/ExpensePieChart'
 import TaxBucketChart from '@/components/results/TaxBucketChart'
 import SankeyChart from '@/components/results/SankeyChart'
@@ -17,6 +17,7 @@ export default function ExecutiveSummary() {
   const { id = '' } = useParams()
   const { data: scenario, isLoading: scenarioLoading } = useScenario(id)
   const { data: projection, isLoading: projectionLoading } = useProjection(id, true)
+  const { data: analysis, isLoading: analysisLoading } = useAnalysis(id)
 
   if (scenarioLoading || projectionLoading) {
     return (
@@ -259,52 +260,33 @@ export default function ExecutiveSummary() {
           />
         </div>
 
-        {/* Section 4: Analysis & Insights */}
+{/* Section 4: AI-Powered Analysis */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
           <h2 className="font-sans text-xl font-semibold text-white mb-4">
             Financial Analysis
           </h2>
           
-          <div className="space-y-4">
-            {/* Portfolio Health */}
-            <div>
-              <h3 className="font-sans text-sm font-semibold text-gold-500 mb-2">
-                ✓ Portfolio Health
-              </h3>
-              <p className="font-sans text-slate-300 text-sm leading-relaxed">
-                Your portfolio is projected to grow from {fmt(startingPortfolio)} to {fmt(endingPortfolio)} 
-                over {totalYears} years, representing a {growthPercent.toFixed(1)}% increase. With {summary.months_in_surplus} months 
-                in surplus out of {totalMonths} total months ({((summary.months_in_surplus / totalMonths) * 100).toFixed(0)}%), 
-                your plan demonstrates strong financial sustainability.
-              </p>
+          {analysisLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold-500"></div>
+              <span className="ml-3 text-slate-400">Generating CFP-level analysis...</span>
             </div>
-
-            {/* Cash Flow Analysis */}
-            <div>
-              <h3 className="font-sans text-sm font-semibold text-gold-500 mb-2">
-                ✓ Cash Flow Analysis
-              </h3>
-              <p className="font-sans text-slate-300 text-sm leading-relaxed">
-                Your cumulative surplus of {fmt(summary.total_surplus_deficit)} indicates healthy cash flow 
-                management. On average, you're generating {fmt(summary.average_monthly_surplus_deficit)} in 
-                monthly surplus, which provides a cushion for unexpected expenses and accelerates portfolio growth.
-              </p>
+          ) : analysis?.analysis ? (
+            <div className="prose prose-invert prose-slate max-w-none">
+              <div 
+                className="text-slate-300 text-sm leading-relaxed space-y-4"
+                dangerouslySetInnerHTML={{ 
+                  __html: analysis.analysis
+                    .replace(/\*\*(.*?)\*\*/g, '<strong class="text-gold-500">$1</strong>')
+                    .replace(/### (.*?)$/gm, '<h3 class="text-white text-base font-semibold mt-6 mb-3">$1</h3>')
+                    .replace(/- (.*?)$/gm, '<li class="ml-4">$1</li>')
+                    .replace(/\n\n/g, '</p><p class="mt-4">')
+                }}
+              />
             </div>
-
-            {/* Tax Strategy */}
-            {scenario.accounts.length > 0 && (
-              <div>
-                <h3 className="font-sans text-sm font-semibold text-gold-500 mb-2">
-                  → Tax Diversification Opportunity
-                </h3>
-                <p className="font-sans text-slate-300 text-sm leading-relaxed">
-                  Review your tax bucket distribution to optimize withdrawal strategies in retirement. 
-                  Consider balancing contributions across taxable, tax-deferred, and Roth accounts to maximize 
-                  tax flexibility during retirement years.
-                </p>
-              </div>
-            )}
-          </div>
+          ) : (
+            <p className="text-slate-400 text-sm">Analysis unavailable. Please check your configuration.</p>
+          )}
         </div>
 
       </div>

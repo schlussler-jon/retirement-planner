@@ -271,3 +271,15 @@ export function useDeleteFromDrive() {
     },
   })
 }
+// AI Analysis
+export function useAnalysis(scenarioId: string) {
+  return useQuery({
+    queryKey: ['analysis', scenarioId],
+    queryFn: async () => {
+      const response = await client.post(`/scenarios/${scenarioId}/analysis`)
+      return response.data
+    },
+    enabled: !!scenarioId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  })
+}
