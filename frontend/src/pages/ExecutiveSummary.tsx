@@ -9,6 +9,7 @@ import { useProjection, useScenario } from '@/api/hooks'
 import ExpensePieChart from '@/components/results/ExpensePieChart'
 import TaxBucketChart from '@/components/results/TaxBucketChart'
 import SankeyChart from '@/components/results/SankeyChart'
+import AccountPictorialChart from '@/components/results/AccountPictorialChart'
 
 const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
 
@@ -231,9 +232,18 @@ export default function ExecutiveSummary() {
         </div>
 
         {/* Section 3: Visual Suite */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          <ExpensePieChart categories={scenario.budget_settings?.categories || []} />
-          <TaxBucketChart accounts={scenario.accounts || []} />
+        <div className="grid grid-cols-1 gap-6 mb-6">
+          {/* Pictorial Account Chart */}
+          <AccountPictorialChart 
+            accounts={scenario.accounts}
+            balances={monthly.length > 0 ? monthly[monthly.length - 1].balances_by_account : {}}
+          />
+          
+          {/* Existing Charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ExpensePieChart categories={scenario.budget_settings?.categories || []} />
+            <TaxBucketChart accounts={scenario.accounts || []} />
+          </div>
         </div>
 
         {/* Cash Flow Sankey */}
