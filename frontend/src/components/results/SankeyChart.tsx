@@ -20,10 +20,11 @@ interface Props {
   federalTax: number
   stateTax: number
   savings: number
+  surplusAccountName?: string
 }
 type IncomeStreamType = 'pension' | 'social_security' | 'salary' | 'self_employment' | 'other'
 
-export default function SankeyChart({ incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings }: Props) {
+export default function SankeyChart({ incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings, surplusAccountName }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null)
 
@@ -116,8 +117,8 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
     // Savings
     if (savings > 0) {
       const savingsIndex = nodeIndex
-      nodes.push({ name: 'Net Savings', category: 'savings' })
-      nodeIndex++
+     nodes.push({ name: surplusAccountName || 'Net Savings', category: 'savings' })
+     nodeIndex++
 
       const totalIncome = Object.values(incomeBySource).reduce((sum, v) => sum + v, 0)
       Object.entries(incomeBySource).forEach(([source, amount]) => {

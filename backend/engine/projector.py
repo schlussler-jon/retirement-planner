@@ -1,11 +1,11 @@
 """
 Main projection engine.
 
-Combines timeline, income, and account processors to generate
-month-by-month financial projections.
+Combines timeline, income, account, tax, and budget processors to generate
+month-by-month financial projections with surplus reinvestment.
 """
 
-from typing import List, Optional
+from typing import List
 from models import (
     Scenario,
     MonthlyProjection,
@@ -14,6 +14,7 @@ from models import (
 from .timeline import Timeline
 from .income import IncomeProcessor
 from .accounts import AccountProcessor
+from budget import BudgetProcessor
 
 
 class ProjectionEngine:
@@ -23,8 +24,10 @@ class ProjectionEngine:
     This is the core of the retirement planning system. It:
     1. Iterates through each month in the timeline
     2. Processes income (with COLA adjustments)
-    3. Processes accounts (contributions, withdrawals, growth)
-    4. Records monthly snapshots
+    3. Processes accounts (contributions, withdrawals)
+    4. Deposits prior month's surplus into designated account
+    5. Applies growth to all accounts (including deposited surplus)
+    6. Records monthly snapshots
     
     The engine is deterministic and stateless - it can be run
     multiple times on the same scenario with identical results.
@@ -48,6 +51,10 @@ class ProjectionEngine:
         # Initialize processors
         self.income_processor = IncomeProcessor(scenario.income_streams)
         self.account_processor = AccountProcessor(scenario.accounts)
+        self.budget_processor = BudgetProcessor(
+            scenario.budget_settings,
+            scenario.people
+        )
         
         # Track filing status changes (due to death dates)
         self.filing_status_tracker = FilingStatusTracker(
@@ -62,10 +69,18 @@ class ProjectionEngine:
         This is the main entry point. It iterates through all months
         and generates a MonthlyProjection for each one.
         
+        NOTE: Surplus calculation uses a 1-month lag. This means:
+        - Month 1: No surplus deposited (we don't have prior month data yet)
+        - Month 2+: Prior month's surplus deposited before growth
+        
+        This allows surplus to compound properly without complex in-month
+        tax calculations.
+        
         Returns:
             List of MonthlyProjection objects, one per month
         """
         monthly_projections: List[MonthlyProjection] = []
+        prior_month_surplus = 0.0  # Track surplus from previous month
         
         # Iterate through all months
         for year_month, month_num in self.timeline.months():
@@ -79,9 +94,10 @@ class ProjectionEngine:
             )
             total_income = self.income_processor.get_total_income(income_by_stream)
             
-            # Process accounts (contributions, withdrawals, growth)
+            # Process accounts (contributions, withdrawals, surplus deposit, growth)
+            # Prior month's surplus is deposited BEFORE growth is applied
             withdrawals_by_account, balances_by_account = (
-                self.account_processor.process_month(year_month)
+                self.account_processor.process_month(year_month, prior_month_surplus)
             )
             
             # Calculate totals
@@ -113,6 +129,17 @@ class ProjectionEngine:
             )
             
             monthly_projections.append(projection)
+            
+            # Calculate THIS month's surplus for use in NEXT month
+            # (This is a simplified estimate - actual taxes calculated later)
+            monthly_spending = self.budget_processor.process_month(year_month, month_num)
+            
+            # Rough tax estimate: 20% of gross cashflow
+            # (Actual taxes calculated separately for reporting)
+            estimated_taxes = total_gross_cashflow * 0.20
+            
+            # Surplus = Income + Withdrawals - Taxes - Spending
+            prior_month_surplus = total_gross_cashflow - estimated_taxes - monthly_spending
         
         return monthly_projections
     

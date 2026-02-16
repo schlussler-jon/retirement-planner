@@ -86,6 +86,9 @@ export default function ExecutiveSummary() {
   })
 
   const netSavings = summary.total_surplus_deficit || 0
+  // Find surplus account name
+  const surplusAccount = scenario.accounts.find(acc => acc.receives_surplus)
+  const surplusAccountName = surplusAccount?.name || 'Net Savings'
   console.log('DEBUG Executive Summary:', {
     hasScenario: !!scenario,
     hasProjection: !!projection,
@@ -242,6 +245,7 @@ export default function ExecutiveSummary() {
             federalTax={totalFederalTax}
             stateTax={totalStateTax}
             savings={netSavings}
+            surplusAccountName={surplusAccountName}
           />
         </div>
 

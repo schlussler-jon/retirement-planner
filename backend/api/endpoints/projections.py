@@ -10,7 +10,7 @@ from typing import List, Dict, Any, Optional
 import logging
 import time
 
-from models import Scenario, MonthlyProjection, TaxSummary, NetIncomeProjection, InvestmentAccount
+from models import Scenario, MonthlyProjection, TaxSummary, NetIncomeProjection
 from engine import ProjectionEngine, AnnualAggregator
 from tax import calculate_taxes_for_projection
 from budget import (
@@ -25,56 +25,6 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
-def apply_surplus_to_accounts(
-    monthly_projections: List[MonthlyProjection],
-    net_income_projections: List[NetIncomeProjection],
-    accounts: List[InvestmentAccount]
-) -> None:
-    """
-    Apply monthly surplus/deficit to designated account balances.
-    
-    Modifies monthly_projections in-place by adjusting balances_by_account
-    to reflect cumulative surplus flowing into the receives_surplus account.
-    
-    Args:
-        monthly_projections: Monthly projection results (modified in-place)
-        net_income_projections: Net income projections with surplus calculated
-        accounts: Investment accounts from scenario
-    """
-    # Find the account that receives surplus
-    surplus_account = next(
-        (acc for acc in accounts if acc.receives_surplus),
-        None
-    )
-    
-    if not surplus_account:
-        # No account designated - surplus stays as uninvested cash
-        return
-
-    logger.info(f"Applying surplus to account: {surplus_account.name} (ID: {surplus_account.account_id})")
-    
-    # Track cumulative surplus across all months
-    cumulative_surplus = 0.0
-    
-    for monthly_proj, net_income_proj in zip(monthly_projections, net_income_projections):
-        # Add this month's surplus to cumulative total
-        cumulative_surplus += net_income_proj.surplus_deficit
-        
-        # Update the designated account's balance
-        account_id = surplus_account.account_id
-        if account_id in monthly_proj.balances_by_account:
-            monthly_proj.balances_by_account[account_id] += cumulative_surplus
-            logger.info(f"Month {monthly_proj.month}: Added ${cumulative_surplus:,.0f} to {surplus_account.name}. New balance: ${monthly_proj.balances_by_account[account_id]:,.0f}")
-        else:
-            logger.warning(f"Account {account_id} not found in balances for month {monthly_proj.month}")
-        
-        # Also update total investments
-        monthly_proj.total_investments += cumulative_surplus
-        
-        # Update tax bucket totals
-        bucket = surplus_account.tax_bucket
-        if bucket in monthly_proj.balances_by_tax_bucket:
-            monthly_proj.balances_by_tax_bucket[bucket] += cumulative_surplus
 
 class ProjectionRequest(BaseModel):
     """Request model for projection calculation."""
@@ -105,7 +55,7 @@ async def calculate_projection(
     Calculate complete retirement projection for a scenario.
     
     This endpoint runs the complete calculation pipeline:
-    1. Monthly projections (income, accounts, COLA, growth)
+    1. Monthly projections (income, accounts, surplus reinvestment, growth)
     2. Tax calculations (SSA, federal, state)
     3. Budget processing (inflation, survivor reduction)
     4. Net income calculations (surplus/deficit)
@@ -135,13 +85,13 @@ async def calculate_projection(
     try:
         logger.info(f"Starting projection for scenario: {scenario_id}")
         
-        # Phase 2: Run monthly projection
+        # Run monthly projection (now includes surplus reinvestment)
         engine = ProjectionEngine(scenario)
         monthly_projections = engine.run()
         
         logger.info(f"Generated {len(monthly_projections)} monthly projections")
         
-        # Phase 3: Calculate taxes
+        # Calculate taxes
         tax_summaries = calculate_taxes_for_projection(
             monthly_projections,
             scenario.income_streams,
@@ -152,7 +102,7 @@ async def calculate_projection(
         
         logger.info(f"Calculated taxes for {len(tax_summaries)} years")
         
-        # Phase 4a: Process budget
+        # Process budget
         budget_processor = BudgetProcessor(
             scenario.budget_settings,
             scenario.people
@@ -167,7 +117,7 @@ async def calculate_projection(
         
         logger.info(f"Processed budget for {len(spending_amounts)} months")
         
-        # Phase 4b: Calculate net income
+        # Calculate net income
         net_income_projections = calculate_net_income_projections(
             monthly_projections,
             tax_summaries,
@@ -176,16 +126,6 @@ async def calculate_projection(
         
         logger.info(f"Calculated net income for {len(net_income_projections)} months")
         
-        # Apply surplus/deficit to designated account
-        apply_surplus_to_accounts(
-            monthly_projections,
-            net_income_projections,
-            scenario.accounts
-        )
-        
-        logger.info("Applied surplus/deficit to designated account")
-        
-        # Generate annual summaries        
         # Generate annual summaries
         aggregator = AnnualAggregator(monthly_projections)
         annual_summaries = aggregator.aggregate()
@@ -265,7 +205,7 @@ async def quick_projection(scenario_id: str):
     start_time = time.time()
     
     try:
-        # Run minimal projection
+        # Run projection (includes surplus reinvestment)
         engine = ProjectionEngine(scenario)
         monthly_projections = engine.run()
         
@@ -294,13 +234,6 @@ async def quick_projection(scenario_id: str):
             monthly_projections,
             tax_summaries,
             spending_amounts
-        )
-
-        # Apply surplus/deficit to designated account
-        apply_surplus_to_accounts(
-            monthly_projections,
-            net_income_projections,
-            scenario.accounts
         )
             
         # Get summary only

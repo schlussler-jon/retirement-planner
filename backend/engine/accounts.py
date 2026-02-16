@@ -144,7 +144,8 @@ class AccountProcessor:
     Applies operations in the correct order:
     1. Contributions
     2. Withdrawals
-    3. Growth
+    3. Surplus deposit (if designated account exists)
+    4. Growth
     """
     
     def __init__(self, accounts: list[InvestmentAccount]):
@@ -160,17 +161,48 @@ class AccountProcessor:
             for account in accounts
         }
     
-    def process_month(self, year_month: str) -> tuple[Dict[str, float], Dict[str, float]]:
+    def deposit_surplus(self, surplus_amount: float) -> None:
+        """
+        Deposit surplus into the designated account.
+        
+        This happens BEFORE growth is applied, so the surplus earns returns
+        starting this month.
+        
+        Args:
+            surplus_amount: Amount to deposit (can be negative for deficit)
+        """
+        # Find the account that receives surplus
+        surplus_account_id = None
+        for account in self.accounts:
+            if account.receives_surplus:
+                surplus_account_id = account.account_id
+                break
+        
+        if not surplus_account_id:
+            # No account designated - surplus not deposited
+            return
+        
+        # Add surplus to the account balance (before growth is applied)
+        state = self.states[surplus_account_id]
+        state.balance += surplus_amount
+        
+        # Prevent negative balances
+        if state.balance < 0:
+            state.balance = 0.0
+    
+    def process_month(self, year_month: str, prior_month_surplus: float = 0.0) -> tuple[Dict[str, float], Dict[str, float]]:
         """
         Process all accounts for a single month.
         
         CRITICAL ORDER (must be followed exactly):
         1. Apply contributions to all accounts (if within date range)
         2. Apply withdrawals to all accounts (if within date range - these become income)
-        3. Apply growth to all accounts
+        3. Apply prior month's surplus to designated account
+        4. Apply growth to all accounts
         
         Args:
             year_month: Current month in YYYY-MM format
+            prior_month_surplus: Surplus from previous month to deposit before growth
         
         Returns:
             Tuple of:
@@ -191,7 +223,11 @@ class AccountProcessor:
             withdrawal = state.apply_withdrawal(year_month)
             withdrawals[account.account_id] = withdrawal
         
-        # Step 3: Growth
+        # Step 3: Deposit prior month's surplus (before growth!)
+        if prior_month_surplus != 0.0:
+            self.deposit_surplus(prior_month_surplus)
+        
+        # Step 4: Growth
         for account in self.accounts:
             state = self.states[account.account_id]
             state.apply_growth()
