@@ -247,7 +247,7 @@ export default function ExecutiveSummary() {
         </div>
 
         {/* Cash Flow Sankey */}
-        <div className="mb-6">
+        <div className="mb-6 max-w-6xl mx-auto">
           <SankeyChart
             incomeBySource={incomeBySource}
             incomeSourceTypes={incomeSourceTypes}

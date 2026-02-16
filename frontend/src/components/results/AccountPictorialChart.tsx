@@ -32,6 +32,11 @@ export default function AccountPictorialChart({ accounts, balances }: Props) {
   })).filter(item => item.value > 0)
     .sort((a, b) => b.value - a.value)
 
+  // Mobile responsive sizing
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 640
+  const coinHeight = isMobile ? 8 : 12
+  const coinWidth = isMobile ? 60 : 80
+
   // Tax bucket colors for coins
   const getCoinColor = (taxBucket: string) => {
     switch (taxBucket) {
@@ -67,9 +72,7 @@ export default function AccountPictorialChart({ accounts, balances }: Props) {
     numCoins: number, 
     colors: ReturnType<typeof getCoinColor> 
   }) => {
-    const coinHeight = 12 // Height of each coin in pixels
-    const coinWidth = 80 // Width of coin
-    const stackHeight = Math.min(numCoins * coinHeight, 400) // Max height
+    const stackHeight = Math.min(numCoins * coinHeight, 400) // Calculate inside component
 
     return (
       <div className="flex flex-col items-center">
@@ -172,7 +175,7 @@ export default function AccountPictorialChart({ accounts, balances }: Props) {
       </div>
 
       {/* Coin stacks */}
-      <div className="flex justify-center items-end gap-8 flex-wrap min-h-[300px] py-4">
+      <div className="flex justify-center items-end gap-4 sm:gap-6 lg:gap-8 flex-wrap min-h-[200px] sm:min-h-[300px] py-4">
         {chartData.map((account, index) => (
           <CoinStack
             key={index}
