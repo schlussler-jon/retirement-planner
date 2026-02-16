@@ -67,8 +67,17 @@ def generate_financial_analysis(
     total_income = sum(mp.total_gross_cashflow for mp in monthly_projections)
     effective_tax_rate = (total_taxes / total_income * 100) if total_income > 0 else 0
     
+# Get person names for personalization
+    person_names = [person.name for person in scenario.people]
+    if len(person_names) == 1:
+        greeting = f"{person_names[0]}"
+    elif len(person_names) == 2:
+        greeting = f"{person_names[0]} and {person_names[1]}"
+    else:
+        greeting = "your household"
+    
     # Build prompt for GPT-4
-    prompt = f"""You are a Certified Financial Planner analyzing a retirement scenario. Generate a professional analysis following this EXACT structure:
+    prompt = f"""You are a Certified Financial Planner analyzing a retirement scenario for {greeting}. Generate a professional analysis following this EXACT structure:
 
 CLIENT SCENARIO:
 - Planning horizon: {total_years} years
@@ -99,10 +108,13 @@ REQUIREMENTS:
 4. **Future State Visualization**: Life in 15 years if they follow vs don't follow advice
 
 CONSTRAINTS:
-- No fluff or boilerplate
-- Use CFP terminology
+- Address the analysis directly to {greeting} (use "you" and "your")
+- Write in plain, conversational language - avoid technical jargon
+- Explain concepts simply (e.g., "money in retirement accounts" instead of "tax-deferred vehicles")
+- Use everyday analogies and relatable comparisons
+- Be direct and actionable - focus on what they should DO
 - Maximum 400 words
-- Format in markdown
+- Format in clean markdown WITHOUT code fences (no ```markdown tags)
 
 Generate analysis:"""
 
@@ -110,13 +122,17 @@ Generate analysis:"""
         response = client.chat.completions.create(
             model="gpt-4o",
             messages=[
-                {"role": "system", "content": "You are a Certified Financial Planner."},
+                {"role": "system", "content": "You are a trusted financial advisor explaining retirement planning to a friend. Use simple, clear language without jargon. Be warm but professional."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
             max_tokens=800
         )
-        return response.choices[0].message.content
+        # Strip markdown code fences if present
+        analysis = response.choices[0].message.content
+        analysis = analysis.replace('```markdown', '').replace('```', '').strip()
+        
+        return analysis
     except Exception as e:
         return f"""# Analysis Unavailable
 
