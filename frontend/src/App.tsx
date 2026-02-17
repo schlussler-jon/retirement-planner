@@ -52,7 +52,7 @@ export default function App() {
             element={<ProtectedRoute><Layout><ExecutiveSummary /></Layout></ProtectedRoute>} />
 
           {/* ── 404 ── */}
-          <Route path="/help" element={<Help />} />
+          <Route path="/help" element={<ProtectedRoute><Layout><Help /></Layout></ProtectedRoute>} />
           <Route path="*"
             element={
               <div className="min-h-screen bg-slate-950 flex items-center justify-center">
