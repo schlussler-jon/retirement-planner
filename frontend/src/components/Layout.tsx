@@ -52,15 +52,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <nav className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2.5 group">
               {/* Inline SVG icon — matches favicon */}
-              <svg width="28" height="28" viewBox="0 0 32 32" className="shrink-0">
-                <rect width="32" height="32" rx="6" fill="#0f1623" stroke="#c9a84c" strokeWidth="1.5"/>
-                <path d="M8 24 L16 8 L24 24" stroke="#c9a84c" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="16" cy="20" r="2.5" fill="#c9a84c" opacity="0.6"/>
-              </svg>
-              <span className="font-display text-lg font-semibold text-gold-500 tracking-wide group-hover:text-gold-400 transition-colors">
-                Retirement Planner
-              </span>
-            </Link>
+            <img src="/favicon.svg" alt="my-moneyplan.com" width="36" height="36" className="shrink-0 rounded-lg" />
+            <span className="font-display text-lg font-semibold tracking-wide group-hover:opacity-80 transition-opacity">
+              <span style={{color: '#c4b5fd', fontWeight: 300}}>my-</span>
+              <span style={{color: '#f59e0b', fontWeight: 800}}>money</span>
+              <span style={{color: '#a855f7', fontWeight: 800}}>plan</span>
+              <span style={{color: '#fbbf24', fontSize: '0.75em', fontWeight: 600}}>.com</span>
+            </span>            </Link>
 
             <div className="hidden sm:flex items-center gap-1">
               {NAV_LINKS.map(({ to, label }) => {
@@ -204,7 +202,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* ── footer ── */}
       <footer className="border-t border-slate-800 px-4 py-4 text-center">
         <p className="text-slate-600 text-xs font-sans">
-          Retirement Planner · All calculations are estimates · Not financial advice
+          my-moneyplan.com · All calculations are estimates · Not financial advice
         </p>
       </footer>
     </div>
