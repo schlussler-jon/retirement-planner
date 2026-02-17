@@ -1,5 +1,78 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="6" fill="#0f1623"/>
-  <path d="M8 24 L16 8 L24 24" stroke="#c9a84c" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle cx="16" cy="20" r="3" fill="#c9a84c" opacity="0.6"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b0764"/>
+      <stop offset="50%" style="stop-color:#6d28d9"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="goldBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="100%" style="stop-color:#d97706"/>
+    </linearGradient>
+    <linearGradient id="goldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#d97706"/>
+      <stop offset="100%" style="stop-color:#fde68a"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#iconBg)"/>
+
+  <!-- Radial glow -->
+  <radialGradient id="centerGlow" cx="50%" cy="60%" r="55%">
+    <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:0.25"/>
+    <stop offset="100%" style="stop-color:#3b0764;stop-opacity:0"/>
+  </radialGradient>
+  <rect width="512" height="512" rx="100" fill="url(#centerGlow)"/>
+
+  <!-- Grid lines -->
+  <line x1="72" y1="360" x2="440" y2="360" stroke="#6d28d9" stroke-width="2" opacity="0.4"/>
+  <line x1="72" y1="280" x2="440" y2="280" stroke="#6d28d9" stroke-width="2" opacity="0.3"/>
+  <line x1="72" y1="200" x2="440" y2="200" stroke="#6d28d9" stroke-width="2" opacity="0.2"/>
+
+  <!-- Bars -->
+  <rect x="85"  y="305" width="60" height="68"  rx="8" fill="url(#goldBar)" opacity="0.75"/>
+  <rect x="175" y="242" width="60" height="131" rx="8" fill="url(#goldBar)" opacity="0.85"/>
+  <rect x="265" y="172" width="60" height="201" rx="8" fill="url(#goldBar)" opacity="0.93"/>
+  <rect x="355" y="108" width="60" height="265" rx="8" fill="url(#goldBar)"/>
+
+  <!-- Trend line -->
+  <polyline
+    points="115,298 205,236 295,162 385,100"
+    fill="none"
+    stroke="url(#goldLine)"
+    stroke-width="10"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#glow)"/>
+
+  <!-- Dots -->
+  <circle cx="115" cy="298" r="11" fill="#fbbf24" filter="url(#glow)"/>
+  <circle cx="205" cy="236" r="11" fill="#fbbf24" filter="url(#glow)"/>
+  <circle cx="295" cy="162" r="11" fill="#fbbf24" filter="url(#glow)"/>
+  <circle cx="385" cy="100" r="16" fill="#fde68a" filter="url(#glow)"/>
+  <circle cx="385" cy="100" r="7"  fill="#ffffff"/>
+
+  <!-- Arrow -->
+  <polyline
+    points="366,82 385,66 404,82"
+    fill="none" stroke="#fde68a" stroke-width="9"
+    stroke-linecap="round" stroke-linejoin="round"
+    filter="url(#glow)"/>
+
+  <!-- Baseline -->
+  <line x1="68" y1="376" x2="444" y2="376" stroke="#a78bfa" stroke-width="3" opacity="0.7"/>
+
+  <!-- "my-moneyplan.com" text at bottom of icon -->
+  <text x="256" y="448" font-family="Arial, Helvetica, sans-serif"
+    font-size="32" font-weight="700" fill="#c4b5fd"
+    text-anchor="middle" letter-spacing="1">my-moneyplan.com</text>
+
 </svg>
