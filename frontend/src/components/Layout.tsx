@@ -52,13 +52,36 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <nav className="flex items-center gap-8">
             <Link to="/" className="flex items-center gap-2.5 group">
               {/* Inline SVG icon — matches favicon */}
-            <img src="/favicon.svg" alt="my-moneyplan.com" width="36" height="36" className="shrink-0 rounded-lg" />
-            <span className="font-display text-lg font-semibold tracking-wide group-hover:opacity-80 transition-opacity">
+              <svg width="36" height="36" viewBox="0 0 512 512" className="shrink-0 rounded-xl">
+              <defs>
+                <linearGradient id="navBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3b0764"/>
+                  <stop offset="100%" stopColor="#7c3aed"/>
+                </linearGradient>
+                <linearGradient id="navGold" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fbbf24"/>
+                  <stop offset="100%" stopColor="#d97706"/>
+                </linearGradient>
+              </defs>
+              <rect width="512" height="512" rx="100" fill="url(#navBg)"/>
+              <rect x="85"  y="305" width="60" height="68"  rx="8" fill="url(#navGold)" opacity="0.75"/>
+              <rect x="175" y="242" width="60" height="131" rx="8" fill="url(#navGold)" opacity="0.85"/>
+              <rect x="265" y="172" width="60" height="201" rx="8" fill="url(#navGold)" opacity="0.93"/>
+              <rect x="355" y="108" width="60" height="265" rx="8" fill="url(#navGold)"/>
+              <polyline points="115,298 205,236 295,162 385,100"
+                fill="none" stroke="#fbbf24" strokeWidth="10"
+                strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="385" cy="100" r="16" fill="#fde68a"/>
+              <circle cx="385" cy="100" r="7"  fill="#ffffff"/>
+              <line x1="68" y1="376" x2="444" y2="376" stroke="#a78bfa" strokeWidth="3" opacity="0.7"/>
+              </svg>
+              <span className="font-display text-lg font-semibold tracking-wide group-hover:opacity-80 transition-opacity">
               <span style={{color: '#c4b5fd', fontWeight: 300}}>my-</span>
               <span style={{color: '#f59e0b', fontWeight: 800}}>money</span>
               <span style={{color: '#a855f7', fontWeight: 800}}>plan</span>
               <span style={{color: '#fbbf24', fontSize: '0.75em', fontWeight: 600}}>.com</span>
-            </span>            </Link>
+              </span>
+            </Link>
 
             <div className="hidden sm:flex items-center gap-1">
               {NAV_LINKS.map(({ to, label }) => {
