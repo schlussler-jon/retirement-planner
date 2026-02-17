@@ -50,8 +50,22 @@ async def create_scenario(scenario_data: Dict[str, Any]):
     """
     try:
         # Parse and validate scenario
-        scenario = Scenario(**scenario_data)
+        # Add defaults for missing fields (backwards compatibility with older exports)
+        if 'global_settings' not in scenario_data:
+            scenario_data['global_settings'] = {
+                'projection_start_month': '2025-01',
+                'projection_end_year': 2055,
+                'residence_state': 'CA'
+            }
         
+        if 'tax_settings' not in scenario_data:
+            scenario_data['tax_settings'] = {
+                'filing_status': 'married_filing_jointly',
+                'standard_deduction_override': None
+            }
+        
+        # Parse and validate scenario
+        scenario = Scenario(**scenario_data)        
         # Validate references
         scenario.validate_references()
         
