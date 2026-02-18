@@ -38,3 +38,4 @@ types-python-dateutil==2.8.19.14
 python-dotenv
 openai
 python-dotenv
+python-multipart
