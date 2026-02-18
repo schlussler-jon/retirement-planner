@@ -70,6 +70,7 @@ async def auth_callback(request: Request, response: Response):
             key=settings.session_cookie_name,
             value=session_id,
             max_age=settings.session_max_age,
+            domain=".my-moneyplan.com",
             httponly=True,
             secure=True,        # Required for SameSite=None
             samesite='none'     # Allow cross-domain cookies
