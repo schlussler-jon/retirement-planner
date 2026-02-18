@@ -34,15 +34,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const userQuery    = useCurrentUser(statusQuery.data?.authenticated ?? false)
   const logoutMut    = useLogoutMutation()
 
-  const isAuthenticated = true  // Bypass auth - everyone is authenticated
+  const isAuthenticated = statusQuery.data?.authenticated ?? false
   const isLoading       = statusQuery.isLoading
 
   /** Kick off the OAuth dance — browser navigates away. */
   const login = useCallback(() => {
     // The backend's /api/auth/login returns a redirect to Google.
     // We open it in the current tab so the cookie lands on our origin.
-    window.location.href = 'https://retirement-planner-production.up.railway.app/api/auth/login'
-  }, [])
+    // Change from hardcoded production URL to dynamic
+    const apiBase = import.meta.env.PROD 
+      ? 'https://retirement-planner-production.up.railway.app'
+      : 'http://localhost:8000'
+    window.location.href = `${apiBase}/api/auth/login`
+    }, [])
 
   /** POST /api/auth/logout then wait for React Query to invalidate. */
   const logout = useCallback(async () => {
