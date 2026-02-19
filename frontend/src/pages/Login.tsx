@@ -63,17 +63,14 @@ export default function Login() {
 
       {/* ── card ── */}
       <div className="relative z-10 w-full max-w-md mx-auto px-6 animate-slide-up">
+
         {/* logo */}
         <div className="flex flex-col items-center gap-4 mb-10">
-          <svg width="56" height="56" viewBox="0 0 32 32">
-            <rect width="32" height="32" rx="6" fill="#141c2e" stroke="#c9a84c" strokeWidth="1.2"/>
-            <path d="M8 24 L16 8 L24 24" stroke="#c9a84c" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
-            <circle cx="16" cy="20" r="2.5" fill="#c9a84c" opacity="0.6"/>
-          </svg>
-
-          <h1 className="font-display text-4xl font-semibold text-white tracking-tight leading-none">
-            Retirement Planner
-          </h1>
+          <img
+            src="/mymoneyplan_logo_v3.svg"
+            alt="my-moneyplan.com"
+            className="w-full max-w-sm"
+          />
           <p className="font-sans text-slate-500 text-sm text-center leading-relaxed max-w-xs">
             Model your income, taxes, and spending across decades of retirement — with IRS-accurate calculations.
           </p>

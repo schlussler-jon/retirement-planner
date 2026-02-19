@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 180" width="660" height="180">
+  <defs>
+    <linearGradient id="iconBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b0764"/>
+      <stop offset="100%" style="stop-color:#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="goldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#d97706"/>
+      <stop offset="100%" style="stop-color:#fbbf24"/>
+    </linearGradient>
+    <linearGradient id="goldBar" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbbf24"/>
+      <stop offset="100%" style="stop-color:#d97706"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#4c1d95" flood-opacity="0.5"/>
+    </filter>
+  </defs>
+
+  <!-- ── Icon Block ── -->
+  <rect x="10" y="10" width="130" height="130" rx="24" fill="url(#iconBg)" filter="url(#shadow)"/>
+
+  <!-- Grid lines -->
+  <line x1="26" y1="105" x2="124" y2="105" stroke="#6d28d9" stroke-width="0.8" opacity="0.5"/>
+  <line x1="26" y1="85"  x2="124" y2="85"  stroke="#6d28d9" stroke-width="0.8" opacity="0.4"/>
+  <line x1="26" y1="65"  x2="124" y2="65"  stroke="#6d28d9" stroke-width="0.8" opacity="0.3"/>
+
+  <!-- Bars -->
+  <rect x="28"  y="88"  width="16" height="20" rx="2.5" fill="url(#goldBar)" opacity="0.80"/>
+  <rect x="50"  y="72"  width="16" height="36" rx="2.5" fill="url(#goldBar)" opacity="0.87"/>
+  <rect x="72"  y="54"  width="16" height="54" rx="2.5" fill="url(#goldBar)" opacity="0.93"/>
+  <rect x="94"  y="38"  width="16" height="70" rx="2.5" fill="url(#goldBar)"/>
+
+  <!-- Trend line -->
+  <polyline points="36,84 58,68 80,50 102,34"
+    fill="none" stroke="url(#goldLine)" stroke-width="3"
+    stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Dots -->
+  <circle cx="36"  cy="84" r="3.5" fill="#fbbf24" filter="url(#glow)"/>
+  <circle cx="58"  cy="68" r="3.5" fill="#fbbf24" filter="url(#glow)"/>
+  <circle cx="80"  cy="50" r="3.5" fill="#fbbf24" filter="url(#glow)"/>
+  <circle cx="102" cy="34" r="5"   fill="#fde68a" filter="url(#glow)"/>
+  <circle cx="102" cy="34" r="2.5" fill="#ffffff"/>
+
+  <!-- Arrow at peak -->
+  <polyline points="96,29 102,23 108,29"
+    fill="none" stroke="#fde68a" stroke-width="2.5"
+    stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+
+  <!-- Baseline -->
+  <line x1="22" y1="110" x2="128" y2="110" stroke="#a78bfa" stroke-width="1.5" opacity="0.6"/>
+
+  <!-- ── Wordmark ── -->
+  <!-- Use a single text element with tspan for precise color control, no gaps -->
+
+  <!-- Single text element - tspan ensures zero gap between words -->
+  <text x="158" y="88" font-family="Arial, Helvetica, sans-serif" font-size="46" letter-spacing="-1">
+    <tspan font-weight="300" fill="#c4b5fd">my-</tspan><tspan font-weight="800" fill="#f59e0b">money</tspan><tspan font-weight="800" fill="#a855f7">plan</tspan><tspan font-size="19" font-weight="600" fill="#fbbf24" baseline-shift="super">.com</tspan>
+  </text>
+
+  <!-- Tagline -->
+  <text x="158" y="118" font-family="Arial, Helvetica, sans-serif"
+    font-size="12" font-weight="400" fill="#a78bfa" letter-spacing="3.8">YOUR RETIREMENT, SIMPLIFIED</text>
+
+  <!-- Accent underline -->
+  <line x1="158" y1="128" x2="625" y2="128" stroke="url(#goldLine)" stroke-width="1.2" opacity="0.4"/>
+
+</svg>
