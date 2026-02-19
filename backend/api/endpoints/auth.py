@@ -30,6 +30,8 @@ async def login(request: Request):
     
     Redirects user to Google's OAuth consent screen.
     """
+    logger.info(f"Login initiated, cookies in request: {request.cookies}")
+
     if not settings.google_client_id:
         raise HTTPException(
             status_code=503,
@@ -49,6 +51,8 @@ async def auth_callback(request: Request):
     
     Google redirects here after user authorizes the app.
     """
+    logger.info(f"Callback received, cookies in request: {request.cookies}")
+    logger.info(f"Callback query params: {request.query_params}")
     try:
         google = get_google_oauth()
         
