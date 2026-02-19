@@ -30,11 +30,13 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
 // Auth status check
 const fetchAuthStatus = async () => {
-  const { data } = await axios.get('/api/auth/status', { withCredentials: true })
+  const { data } = await client.get('/auth/status')
   return data
 }
 
 // Token exchange
+import client from '@/api/client'
+
 const exchangeToken = async (token: string) => {
   const apiBase = import.meta.env.PROD 
     ? 'https://api.my-moneyplan.com'
