@@ -69,15 +69,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (token) {
       // Exchange token for session cookie
       exchangeToken(token)
-        .then(() => {
+        .then(async () => {
           // Remove token from URL
           params.delete('token')
           const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '')
           window.history.replaceState({}, '', newUrl)
-          
-          // Refresh auth status
-          queryClient.invalidateQueries({ queryKey: ['authStatus'] })
-          queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+    
+          // Refresh auth status and WAIT for it
+          await queryClient.invalidateQueries({ queryKey: ['authStatus'] })
+          await queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+          await queryClient.refetchQueries({ queryKey: ['authStatus'] })
         })
         .catch((err) => {
           console.error('Token exchange failed:', err)
