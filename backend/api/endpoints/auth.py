@@ -69,7 +69,7 @@ async def auth_callback(request: Request):
         user = GoogleUser(user_info)
         
         # Create session
-        session_id = create_session(user)
+        session_id = create_session(user, token.get('access_token'))
         
         # Generate one-time token for frontend exchange
         exchange_token = secrets.token_urlsafe(32)
