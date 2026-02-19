@@ -60,10 +60,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from starlette.middleware.sessions import SessionMiddleware
+
+# Session middleware for OAuth state
+
 app.add_middleware(
     SessionMiddleware,
     secret_key=get_oauth_settings().session_secret_key,
-    same_site='none',
+    same_site='lax',
     https_only=True
 )
 
