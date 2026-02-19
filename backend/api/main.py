@@ -14,11 +14,10 @@ from fastapi.responses import JSONResponse
 from typing import Dict, Any
 import logging
 
-from .endpoints import scenarios, projections, health, auth, drive
+from .endpoints import scenarios, projections, health, auth, drive, analysis
 from auth.oauth import configure_oauth
 from auth.config import get_oauth_settings
 from starlette.middleware.sessions import SessionMiddleware
-from .endpoints import scenarios, projections, health, auth, drive, analysis
 
 # Configure logging
 logging.basicConfig(
@@ -38,16 +37,14 @@ app = FastAPI(
 )
 
 # Configure CORS
-import os
-
-# Get frontend URL from environment, fallback to localhost for dev
 frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 allowed_origins = [
     "http://localhost:3000",
     "http://localhost:5173",
+    "https://www.my-moneyplan.com",  # Always include production origin
 ]
-# Add production frontend URL if it's set and different from localhost
-if frontend_url and not frontend_url.startswith("http://localhost"):
+# Also add FRONTEND_URL if it's set to something not already in the list
+if frontend_url and frontend_url not in allowed_origins:
     allowed_origins.append(frontend_url)
 
 logging.info(f"CORS allowed origins: {allowed_origins}")
@@ -60,10 +57,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from starlette.middleware.sessions import SessionMiddleware
-
 # Session middleware for OAuth state
-
 app.add_middleware(
     SessionMiddleware,
     secret_key=get_oauth_settings().session_secret_key,
@@ -78,6 +72,7 @@ app.include_router(scenarios.router, prefix="/api", tags=["Scenarios"])
 app.include_router(projections.router, prefix="/api", tags=["Projections"])
 app.include_router(drive.router, prefix="/api/drive", tags=["Google Drive"])
 app.include_router(analysis.router, prefix="/api", tags=["Analysis"])
+
 
 @app.on_event("startup")
 async def startup_event():

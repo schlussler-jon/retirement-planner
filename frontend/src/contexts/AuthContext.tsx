@@ -8,9 +8,9 @@
  *   • logout()        – POST /api/auth/logout
  */
 
-import React, { createContext, useContext, useCallback, useEffect } from 'react'
+import React, { createContext, useContext, useCallback, useEffect, useState } from 'react'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
-import axios from 'axios'
+import client from '@/api/client'
 
 interface User {
   email: string
@@ -34,114 +34,104 @@ const fetchAuthStatus = async () => {
   return data
 }
 
-// Token exchange
-import client from '@/api/client'
-
+// Token exchange — uses native fetch so we control credentials explicitly
 const exchangeToken = async (token: string) => {
-  const apiBase = import.meta.env.PROD 
+  const apiBase = import.meta.env.PROD
     ? 'https://api.my-moneyplan.com'
     : 'http://localhost:8000'
-  
+
   const response = await fetch(`${apiBase}/api/auth/exchange`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ token }),
-    credentials: 'include',  // EXPLICIT - this is the key
+    credentials: 'include',
   })
-  
-  if (!response.ok) {
-    throw new Error('Token exchange failed')
-  }
-  
-  return await response.json()
-}
-// Current user query
-const useCurrentUser = (enabled: boolean) => {
-  return useQuery({
-    queryKey: ['currentUser'],
-    queryFn: fetchAuthStatus,
-    enabled,
-    staleTime: 5 * 60 * 1000,
-  })
+
+  if (!response.ok) throw new Error('Token exchange failed')
+  return response.json()
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
-  
-  // Check for token in URL on mount
+
+  // Detect token synchronously on first render so ProtectedRoute sees
+  // isLoading=true from the very first paint — preventing a premature redirect.
+  const [isExchanging, setIsExchanging] = useState(() =>
+    new URLSearchParams(window.location.search).has('token')
+  )
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('token')
-    
-    if (token) {
-      // Exchange token for session cookie
-      exchangeToken(token)
-        .then(() => {
-        // Remove token from URL
-        params.delete('token')
-        const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '')
-        window.history.replaceState({}, '', newUrl)
-    
-        // Force full page reload - browser will check auth naturally
-        window.location.reload()
+    if (!token) return
+
+    // Strip token from URL immediately (before async work)
+    params.delete('token')
+    const newUrl =
+      window.location.pathname + (params.toString() ? '?' + params.toString() : '')
+    window.history.replaceState({}, '', newUrl)
+
+    exchangeToken(token)
+      .then(async () => {
+        // Wipe any stale cached auth state, then fetch a fresh status
+        queryClient.removeQueries({ queryKey: ['authStatus'] })
+        await queryClient.fetchQuery({
+          queryKey: ['authStatus'],
+          queryFn: fetchAuthStatus,
         })
-        .catch((err) => {
-          console.error('Token exchange failed:', err)
-          // Remove token from URL even on failure
-          params.delete('token')
-          const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '')
-          window.history.replaceState({}, '', newUrl)
-        })
-    }
+      })
+      .catch((err) => {
+        console.error('Token exchange failed:', err)
+      })
+      .finally(() => {
+        setIsExchanging(false)
+      })
   }, [queryClient])
-  
+
+  // Don't run the auth status query while exchange is in flight —
+  // prevents a stale `authenticated: false` from racing the exchange.
   const statusQuery = useQuery({
     queryKey: ['authStatus'],
     queryFn: fetchAuthStatus,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
+    enabled: !isExchanging,
   })
 
-  const userQuery = useCurrentUser(statusQuery.data?.authenticated ?? false)
-
   const isAuthenticated = statusQuery.data?.authenticated ?? false
-  const isLoading = statusQuery.isLoading
+  const isLoading = isExchanging || statusQuery.isLoading
+
+  // User object lives directly on the status response
+  const user: User | null = statusQuery.data?.user ?? null
 
   const login = useCallback(() => {
-    const apiBase = import.meta.env.PROD 
+    const apiBase = import.meta.env.PROD
       ? 'https://api.my-moneyplan.com'
       : 'http://localhost:8000'
     window.location.href = `${apiBase}/api/auth/login`
   }, [])
 
-  /** POST /api/auth/logout then wait for React Query to invalidate. */
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await axios.post('/api/auth/logout', {}, { withCredentials: true })
+      await client.post('/auth/logout')
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['authStatus'] })
-      queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+      // Wipe auth state so all protected routes redirect immediately
+      queryClient.removeQueries({ queryKey: ['authStatus'] })
     },
   })
 
-  const logout = useCallback(() => {
-    logoutMutation.mutate()
-  }, [logoutMutation])
+  const logout = useCallback(() => logoutMutation.mutate(), [logoutMutation])
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, user: userQuery.data, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, user, login, logout }}>
       {children}
     </AuthContext.Provider>
   )
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
-  }
-  return context
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  return ctx
 }
