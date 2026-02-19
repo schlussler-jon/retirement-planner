@@ -1,21 +1,26 @@
 """
 Authentication endpoints.
 
-Handles Google OAuth login/logout flow.
+Handles Google OAuth login/logout flow with token exchange.
 """
 
 from fastapi import APIRouter, Request, HTTPException, Response
 from fastapi.responses import RedirectResponse, JSONResponse
 from typing import Optional
 import logging
+import time
+import secrets
 
-from auth.oauth import get_google_oauth, GoogleUser, configure_oauth
+from auth.oauth import get_google_oauth, GoogleUser
 from auth.session import create_session, get_user_from_session, delete_session
 from auth.config import get_oauth_settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 settings = get_oauth_settings()
+
+# Token store for one-time exchange tokens
+_token_store = {}
 
 
 @router.get("/login")
@@ -38,7 +43,7 @@ async def login(request: Request):
 
 
 @router.get("/callback")
-async def auth_callback(request: Request, response: Response):
+async def auth_callback(request: Request):
     """
     OAuth callback endpoint.
     
@@ -50,83 +55,113 @@ async def auth_callback(request: Request, response: Response):
         # Exchange authorization code for access token
         token = await google.authorize_access_token(request)
         
-        # Get user info
+        # Get user info from Google
         user_info = token.get('userinfo')
         if not user_info:
-            # Fetch user info if not in token
-            user_info = await google.userinfo(token=token)
+            resp = await google.get('https://www.googleapis.com/oauth2/v3/userinfo', token=token)
+            user_info = resp.json()
         
         # Create user object
-        user = GoogleUser(user_info)
+        user = GoogleUser(
+            id=user_info['sub'],
+            email=user_info['email'],
+            name=user_info.get('name', ''),
+            picture=user_info.get('picture', '')
+        )
         
         # Create session
-        session_id = create_session(user, token['access_token'])
+        session_id = create_session(user)
         
-        # Redirect to frontend (production or local)
+        # Generate one-time token for frontend exchange
+        exchange_token = secrets.token_urlsafe(32)
+        
+        # Store token temporarily (5 min expiry)
+        _token_store[exchange_token] = {
+            'session_id': session_id,
+            'expires': time.time() + 300  # 5 minutes
+        }
+        
+        # Clean up expired tokens
+        current_time = time.time()
+        expired_tokens = [t for t, data in _token_store.items() if data['expires'] < current_time]
+        for t in expired_tokens:
+            del _token_store[t]
+        
+        # Redirect to frontend with token
         frontend_url = settings.frontend_url
-        logger.info(f"Redirecting to frontend: {frontend_url}")
-        response = RedirectResponse(url=frontend_url)
-        response.set_cookie(
-            key=settings.session_cookie_name,
-            value=session_id,
-            max_age=settings.session_max_age,
-            domain=".my-moneyplan.com",
-            httponly=True,
-            secure=True,        # Required for SameSite=None
-            samesite='none'     # Allow cross-domain cookies
-        )        
-        logger.info(f"User logged in: {user.email}")
+        redirect_url = f"{frontend_url}?token={exchange_token}"
+        logger.info(f"User logged in: {user.email}, redirecting with exchange token")
         
-        return response
+        return RedirectResponse(url=redirect_url)
         
     except Exception as e:
-        logger.error(f"OAuth callback error: {e}", exc_info=True)
-        raise HTTPException(status_code=400, detail="Authentication failed")
+        logger.error(f"OAuth callback error: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
+
+
+@router.post("/exchange")
+async def exchange_token(request: Request, response: Response):
+    """
+    Exchange one-time token for session cookie.
+    
+    Frontend calls this after OAuth redirect with token from URL.
+    """
+    body = await request.json()
+    token = body.get('token')
+    
+    if not token:
+        raise HTTPException(status_code=400, detail="Token required")
+    
+    token_data = _token_store.get(token)
+    
+    if not token_data:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    
+    # Check expiry
+    if time.time() > token_data['expires']:
+        del _token_store[token]
+        raise HTTPException(status_code=401, detail="Token expired")
+    
+    # Get session ID
+    session_id = token_data['session_id']
+    
+    # Delete token (one-time use)
+    del _token_store[token]
+    
+    # Set session cookie (now same-origin request, works!)
+    response.set_cookie(
+        key=settings.session_cookie_name,
+        value=session_id,
+        max_age=settings.session_max_age,
+        domain=".my-moneyplan.com",
+        httponly=True,
+        secure=True,
+        samesite='none'
+    )
+    
+    logger.info("Token exchanged successfully, session cookie set")
+    
+    return {"success": True}
 
 
 @router.post("/logout")
 async def logout(request: Request, response: Response):
     """
-    Logout current user.
+    Log out the current user.
     
-    Clears session cookie and removes session data.
+    Deletes the session and clears the cookie.
     """
-    # Get session ID from cookie
     session_id = request.cookies.get(settings.session_cookie_name)
     
     if session_id:
-        # Delete session
         delete_session(session_id)
-        
-        logger.info("User logged out")
     
-    # Clear cookie
-    response = JSONResponse(content={"message": "Logged out successfully"})
-    response.delete_cookie(settings.session_cookie_name)
+    response.delete_cookie(
+        key=settings.session_cookie_name,
+        domain=".my-moneyplan.com"
+    )
     
-    return response
-
-
-@router.get("/me")
-async def get_current_user(request: Request):
-    """
-    Get current authenticated user.
-    
-    Returns user information if logged in.
-    """
-    # Get session ID from cookie
-    session_id = request.cookies.get(settings.session_cookie_name)
-    
-    if not session_id:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    # Get user from session
-    user = get_user_from_session(session_id)
-    
-    if not user:
-        raise HTTPException(status_code=401, detail="Session expired")
-    
-    return user.to_dict()
+    return {"message": "Logged out successfully"}
 
 
 @router.get("/status")
