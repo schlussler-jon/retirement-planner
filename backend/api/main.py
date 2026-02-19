@@ -67,7 +67,7 @@ from starlette.middleware.sessions import SessionMiddleware
 app.add_middleware(
     SessionMiddleware,
     secret_key=get_oauth_settings().session_secret_key,
-    same_site='lax',
+    same_site='none',
     https_only=True
 )
 
