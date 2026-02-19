@@ -1,57 +1,127 @@
 /**
  * AuthContext
  *
- * Wraps the entire app.  Any component can call useAuth() to get:
- *   • isAuthenticated   – boolean
- *   • user              – { email, name, picture } | null
- *   • isLoading         – true while the first status check is in-flight
- *   • login()           – redirects to Google OAuth
- *   • logout()          – clears session
+ * Provides authentication state globally.
+ *   • isAuthenticated – true if user has valid session
+ *   • user            – user profile data
+ *   • login()         – redirects to Google OAuth
+ *   • logout()        – POST /api/auth/logout
  */
 
-import React, { createContext, useContext, useCallback } from 'react'
-import { useAuthStatus, useCurrentUser, useLogoutMutation } from '@/api/hooks'
-import type { AuthUser } from '@/types/api'
+import React, { createContext, useContext, useCallback, useEffect } from 'react'
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import axios from 'axios'
 
-// ─── Shape ────────────────────────────────────────────────────────────────
+interface User {
+  email: string
+  name: string
+  picture: string
+}
 
 interface AuthContextValue {
   isAuthenticated: boolean
   isLoading: boolean
-  user: AuthUser | null | undefined
+  user: User | null
   login: () => void
-  logout: () => Promise<void>
+  logout: () => void
 }
-
-// ─── Context ──────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 
-// ─── Provider ─────────────────────────────────────────────────────────────
+// Auth status check
+const fetchAuthStatus = async () => {
+  const { data } = await axios.get('/api/auth/status', { withCredentials: true })
+  return data
+}
+
+// Token exchange
+const exchangeToken = async (token: string) => {
+  const apiBase = import.meta.env.PROD 
+    ? 'https://api.my-moneyplan.com'
+    : 'http://localhost:8000'
+  
+  const { data } = await axios.post(
+    `${apiBase}/api/auth/exchange`, 
+    { token },
+    { withCredentials: true }
+  )
+  return data
+}
+
+// Current user query
+const useCurrentUser = (enabled: boolean) => {
+  return useQuery({
+    queryKey: ['currentUser'],
+    queryFn: fetchAuthStatus,
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const statusQuery  = useAuthStatus()
-  const userQuery    = useCurrentUser(statusQuery.data?.authenticated ?? false)
-  const logoutMut    = useLogoutMutation()
+  const queryClient = useQueryClient()
+  
+  // Check for token in URL on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('token')
+    
+    if (token) {
+      // Exchange token for session cookie
+      exchangeToken(token)
+        .then(() => {
+          // Remove token from URL
+          params.delete('token')
+          const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '')
+          window.history.replaceState({}, '', newUrl)
+          
+          // Refresh auth status
+          queryClient.invalidateQueries({ queryKey: ['authStatus'] })
+          queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+        })
+        .catch((err) => {
+          console.error('Token exchange failed:', err)
+          // Remove token from URL even on failure
+          params.delete('token')
+          const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '')
+          window.history.replaceState({}, '', newUrl)
+        })
+    }
+  }, [queryClient])
+  
+  const statusQuery = useQuery({
+    queryKey: ['authStatus'],
+    queryFn: fetchAuthStatus,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: true,
+  })
+
+  const userQuery = useCurrentUser(statusQuery.data?.authenticated ?? false)
 
   const isAuthenticated = statusQuery.data?.authenticated ?? false
-  const isLoading       = statusQuery.isLoading
+  const isLoading = statusQuery.isLoading
 
-  /** Kick off the OAuth dance — browser navigates away. */
   const login = useCallback(() => {
-    // The backend's /api/auth/login returns a redirect to Google.
-    // We open it in the current tab so the cookie lands on our origin.
-    // Change from hardcoded production URL to dynamic
     const apiBase = import.meta.env.PROD 
-      ? 'https://retirement-planner-production.up.railway.app'
+      ? 'https://api.my-moneyplan.com'
       : 'http://localhost:8000'
     window.location.href = `${apiBase}/api/auth/login`
-    }, [])
+  }, [])
 
   /** POST /api/auth/logout then wait for React Query to invalidate. */
-  const logout = useCallback(async () => {
-    await logoutMut.mutateAsync()
-  }, [logoutMut])
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await axios.post('/api/auth/logout', {}, { withCredentials: true })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['authStatus'] })
+      queryClient.invalidateQueries({ queryKey: ['currentUser'] })
+    },
+  })
+
+  const logout = useCallback(() => {
+    logoutMutation.mutate()
+  }, [logoutMutation])
 
   return (
     <AuthContext.Provider value={{ isAuthenticated, isLoading, user: userQuery.data, login, logout }}>
@@ -60,12 +130,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext)
-  if (!ctx) {
-    throw new Error('useAuth() must be called inside <AuthProvider>')
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider')
   }
-  return ctx
+  return context
 }
