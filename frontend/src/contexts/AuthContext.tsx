@@ -35,16 +35,11 @@ const fetchAuthStatus = async () => {
 }
 
 // Token exchange
+import client from '@/api/client'
+
 const exchangeToken = async (token: string) => {
-  const apiBase = import.meta.env.PROD 
-    ? 'https://api.my-moneyplan.com'
-    : 'http://localhost:8000'
-  
-  const { data } = await axios.post(
-    `${apiBase}/api/auth/exchange`, 
-    { token },
-    { withCredentials: true }
-  )
+  // Use the configured client that has withCredentials
+  const { data } = await client.post('/auth/exchange', { token })
   return data
 }
 
