@@ -66,12 +66,7 @@ async def auth_callback(request: Request):
             user_info = resp.json()
         
         # Create user object
-        user = GoogleUser(
-            id=user_info['sub'],
-            email=user_info['email'],
-            name=user_info.get('name', ''),
-            picture=user_info.get('picture', '')
-        )
+        user = GoogleUser(user_info)
         
         # Create session
         session_id = create_session(user)
