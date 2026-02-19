@@ -35,14 +35,26 @@ const fetchAuthStatus = async () => {
 }
 
 // Token exchange
-import client from '@/api/client'
-
 const exchangeToken = async (token: string) => {
-  // Use the configured client that has withCredentials
-  const { data } = await client.post('/auth/exchange', { token })
-  return data
+  const apiBase = import.meta.env.PROD 
+    ? 'https://api.my-moneyplan.com'
+    : 'http://localhost:8000'
+  
+  const response = await fetch(`${apiBase}/api/auth/exchange`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ token }),
+    credentials: 'include',  // EXPLICIT - this is the key
+  })
+  
+  if (!response.ok) {
+    throw new Error('Token exchange failed')
+  }
+  
+  return await response.json()
 }
-
 // Current user query
 const useCurrentUser = (enabled: boolean) => {
   return useQuery({
