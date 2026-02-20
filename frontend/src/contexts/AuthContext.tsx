@@ -5,7 +5,7 @@
  *   • isAuthenticated – true if user has valid session
  *   • user            – user profile data
  *   • login()         – redirects to Google OAuth
- *   • logout()        – POST /api/auth/logout
+ *   • logout()        – POST /api/auth/logout then redirect to /login
  */
 
 import React, { createContext, useContext, useCallback, useEffect, useState } from 'react'
@@ -116,8 +116,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await client.post('/auth/logout')
     },
     onSuccess: () => {
-      // Wipe auth state so all protected routes redirect immediately
-      queryClient.removeQueries({ queryKey: ['authStatus'] })
+      // Wipe all cached data — scenarios, projections, everything
+      queryClient.clear()
+      // Hard redirect to login — works on all browsers and mobile Safari
+      window.location.href = '/login'
+    },
+    onError: () => {
+      // Even if the server call fails, clear local state and redirect.
+      // Handles cases where the session is already gone server-side.
+      queryClient.clear()
+      window.location.href = '/login'
     },
   })
 
