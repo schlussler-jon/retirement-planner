@@ -155,34 +155,33 @@ export default function Scenarios() {
                 {/* left: name + id */}
                 <div>
                   <p className="font-sans text-white text-sm font-medium">{sc.scenario_name}</p>
-                  <p className="font-sans text-slate-600 text-xs mt-0.5 font-mono">{sc.scenario_id}</p>
-                  <p className="font-sans text-slate-500 text-xs mt-1">
+                  <p className="font-sans text-slate-300 text-xs mt-1">
                     {sc.people_count} people · {sc.income_streams_count} income streams · {sc.accounts_count} accounts
                   </p>
                 </div>
                 {/* right: actions */}
                 <div className="flex items-center gap-3 shrink-0">
                   <Link to={`/scenarios/${sc.scenario_id}`}
-                    className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
+                    className="font-sans text-slate-300 hover:text-gold-400 text-xs transition-colors">
                     Open →
                   </Link>
                   <Link to={`/scenarios/${sc.scenario_id}/results`}
-                    className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
+                    className="font-sans text-slate-300 hover:text-gold-400 text-xs transition-colors">
                     View Results →
                   </Link>
                   <button
                     onClick={() => handleDuplicate(sc.scenario_id, sc.scenario_name)}
-                    className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
+                    className="font-sans text-slate-300 hover:text-gold-400 text-xs transition-colors">
                     Duplicate
                   </button>
                   <button
                     onClick={() => handleExport(sc)}
-                    className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors">
+                    className="font-sans text-slate-300 hover:text-gold-400 text-xs transition-colors">
                     Export JSON
                   </button>
                   <button
                     onClick={() => handleDelete(sc.scenario_id, sc.scenario_name)}
-                    className="font-sans text-slate-600 hover:text-danger text-xs transition-colors">
+                    className="font-sans text-slate-400 hover:text-danger text-xs transition-colors">
                     Delete
                   </button>
                 </div>
