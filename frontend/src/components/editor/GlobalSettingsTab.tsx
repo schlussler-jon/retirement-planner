@@ -39,7 +39,7 @@ export default function GlobalSettingsTab({ settings, onChange }: Props) {
 
   return (
     <div>
-      <p className="font-sans text-slate-500 text-xs mb-5">
+      <p className="font-sans text-slate-300 text-xs mb-5">
         Define the projection window and your state of residence for tax calculations.
       </p>
 
@@ -79,7 +79,7 @@ export default function GlobalSettingsTab({ settings, onChange }: Props) {
 {US_STATES.filter(s => SUPPORTED_STATE_CODES.includes(s.code)).map(s => <option key={s.code} value={s.code}>{s.name} ({s.code})</option>)}
 
           </select>
-          <p className="font-sans text-slate-600 text-xs mt-1">Showing states with tax support (AZ, CA, CO) and no-income-tax states.</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">Showing states with tax support (AZ, CA, CO) and no-income-tax states.</p>
         </div>
       </div>
     </div>

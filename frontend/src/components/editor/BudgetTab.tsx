@@ -66,7 +66,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
       <p className="font-sans text-slate-400 text-sm mb-2">
         Define your expected monthly spending in retirement.
       </p>
-      <p className="font-sans text-slate-500 text-xs mb-5">
+      <p className="font-sans text-slate-300 text-xs mb-5">
         <strong className="text-slate-400">Fixed</strong> expenses stay the same every month (mortgage, insurance).
         <strong className="text-slate-400"> Flexible</strong> expenses can be reduced if one spouse passes away.
         Uncheck a category to exclude it from the projection without deleting it.
@@ -76,18 +76,18 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
         <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
           <p className="text-3xl mb-2">📊</p>
           <p className="font-sans text-slate-400 text-sm font-medium mb-1">No budget categories yet</p>
-          <p className="font-sans text-slate-600 text-xs">Add your monthly expenses below — housing, food, transportation, etc.</p>
+          <p className="font-sans text-slate-400 text-xs">Add your monthly expenses below — housing, food, transportation, etc.</p>
         </div>
       )}
 
       {/* column headers */}
       {budget.categories.length > 0 && (
         <div className="flex items-center gap-2.5 mb-2 ml-6">
-          <span className="w-56 shrink-0 font-sans text-slate-600 text-xs uppercase tracking-wider">Category</span>
-          <span className="flex-1 font-sans text-slate-600 text-xs uppercase tracking-wider">Description</span>
-          <span className="w-28 shrink-0 font-sans text-slate-600 text-xs uppercase tracking-wider">Type</span>
-          <span className="w-32 shrink-0 font-sans text-slate-600 text-xs uppercase tracking-wider">Monthly $</span>
-          <span className="w-40 font-sans text-slate-600 text-xs uppercase tracking-wider">End Date</span>
+          <span className="w-56 shrink-0 font-sans text-slate-400 text-xs uppercase tracking-wider">Category</span>
+          <span className="flex-1 font-sans text-slate-400 text-xs uppercase tracking-wider">Description</span>
+          <span className="w-28 shrink-0 font-sans text-slate-400 text-xs uppercase tracking-wider">Type</span>
+          <span className="w-32 shrink-0 font-sans text-slate-400 text-xs uppercase tracking-wider">Monthly $</span>
+          <span className="w-40 font-sans text-slate-400 text-xs uppercase tracking-wider">End Date</span>
         </div>
       )}
 
@@ -109,7 +109,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
               <select
                 value={cat.main_category || 'Housing'}
                 onChange={e => updateCategory(idx, c => ({ ...c, main_category: e.target.value as BudgetCategory['main_category'] }))}
-                className={`w-56 shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none ${cat.include ? 'text-white' : 'text-slate-500'}`}
+                className={`w-56 shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none ${cat.include ? 'text-white' : 'text-slate-300'}`}
               >
                 {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -120,7 +120,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 value={cat.category_name}
                 onChange={e => updateCategory(idx, c => ({ ...c, category_name: e.target.value }))}
                 placeholder="e.g. Mortgage Payment"
-                className={`flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none ${cat.include ? 'text-white' : 'text-slate-500'}`}
+                className={`flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none ${cat.include ? 'text-white' : 'text-slate-300'}`}
               />
 
               {/* type */}
@@ -134,7 +134,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
 
               {/* amount */}
               <div className="relative w-32 shrink-0">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
                 <input
                   type="number"
                   value={cat.monthly_amount}
@@ -160,7 +160,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
               {/* delete */}
               <button
                 onClick={() => removeCategory(idx)}
-                className="font-sans text-slate-600 hover:text-red-400 text-lg leading-none transition-colors shrink-0 px-1"
+                className="font-sans text-slate-400 hover:text-red-400 text-lg leading-none transition-colors shrink-0 px-1"
                 title="Remove category"
               >×</button>
             </div>
@@ -181,18 +181,18 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
         <div className="bg-slate-800/50 rounded-xl px-5 py-4 mb-6 flex flex-wrap justify-between items-center gap-3">
           <div className="flex gap-6">
             <div>
-              <p className="font-sans text-slate-500 text-xs mb-0.5">Fixed monthly</p>
+              <p className="font-sans text-slate-300 text-xs mb-0.5">Fixed monthly</p>
               <p className="font-sans text-slate-200 text-sm font-semibold">${totalFixed.toLocaleString()}</p>
             </div>
             <div>
-              <p className="font-sans text-slate-500 text-xs mb-0.5">Flexible monthly</p>
+              <p className="font-sans text-slate-300 text-xs mb-0.5">Flexible monthly</p>
               <p className="font-sans text-slate-200 text-sm font-semibold">${totalFlexible.toLocaleString()}</p>
             </div>
           </div>
           <div className="text-right">
-            <p className="font-sans text-slate-500 text-xs mb-0.5">Total monthly spending</p>
+            <p className="font-sans text-slate-300 text-xs mb-0.5">Total monthly spending</p>
             <p className="font-sans text-gold-400 text-lg font-bold">${totalMonthly.toLocaleString()}/mo</p>
-            <p className="font-sans text-slate-600 text-xs">${(totalMonthly * 12).toLocaleString()}/year</p>
+            <p className="font-sans text-slate-400 text-xs">${(totalMonthly * 12).toLocaleString()}/year</p>
           </div>
         </div>
       )}
@@ -202,7 +202,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
         <p className="font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">
           Inflation &amp; Survivor Settings
         </p>
-        <p className="font-sans text-slate-600 text-xs mb-4">
+        <p className="font-sans text-slate-400 text-xs mb-4">
           How spending changes over time and if one spouse passes away.
         </p>
 
@@ -223,9 +223,9 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 }}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">%</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
             </div>
-            <p className="font-sans text-slate-600 text-xs mt-1">How much spending grows each year (2.5% is typical)</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">How much spending grows each year (2.5% is typical)</p>
           </div>
 
           <div>
@@ -244,9 +244,9 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 }}
                 className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">%</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
             </div>
-            <p className="font-sans text-slate-600 text-xs mt-1">Spending cut when one spouse passes (e.g. 20%)</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">Spending cut when one spouse passes (e.g. 20%)</p>
           </div>
 
           <div>
@@ -261,7 +261,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
               <option value="flex_only">Flexible categories only</option>
               <option value="all">All categories</option>
             </select>
-            <p className="font-sans text-slate-600 text-xs mt-1">Which expenses get reduced</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">Which expenses get reduced</p>
           </div>
         </div>
       </div>

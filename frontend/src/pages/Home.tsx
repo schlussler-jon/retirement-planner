@@ -30,10 +30,9 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
       {/* name + id */}
       <p className="font-sans text-white text-sm font-semibold">{sc.scenario_name}</p>
-      <p className="font-sans text-slate-600 text-xs font-mono mt-0.5">{sc.scenario_id}</p>
 
       {/* counts */}
-      <p className="font-sans text-slate-500 text-xs mt-2">
+      <p className="font-sans text-slate-300 text-xs mt-2">
         {pl(sc.people_count, 'person')}
         {' · '}
         {pl(sc.income_streams_count, 'stream')}
@@ -52,11 +51,11 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
       {quick && (
         <div className="flex items-end justify-between mt-3 pt-3 border-t border-slate-800">
           <div>
-            <p className="font-sans text-slate-500 text-xs">Ending Portfolio</p>
+            <p className="font-sans text-slate-300 text-xs">Ending Portfolio</p>
             <p className="font-sans text-white text-sm font-semibold mt-0.5">{fmt(quick.ending_portfolio)}</p>
           </div>
           <div className="text-right">
-            <p className="font-sans text-slate-500 text-xs">Surplus / Deficit</p>
+            <p className="font-sans text-slate-300 text-xs">Surplus / Deficit</p>
             <p className={`font-sans text-sm font-semibold mt-0.5 ${
               quick.financial_summary.total_surplus_deficit >= 0 ? 'text-success' : 'text-danger'
             }`}>
@@ -77,7 +76,7 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
         </Link>
         <Link
           to={`/scenarios/${sc.scenario_id}/results`}
-          className="font-sans text-slate-500 hover:text-gold-400 text-xs transition-colors"
+          className="font-sans text-slate-300 hover:text-gold-400 text-xs transition-colors"
         >
           Results →
         </Link>
@@ -113,7 +112,7 @@ export default function Home() {
           <h1 className="font-display text-3xl text-white">
             {greeting}, <span className="text-gold-500">{user?.name?.split(' ')[0] ?? 'there'}</span>
           </h1>
-          <p className="font-sans text-slate-500 text-sm mt-1">
+          <p className="font-sans text-slate-300 text-sm mt-1">
             {scenarios.length === 0
               ? 'Create your first scenario to get started.'
               : `You have ${scenarios.length} scenario${scenarios.length !== 1 ? 's' : ''} saved.`}
@@ -144,7 +143,7 @@ export default function Home() {
           { label: 'Accounts',       value: totalAccounts },
         ].map(({ label, value }) => (
           <div key={label} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-            <p className="font-sans text-slate-500 text-xs uppercase tracking-wider mb-1">{label}</p>
+            <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">{label}</p>
             <p className="font-display text-2xl text-white font-semibold">{value}</p>
           </div>
         ))}
@@ -169,7 +168,7 @@ export default function Home() {
               <span className="text-gold-500 text-xl">📈</span>
             </div>
             <p className="font-sans text-white text-sm font-semibold">No scenarios yet</p>
-            <p className="font-sans text-slate-500 text-xs mt-1.5 max-w-sm mx-auto leading-relaxed">
+            <p className="font-sans text-slate-300 text-xs mt-1.5 max-w-sm mx-auto leading-relaxed">
               A scenario models your retirement cash flow — income streams, investment accounts, taxes, and spending — projected month by month over your timeline.
             </p>
             <Link

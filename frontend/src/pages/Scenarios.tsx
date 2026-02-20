@@ -102,14 +102,14 @@ export default function Scenarios() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
         <div>
           <h1 className="font-display text-3xl text-white">Scenarios</h1>
-          <p className="font-sans text-slate-500 text-sm mt-1">
+          <p className="font-sans text-slate-300 text-sm mt-1">
             Manage your retirement planning scenarios.
           </p>
         </div>
         <div className="flex items-center gap-3">
           {/* Import button */}
           <label className="
-            cursor-pointer font-sans text-slate-500 hover:text-gold-400 text-sm
+            cursor-pointer font-sans text-slate-300 hover:text-gold-400 text-sm
             border border-slate-700 hover:border-gold-600 px-4 py-2 rounded-lg
             transition-colors duration-150
           ">
@@ -139,7 +139,7 @@ export default function Scenarios() {
       <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
         {sortedScenarios.length === 0 ? (
           <div className="px-6 py-16 text-center">
-            <p className="font-sans text-slate-600 text-sm">
+            <p className="font-sans text-slate-400 text-sm">
               No scenarios yet.{' '}
               <Link to="/scenarios/new" className="text-gold-500 hover:text-gold-400 transition-colors">
                 Create your first one

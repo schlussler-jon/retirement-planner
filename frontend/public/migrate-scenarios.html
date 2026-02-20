@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Migrate Old Scenarios</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }
+    button { padding: 10px 20px; background: #d4af37; border: none; border-radius: 4px; cursor: pointer; }
+    pre { background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>Migrate Old Scenarios</h1>
+  <p>This will add missing fields to your saved scenarios:</p>
+  <ul>
+    <li>Add <code>end_month: null</code> to all income streams</li>
+  </ul>
+  
+  <button onclick="migrate()">Migrate Scenarios</button>
+  <div id="output"></div>
+
+  <script>
+    function migrate() {
+      const output = document.getElementById('output');
+      
+      try {
+        // Load scenarios from localStorage
+        const data = localStorage.getItem('retirement_planner_scenarios');
+        if (!data) {
+          output.innerHTML = '<p style="color: orange;">No scenarios found in localStorage.</p>';
+          return;
+        }
+
+        const parsed = JSON.parse(data);
+        const scenarios = parsed.scenarios || [];
+        
+        let migrated = 0;
+        scenarios.forEach(scenario => {
+          scenario.income_streams.forEach(stream => {
+            if (!('end_month' in stream)) {
+              stream.end_month = null;
+              migrated++;
+            }
+          });
+        });
+
+        // Save back
+        localStorage.setItem('retirement_planner_scenarios', JSON.stringify(parsed));
+        
+        output.innerHTML = `<p style="color: green;">✓ Migration complete! Updated ${migrated} income streams.</p><pre>${JSON.stringify(scenarios, null, 2)}</pre>`;
+      } catch (error) {
+        output.innerHTML = `<p style="color: red;">✗ Error: ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

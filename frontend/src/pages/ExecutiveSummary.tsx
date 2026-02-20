@@ -22,7 +22,7 @@ export default function ExecutiveSummary() {
   if (scenarioLoading || projectionLoading) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="font-sans text-slate-500 text-sm">Loading executive summary...</div>
+        <div className="font-sans text-slate-300 text-sm">Loading executive summary...</div>
       </div>
     )
   }
@@ -30,7 +30,7 @@ export default function ExecutiveSummary() {
   if (!scenario || !projection) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="font-sans text-slate-500 text-sm">Scenario not found</div>
+        <div className="font-sans text-slate-300 text-sm">Scenario not found</div>
       </div>
     )
   }
@@ -148,7 +148,7 @@ export default function ExecutiveSummary() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* People */}
             <div>
-              <h3 className="font-sans text-xs uppercase tracking-wider text-slate-500 mb-2">
+              <h3 className="font-sans text-xs uppercase tracking-wider text-slate-300 mb-2">
                 Household Members
               </h3>
               {scenario.people.map(person => (
@@ -164,7 +164,7 @@ export default function ExecutiveSummary() {
 
             {/* Timeline */}
             <div>
-              <h3 className="font-sans text-xs uppercase tracking-wider text-slate-500 mb-2">
+              <h3 className="font-sans text-xs uppercase tracking-wider text-slate-300 mb-2">
                 Planning Timeline
               </h3>
               <p className="font-sans text-white">
@@ -177,7 +177,7 @@ export default function ExecutiveSummary() {
 
             {/* Key Outcome */}
             <div>
-              <h3 className="font-sans text-xs uppercase tracking-wider text-slate-500 mb-2">
+              <h3 className="font-sans text-xs uppercase tracking-wider text-slate-300 mb-2">
                 Portfolio Growth
               </h3>
               <p className="font-sans text-white">
@@ -193,7 +193,7 @@ export default function ExecutiveSummary() {
         {/* Section 2: Key Metrics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p className="font-sans text-slate-500 text-xs uppercase tracking-wider mb-1">
+            <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
               Ending Portfolio
             </p>
             <p className="font-sans text-white text-2xl font-semibold">
@@ -202,7 +202,7 @@ export default function ExecutiveSummary() {
           </div>
 
           <div className="bg-slate-900 border border-success/25 rounded-xl p-4">
-            <p className="font-sans text-slate-500 text-xs uppercase tracking-wider mb-1">
+            <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
               Cumulative Surplus
             </p>
             <p className="font-sans text-success text-2xl font-semibold">
@@ -211,7 +211,7 @@ export default function ExecutiveSummary() {
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p className="font-sans text-slate-500 text-xs uppercase tracking-wider mb-1">
+            <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
               Avg Monthly Surplus
             </p>
             <p className="font-sans text-success text-2xl font-semibold">
@@ -220,7 +220,7 @@ export default function ExecutiveSummary() {
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
-            <p className="font-sans text-slate-500 text-xs uppercase tracking-wider mb-1">
+            <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
               Success Rate
             </p>
             <p className="font-sans text-white text-2xl font-semibold">

@@ -71,7 +71,7 @@ export default function Login() {
             alt="my-moneyplan.com"
             className="w-full max-w-sm"
           />
-          <p className="font-sans text-slate-500 text-sm text-center leading-relaxed max-w-xs">
+          <p className="font-sans text-slate-300 text-sm text-center leading-relaxed max-w-xs">
             Model your income, taxes, and spending across decades of retirement — with IRS-accurate calculations.
           </p>
         </div>
@@ -112,14 +112,14 @@ export default function Login() {
             Sign in with Google
           </button>
 
-          <p className="font-sans text-slate-600 text-xs text-center leading-relaxed">
+          <p className="font-sans text-slate-400 text-xs text-center leading-relaxed">
             We only access files created by this app in your Google Drive.
             <br/>No ads, no data sharing.
           </p>
         </div>
 
         {/* bottom note */}
-        <p className="font-sans text-slate-600 text-xs text-center mt-8">
+        <p className="font-sans text-slate-400 text-xs text-center mt-8">
           All calculations run on your own server · Your data stays in your Drive
         </p>
       </div>

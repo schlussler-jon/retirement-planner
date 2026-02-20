@@ -56,7 +56,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
         <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
           <p className="text-3xl mb-2">👤</p>
           <p className="font-sans text-slate-400 text-sm font-medium mb-1">No people added yet</p>
-          <p className="font-sans text-slate-600 text-xs">Click "Add Person" below to get started</p>
+          <p className="font-sans text-slate-400 text-xs">Click "Add Person" below to get started</p>
         </div>
       )}
 
@@ -69,7 +69,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
               </span>
               <button
                 onClick={() => removePerson(idx)}
-                className="font-sans text-slate-600 hover:text-red-400 text-sm transition-colors px-2 py-1 rounded hover:bg-red-400/10"
+                className="font-sans text-slate-400 hover:text-red-400 text-sm transition-colors px-2 py-1 rounded hover:bg-red-400/10"
               >
                 Remove
               </button>
@@ -99,7 +99,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                   onChange={e => update(idx, p => ({ ...p, birth_date: e.target.value }))}
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                 />
-                <p className="font-sans text-slate-600 text-xs mt-1">Used to calculate retirement age</p>
+                <p className="font-sans text-slate-400 text-xs mt-1">Used to calculate retirement age</p>
               </div>
 
               <div>
@@ -118,9 +118,9 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                     placeholder="e.g. 90"
                     className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-14 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-xs">years</span>
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-xs">years</span>
                 </div>
-                <p className="font-sans text-slate-600 text-xs mt-1">How long to run the projection</p>
+                <p className="font-sans text-slate-400 text-xs mt-1">How long to run the projection</p>
               </div>
             </div>
           </div>

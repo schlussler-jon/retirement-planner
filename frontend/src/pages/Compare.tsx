@@ -158,7 +158,7 @@ export default function Compare() {
       {/* header */}
       <div className="mb-6">
         <h1 className="font-display text-3xl text-white">Compare Scenarios</h1>
-        <p className="font-sans text-slate-500 text-sm mt-1">
+        <p className="font-sans text-slate-300 text-sm mt-1">
           Pick two scenarios to see them side by side.
         </p>
       </div>
@@ -166,7 +166,7 @@ export default function Compare() {
       {/* ── not enough scenarios ── */}
       {scenarios.length < 2 ? (
         <div className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-12 text-center">
-          <p className="font-sans text-slate-500 text-sm">
+          <p className="font-sans text-slate-300 text-sm">
             {scenarios.length === 0
               ? 'You need at least two scenarios to compare. Create your first on the dashboard.'
               : 'You need one more scenario to unlock comparison.'}
@@ -209,7 +209,7 @@ export default function Compare() {
           {/* ── prompt / loading / error ── */}
           {(!idA || !idB) && (
             <div className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-12 text-center">
-              <p className="font-sans text-slate-500 text-sm">Select both scenarios above to begin comparison.</p>
+              <p className="font-sans text-slate-300 text-sm">Select both scenarios above to begin comparison.</p>
             </div>
           )}
 
@@ -234,7 +234,7 @@ export default function Compare() {
 
           {(idA && idB && !bothReady && !projA.isError && !projB.isError) && (
             <div className="flex items-center justify-center h-48">
-              <p className="font-sans text-slate-500 text-sm animate-pulse-slow">Running projections…</p>
+              <p className="font-sans text-slate-300 text-sm animate-pulse-slow">Running projections…</p>
             </div>
           )}
 
@@ -272,7 +272,7 @@ export default function Compare() {
                   return (
                     <div key={label} className="grid grid-cols-3 border-b border-slate-800 last:border-b-0">
                       <div className="px-4 py-3">
-                        <p className="font-sans text-slate-500 text-xs">{label}</p>
+                        <p className="font-sans text-slate-300 text-xs">{label}</p>
                       </div>
                       <div className={`px-4 py-3 border-l border-slate-800 ${aWins ? 'bg-success/10' : ''}`}>
                         <p className={`font-sans text-sm font-semibold ${aWins ? 'text-success' : 'text-slate-300'}`}>
@@ -293,7 +293,7 @@ export default function Compare() {
               <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4">
                 <div className="mb-3">
                   <p className="font-sans text-slate-200 text-sm font-semibold">Portfolio Value</p>
-                  <p className="font-sans text-slate-600 text-xs mt-0.5">Total investment balance over the projection period</p>
+                  <p className="font-sans text-slate-400 text-xs mt-0.5">Total investment balance over the projection period</p>
                 </div>
                 <div className="flex items-center gap-5 mb-3">
                   {[{ color: GOLD, label: nameA }, { color: BLUE, label: nameB }].map(({ color, label }) => (
@@ -324,7 +324,7 @@ export default function Compare() {
               <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4">
                 <div className="mb-3">
                   <p className="font-sans text-slate-200 text-sm font-semibold">Monthly Cash Flow</p>
-                  <p className="font-sans text-slate-600 text-xs mt-0.5">Net income (solid) vs spending (dashed) for each scenario</p>
+                  <p className="font-sans text-slate-400 text-xs mt-0.5">Net income (solid) vs spending (dashed) for each scenario</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mb-3">
                   {[
@@ -363,19 +363,19 @@ export default function Compare() {
                     <thead className="sticky top-0 bg-slate-900 z-10">
                       {/* scenario name row */}
                       <tr className="border-b border-slate-800">
-                        <th className="px-4 py-2.5 font-sans text-slate-500 text-xs font-semibold uppercase tracking-wider">Month</th>
+                        <th className="px-4 py-2.5 font-sans text-slate-300 text-xs font-semibold uppercase tracking-wider">Month</th>
                         <th colSpan={3} className="px-4 py-2.5 font-sans text-xs font-semibold border-l border-slate-800 whitespace-nowrap" style={{ color: GOLD }}>{nameA}</th>
                         <th colSpan={3} className="px-4 py-2.5 font-sans text-xs font-semibold border-l border-slate-800 whitespace-nowrap" style={{ color: BLUE }}>{nameB}</th>
                       </tr>
                       {/* sub-header row */}
                       <tr className="border-b border-slate-800" style={{ background: 'rgba(30,41,59,0.6)' }}>
                         <th className="px-4 py-2" />
-                        <th className="px-4 py-2 font-sans text-slate-500 text-xs border-l border-slate-800">Net Income</th>
-                        <th className="px-4 py-2 font-sans text-slate-500 text-xs">Surplus</th>
-                        <th className="px-4 py-2 font-sans text-slate-500 text-xs">Portfolio</th>
-                        <th className="px-4 py-2 font-sans text-slate-500 text-xs border-l border-slate-800">Net Income</th>
-                        <th className="px-4 py-2 font-sans text-slate-500 text-xs">Surplus</th>
-                        <th className="px-4 py-2 font-sans text-slate-500 text-xs">Portfolio</th>
+                        <th className="px-4 py-2 font-sans text-slate-300 text-xs border-l border-slate-800">Net Income</th>
+                        <th className="px-4 py-2 font-sans text-slate-300 text-xs">Surplus</th>
+                        <th className="px-4 py-2 font-sans text-slate-300 text-xs">Portfolio</th>
+                        <th className="px-4 py-2 font-sans text-slate-300 text-xs border-l border-slate-800">Net Income</th>
+                        <th className="px-4 py-2 font-sans text-slate-300 text-xs">Surplus</th>
+                        <th className="px-4 py-2 font-sans text-slate-300 text-xs">Portfolio</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -403,7 +403,7 @@ export default function Compare() {
               {/* highlight legend */}
               <div className="flex items-center gap-2 mt-2">
                 <span className="inline-block w-3 h-3 rounded-sm" style={{ background: 'rgba(120,53,15,0.3)', border: '1px solid rgba(180,83,30,0.3)' }} />
-                <p className="font-sans text-slate-600 text-xs">Rows where scenarios diverge by more than 5 %</p>
+                <p className="font-sans text-slate-400 text-xs">Rows where scenarios diverge by more than 5 %</p>
               </div>
             </>
           )}

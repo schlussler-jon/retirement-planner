@@ -105,9 +105,9 @@ export default function ProjectionResults() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-3xl text-white">Projection Results</h1>
-            <p className="font-sans text-slate-500 text-sm mt-1">{scenario?.scenario_name ?? '…'}</p>
+            <p className="font-sans text-slate-300 text-sm mt-1">{scenario?.scenario_name ?? '…'}</p>
           </div>
-          <Link to={`/scenarios/${id}`} className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors">
+          <Link to={`/scenarios/${id}`} className="font-sans text-slate-300 hover:text-gold-400 text-sm transition-colors">
             ← Back to Editor
           </Link>
         </div>
@@ -124,7 +124,7 @@ export default function ProjectionResults() {
           </div>
         ) : (
           <div className="flex items-center justify-center h-48">
-            <p className="font-sans text-slate-500 text-sm animate-pulse-slow">Running projection…</p>
+            <p className="font-sans text-slate-300 text-sm animate-pulse-slow">Running projection…</p>
           </div>
         )}
       </div>
@@ -145,13 +145,13 @@ export default function ProjectionResults() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
         <div>
           <h1 className="font-display text-3xl text-white">Projection Results</h1>
-          <p className="font-sans text-slate-500 text-sm mt-1">
+          <p className="font-sans text-slate-300 text-sm mt-1">
             {results.scenario_name}
-            <span className="text-slate-600 ml-2">· {results.calculation_time_ms.toFixed(0)} ms</span>
+            <span className="text-slate-400 ml-2">· {results.calculation_time_ms.toFixed(0)} ms</span>
           </p>
         </div>
           <div className="flex items-center gap-3">
-            <Link to={`/scenarios/${id}`} className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors">
+            <Link to={`/scenarios/${id}`} className="font-sans text-slate-300 hover:text-gold-400 text-sm transition-colors">
               ← Back to Editor
             </Link>
             <Link to={`/scenarios/${id}/summary`} className="font-sans text-gold-500 hover:text-gold-400 border border-gold-600 hover:border-gold-500 px-4 py-2 rounded-lg text-sm transition-colors">
@@ -177,7 +177,7 @@ export default function ProjectionResults() {
               transition-colors duration-150 whitespace-nowrap
               ${activeTab === tab
                 ? 'bg-slate-800 text-gold-500'
-                : 'text-slate-500 hover:text-slate-300'
+                : 'text-slate-300 hover:text-slate-300'
               }
             `}>
             {tab}

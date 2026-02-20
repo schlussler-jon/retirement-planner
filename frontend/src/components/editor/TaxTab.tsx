@@ -19,7 +19,7 @@ const TAX_YEARS = Array.from({ length: 11 }, (_, i) => 2020 + i) // 2020–2030
 export default function TaxTab({ tax, onChange }: Props) {
   return (
     <div>
-      <p className="font-sans text-slate-500 text-xs mb-5">
+      <p className="font-sans text-slate-300 text-xs mb-5">
         Configure federal tax settings. State tax is determined automatically by your residence state in Settings.
       </p>
 
@@ -46,7 +46,7 @@ export default function TaxTab({ tax, onChange }: Props) {
             className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer">
             {TAX_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
-          <p className="font-sans text-slate-600 text-xs mt-1">Which year's tax brackets to use.</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">Which year's tax brackets to use.</p>
         </div>
 
         {/* standard deduction override */}
@@ -55,7 +55,7 @@ export default function TaxTab({ tax, onChange }: Props) {
             Std. Deduction Override ($)
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input type="number" value={tax.standard_deduction_override ?? ''} min={0} step={1000}
               onChange={e => {
                 const raw = e.target.value
@@ -69,7 +69,7 @@ export default function TaxTab({ tax, onChange }: Props) {
               placeholder="Use default"
               className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm placeholder-slate-600" />
           </div>
-          <p className="font-sans text-slate-600 text-xs mt-1">Leave blank for the standard amount.</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">Leave blank for the standard amount.</p>
         </div>
       </div>
     </div>

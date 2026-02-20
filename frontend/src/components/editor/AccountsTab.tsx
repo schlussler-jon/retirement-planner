@@ -51,13 +51,13 @@ function AccountCard({
       <div className="flex items-center justify-between mb-4">
         <span className="font-sans text-white text-sm font-semibold">
           {acct.name || `Account ${idx + 1}`}
-          <span className="text-slate-500 font-normal ml-2">
+          <span className="text-slate-300 font-normal ml-2">
             {TAX_BUCKETS.find(b => b.value === acct.tax_bucket)?.label}
           </span>
         </span>
         <button
           onClick={onRemove}
-          className="font-sans text-slate-600 hover:text-red-400 text-sm transition-colors px-2 py-1 rounded hover:bg-red-400/10"
+          className="font-sans text-slate-400 hover:text-red-400 text-sm transition-colors px-2 py-1 rounded hover:bg-red-400/10"
         >
           Remove
         </button>
@@ -89,7 +89,7 @@ function AccountCard({
           >
             {TAX_BUCKETS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
           </select>
-          <p className="font-sans text-slate-600 text-xs mt-1">
+          <p className="font-sans text-slate-400 text-xs mt-1">
             {TAX_BUCKET_HELP[acct.tax_bucket]}
           </p>
         </div>
@@ -102,7 +102,7 @@ function AccountCard({
             Current Balance <span className="text-red-400">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
               value={acct.starting_balance}
@@ -115,7 +115,7 @@ function AccountCard({
               className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
-          <p className="font-sans text-slate-600 text-xs mt-1">Balance at the start of the projection</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">Balance at the start of the projection</p>
         </div>
 
         <div>
@@ -134,9 +134,9 @@ function AccountCard({
               }}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">%</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
           </div>
-          <p className="font-sans text-slate-600 text-xs mt-1">6–7% is a common estimate for a balanced portfolio</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">6–7% is a common estimate for a balanced portfolio</p>
         </div>
       </div>
 
@@ -147,7 +147,7 @@ function AccountCard({
             Monthly Contribution
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
               value={acct.monthly_contribution}
@@ -160,7 +160,7 @@ function AccountCard({
               className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
-          <p className="font-sans text-slate-600 text-xs mt-1">How much you add each month</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">How much you add each month</p>
         </div>
 
         <div>
@@ -168,7 +168,7 @@ function AccountCard({
             Monthly Withdrawal
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
               value={acct.monthly_withdrawal}
@@ -181,7 +181,7 @@ function AccountCard({
               className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
-          <p className="font-sans text-slate-600 text-xs mt-1">How much you take out each month in retirement</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">How much you take out each month in retirement</p>
         </div>
       </div>
 
@@ -196,7 +196,7 @@ function AccountCard({
         />
         <label htmlFor={`surplus-${idx}`} className="cursor-pointer">
           <span className="font-sans text-white text-sm font-medium">Receives monthly surplus / covers deficit</span>
-          <p className="font-sans text-slate-500 text-xs mt-0.5">
+          <p className="font-sans text-slate-300 text-xs mt-0.5">
             Any leftover money each month goes into this account; any shortfall is drawn from it.
             Typically your primary savings account.
           </p>
@@ -206,7 +206,7 @@ function AccountCard({
       {/* advanced toggle */}
       <button
         onClick={() => setShowAdvanced(v => !v)}
-        className="font-sans text-slate-500 hover:text-slate-300 text-xs transition-colors flex items-center gap-1 mb-3"
+        className="font-sans text-slate-300 hover:text-slate-300 text-xs transition-colors flex items-center gap-1 mb-3"
       >
         <span>{showAdvanced ? '▾' : '▸'}</span>
         {showAdvanced ? 'Hide' : 'Show'} contribution & withdrawal date ranges
@@ -221,7 +221,7 @@ function AccountCard({
             <input type="month" value={acct.contribution_start_month || ''}
               onChange={e => onUpdate(a => ({ ...a, contribution_start_month: e.target.value || null }))}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
-            <p className="font-sans text-slate-600 text-xs mt-1">When to start contributing</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">When to start contributing</p>
           </div>
           <div>
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -230,7 +230,7 @@ function AccountCard({
             <input type="month" value={acct.contribution_end_month || ''}
               onChange={e => onUpdate(a => ({ ...a, contribution_end_month: e.target.value || null }))}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
-            <p className="font-sans text-slate-600 text-xs mt-1">When to stop contributing</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">When to stop contributing</p>
           </div>
           <div>
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -239,7 +239,7 @@ function AccountCard({
             <input type="month" value={acct.withdrawal_start_month || ''}
               onChange={e => onUpdate(a => ({ ...a, withdrawal_start_month: e.target.value || null }))}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
-            <p className="font-sans text-slate-600 text-xs mt-1">When to start withdrawing</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">When to start withdrawing</p>
           </div>
           <div>
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -248,7 +248,7 @@ function AccountCard({
             <input type="month" value={acct.withdrawal_end_month || ''}
               onChange={e => onUpdate(a => ({ ...a, withdrawal_end_month: e.target.value || null }))}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
-            <p className="font-sans text-slate-600 text-xs mt-1">When to stop withdrawing</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">When to stop withdrawing</p>
           </div>
         </div>
       )}
@@ -299,7 +299,7 @@ export default function AccountsTab({ accounts, onChange, autoAdd, onAutoAddDone
         <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
           <p className="text-3xl mb-2">🏦</p>
           <p className="font-sans text-slate-400 text-sm font-medium mb-1">No accounts added yet</p>
-          <p className="font-sans text-slate-600 text-xs">Add your 401k, IRA, Roth, or other savings accounts below</p>
+          <p className="font-sans text-slate-400 text-xs">Add your 401k, IRA, Roth, or other savings accounts below</p>
         </div>
       )}
 

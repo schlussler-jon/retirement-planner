@@ -184,18 +184,18 @@ function ProgressTracker({
                     ? 'bg-gold-500 text-slate-950 ring-2 ring-gold-400 ring-offset-2 ring-offset-slate-900'
                     : complete
                       ? 'bg-gold-600/30 text-gold-400 border border-gold-600'
-                      : 'bg-slate-800 text-slate-500 border border-slate-700 group-hover:border-slate-500'
+                      : 'bg-slate-800 text-slate-300 border border-slate-700 group-hover:border-slate-500'
                   }
                 `}>
                   {complete && !active ? '✓' : i + 1}
                 </div>
                 <div className={`h-px flex-1 ${i === STEPS.length - 1 ? 'opacity-0' : complete ? 'bg-gold-500' : 'bg-slate-700'}`} />
               </div>
-              <span className={`font-sans text-xs font-semibold text-center leading-tight ${active ? 'text-gold-400' : complete ? 'text-gold-600' : 'text-slate-500 group-hover:text-slate-400'}`}>
+              <span className={`font-sans text-xs font-semibold text-center leading-tight ${active ? 'text-gold-400' : complete ? 'text-gold-600' : 'text-slate-300 group-hover:text-slate-400'}`}>
                 {step.label}
                 {count > 0 && <span className="ml-1 opacity-60">({count})</span>}
               </span>
-              <span className="font-sans text-xs text-slate-600 text-center leading-tight hidden sm:block">
+              <span className="font-sans text-xs text-slate-400 text-center leading-tight hidden sm:block">
                 {step.subtitle}
               </span>
             </button>
@@ -261,10 +261,10 @@ function WhatsNext({
           <div className="flex flex-wrap gap-3 mb-3">
             {requiredSteps.map(step => (
               <div key={step.tab} className="flex items-center gap-1.5">
-                <span className={`text-xs ${step.isComplete(scenario) ? 'text-gold-400' : 'text-slate-600'}`}>
+                <span className={`text-xs ${step.isComplete(scenario) ? 'text-gold-400' : 'text-slate-400'}`}>
                   {step.isComplete(scenario) ? '✓' : '○'}
                 </span>
-                <span className={`font-sans text-xs ${step.isComplete(scenario) ? 'text-slate-500 line-through' : 'text-slate-400'}`}>
+                <span className={`font-sans text-xs ${step.isComplete(scenario) ? 'text-slate-300 line-through' : 'text-slate-400'}`}>
                   {step.label}
                 </span>
               </div>
@@ -427,7 +427,7 @@ export default function ScenarioEditor() {
   if (!isNew && scenarioQuery.isLoading) {
     return (
       <div className="animate-fade-in flex items-center justify-center h-64">
-        <p className="font-sans text-slate-500 text-sm">Loading scenario…</p>
+        <p className="font-sans text-slate-300 text-sm">Loading scenario…</p>
       </div>
     )
   }
@@ -450,7 +450,7 @@ export default function ScenarioEditor() {
           <h1 className="font-display text-3xl text-white">
             {isNew ? 'New Scenario' : 'Edit Scenario'}
           </h1>
-          <p className="font-sans text-slate-500 text-sm mt-1">
+          <p className="font-sans text-slate-300 text-sm mt-1">
             {isNew ? 'Fill in each step below to build your plan.' : `Editing "${scenario.scenario_name}"`}
           </p>
         </div>
@@ -466,7 +466,7 @@ export default function ScenarioEditor() {
           <button
             onClick={handleSave}
             disabled={saving || !scenario.scenario_name}
-            className="inline-flex items-center justify-center bg-gold-600 hover:bg-gold-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-slate-950 font-sans font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors duration-150"
+            className="inline-flex items-center justify-center bg-gold-600 hover:bg-gold-500 disabled:bg-slate-700 disabled:text-slate-300 disabled:cursor-not-allowed text-slate-950 font-sans font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors duration-150"
           >
             {saving ? 'Saving…' : isNew ? 'Create Scenario' : 'Save Scenario'}
           </button>
@@ -489,7 +489,7 @@ export default function ScenarioEditor() {
         </div>
         <div>
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-            Description <span className="text-slate-600 font-normal normal-case">(optional)</span>
+            Description <span className="text-slate-400 font-normal normal-case">(optional)</span>
           </label>
           <textarea
             value={scenario.description}

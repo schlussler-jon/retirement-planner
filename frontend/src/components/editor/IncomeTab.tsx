@@ -52,11 +52,11 @@ function IncomeStreamCard({
       <div className="flex items-center justify-between mb-4">
         <span className="font-sans text-white text-sm font-semibold">
           {INCOME_STREAM_TYPES.find(t => t.value === stream.type)?.label ?? stream.type}
-          {owner && <span className="text-slate-500 font-normal ml-2">— {owner.name}</span>}
+          {owner && <span className="text-slate-300 font-normal ml-2">— {owner.name}</span>}
         </span>
         <button
           onClick={onRemove}
-          className="font-sans text-slate-600 hover:text-red-400 text-sm transition-colors px-2 py-1 rounded hover:bg-red-400/10"
+          className="font-sans text-slate-400 hover:text-red-400 text-sm transition-colors px-2 py-1 rounded hover:bg-red-400/10"
         >
           Remove
         </button>
@@ -97,7 +97,7 @@ function IncomeStreamCard({
             Monthly Amount <span className="text-red-400">*</span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
               value={stream.monthly_amount_at_start}
@@ -110,7 +110,7 @@ function IncomeStreamCard({
               className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
-          <p className="font-sans text-slate-600 text-xs mt-1">Amount at start of income</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">Amount at start of income</p>
         </div>
       </div>
 
@@ -126,7 +126,7 @@ function IncomeStreamCard({
             onChange={e => onUpdate(s => ({ ...s, start_month: e.target.value }))}
             className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
           />
-          <p className="font-sans text-slate-600 text-xs mt-1">When does this income begin?</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">When does this income begin?</p>
         </div>
 
         <div>
@@ -145,16 +145,16 @@ function IncomeStreamCard({
               }}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 font-sans text-sm">%</span>
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
           </div>
-          <p className="font-sans text-slate-600 text-xs mt-1">e.g. 2.5% — leave 0 if income stays flat</p>
+          <p className="font-sans text-slate-400 text-xs mt-1">e.g. 2.5% — leave 0 if income stays flat</p>
         </div>
       </div>
 
       {/* advanced toggle */}
       <button
         onClick={() => setShowAdvanced(v => !v)}
-        className="font-sans text-slate-500 hover:text-slate-300 text-xs transition-colors flex items-center gap-1 mb-3"
+        className="font-sans text-slate-300 hover:text-slate-300 text-xs transition-colors flex items-center gap-1 mb-3"
       >
         <span>{showAdvanced ? '▾' : '▸'}</span>
         {showAdvanced ? 'Hide' : 'Show'} advanced options
@@ -172,7 +172,7 @@ function IncomeStreamCard({
               onChange={e => onUpdate(s => ({ ...s, end_month: e.target.value || null }))}
               className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
-            <p className="font-sans text-slate-600 text-xs mt-1">Leave blank if income continues indefinitely</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">Leave blank if income continues indefinitely</p>
           </div>
 
           <div>
@@ -186,7 +186,7 @@ function IncomeStreamCard({
             >
               {MONTHS.map(m => <option key={m} value={m}>{MONTH_NAMES[m-1]}</option>)}
             </select>
-            <p className="font-sans text-slate-600 text-xs mt-1">Which month the annual increase is applied</p>
+            <p className="font-sans text-slate-400 text-xs mt-1">Which month the annual increase is applied</p>
           </div>
         </div>
       )}
@@ -242,7 +242,7 @@ export default function IncomeTab({ streams, people, onChange, autoAdd, onAutoAd
         <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
           <p className="text-3xl mb-2">💰</p>
           <p className="font-sans text-slate-400 text-sm font-medium mb-1">No income streams added yet</p>
-          <p className="font-sans text-slate-600 text-xs">Add salary, pension, Social Security, or other income below</p>
+          <p className="font-sans text-slate-400 text-xs">Add salary, pension, Social Security, or other income below</p>
         </div>
       )}
 
