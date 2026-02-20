@@ -14,7 +14,8 @@ from fastapi.responses import JSONResponse
 from typing import Dict, Any
 import logging
 
-from .endpoints import scenarios, projections, health, auth, drive, analysis
+from .endpoints import projections, health, auth, drive, analysis
+from .endpoints import scenarios_db as scenarios  # PostgreSQL-backed scenarios
 from auth.oauth import configure_oauth
 from auth.config import get_oauth_settings
 from starlette.middleware.sessions import SessionMiddleware
@@ -43,7 +44,6 @@ allowed_origins = [
     "http://localhost:5173",
     "https://www.my-moneyplan.com",  # Always include production origin
 ]
-# Also add FRONTEND_URL if it's set to something not already in the list
 if frontend_url and frontend_url not in allowed_origins:
     allowed_origins.append(frontend_url)
 
@@ -68,7 +68,7 @@ app.add_middleware(
 # Include routers
 app.include_router(health.router, prefix="/api", tags=["Health"])
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(scenarios.router, prefix="/api", tags=["Scenarios"])
+app.include_router(scenarios.router, prefix="/api", tags=["Scenarios"])  # DB-backed
 app.include_router(projections.router, prefix="/api", tags=["Projections"])
 app.include_router(drive.router, prefix="/api/drive", tags=["Google Drive"])
 app.include_router(analysis.router, prefix="/api", tags=["Analysis"])
