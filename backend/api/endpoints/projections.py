@@ -144,7 +144,7 @@ async def calculate_projection(
 
         # Annual summaries
         aggregator = AnnualAggregator(monthly_projections)
-        annual_summaries = aggregator.aggregate()
+        annual_summaries = [s.model_dump() if hasattr(s, 'model_dump') else s for s in aggregator.aggregate()]
 
         # Financial summary
         financial_summary = get_financial_summary(net_income_projections)

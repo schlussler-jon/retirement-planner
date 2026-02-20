@@ -2,12 +2,15 @@
 Analysis endpoint.
 
 Generates AI-powered financial analysis for scenarios.
+Looks up scenarios from PostgreSQL with proper user isolation.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request, Depends
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
 import logging
 import os
+import json
 from typing import Dict, Any, List
 from openai import OpenAI
 
@@ -19,12 +22,46 @@ from budget import (
     calculate_net_income_projections,
     get_financial_summary,
 )
-from .scenarios import scenarios_db
+from db.models import get_db, ScenarioModel
+from auth.session import get_user_from_session
+from auth.config import get_oauth_settings
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+# ─── Auth + DB helpers ────────────────────────────────────────────────────
+
+def get_current_user_id(request: Request) -> str:
+    """Extract authenticated user ID from session cookie."""
+    settings = get_oauth_settings()
+    session_id = request.cookies.get(settings.session_cookie_name)
+    if not session_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    user = get_user_from_session(session_id)
+    if not user:
+        raise HTTPException(status_code=401, detail="Session expired")
+    return user.id  # matches how scenarios_db.py stores scenarios
+
+
+def load_scenario(scenario_id: str, user_id: str, db: Session) -> Scenario:
+    """Load a scenario from the database, enforcing user ownership."""
+    db_scenario = db.query(ScenarioModel).filter_by(
+        user_id=user_id,
+        scenario_id=scenario_id,
+    ).first()
+
+    if not db_scenario:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Scenario '{scenario_id}' not found",
+        )
+
+    return Scenario(**json.loads(db_scenario.data))
+
+
+# ─── AI analysis logic ────────────────────────────────────────────────────
 
 def generate_financial_analysis(
     scenario: Scenario,
@@ -33,41 +70,34 @@ def generate_financial_analysis(
     financial_summary: Dict[str, Any]
 ) -> str:
     """Generate AI-powered financial analysis."""
-    
-    # Initialize OpenAI client
+
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    
-    # Extract key metrics
+
     total_months = len(monthly_projections)
     total_years = total_months // 12
-    
+
     starting_portfolio = monthly_projections[0].total_investments if monthly_projections else 0
     ending_portfolio = monthly_projections[-1].total_investments if monthly_projections else 0
     portfolio_growth = ending_portfolio - starting_portfolio
     portfolio_growth_pct = ((ending_portfolio / starting_portfolio - 1) * 100) if starting_portfolio > 0 else 0
-    
-    # Tax bucket analysis
+
     final_balances = monthly_projections[-1].balances_by_tax_bucket if monthly_projections else {}
     tax_deferred = final_balances.get('tax_deferred', 0)
     roth = final_balances.get('roth', 0)
     taxable = final_balances.get('taxable', 0)
-    
-    # Surplus/deficit metrics
+
     total_surplus = financial_summary.get('total_surplus_deficit', 0)
     avg_monthly_surplus = financial_summary.get('average_monthly_surplus_deficit', 0)
     months_in_surplus = financial_summary.get('months_in_surplus', 0)
     success_rate = (months_in_surplus / total_months * 100) if total_months > 0 else 0
-    
-    # Tax analysis
+
     total_federal_tax = sum(ts.federal_tax for ts in tax_summaries)
     total_state_tax = sum(ts.state_tax for ts in tax_summaries)
     total_taxes = total_federal_tax + total_state_tax
-    
-    # Calculate total income for effective tax rate
+
     total_income = sum(mp.total_gross_cashflow for mp in monthly_projections)
     effective_tax_rate = (total_taxes / total_income * 100) if total_income > 0 else 0
-    
-# Get person names for personalization
+
     person_names = [person.name for person in scenario.people]
     if len(person_names) == 1:
         greeting = f"{person_names[0]}"
@@ -75,8 +105,7 @@ def generate_financial_analysis(
         greeting = f"{person_names[0]} and {person_names[1]}"
     else:
         greeting = "your household"
-    
-    # Build prompt for GPT-4
+
     prompt = f"""You are a Certified Financial Planner analyzing a retirement scenario for {greeting}. Generate a professional analysis following this EXACT structure:
 
 CLIENT SCENARIO:
@@ -128,11 +157,10 @@ Generate analysis:"""
             temperature=0.7,
             max_tokens=800
         )
-        # Strip markdown code fences if present
         analysis = response.choices[0].message.content
         analysis = analysis.replace('```markdown', '').replace('```', '').strip()
-        
         return analysis
+
     except Exception as e:
         return f"""# Analysis Unavailable
 
@@ -144,63 +172,69 @@ Your projection shows:
 - Cumulative surplus: ${total_surplus:,.0f}"""
 
 
+# ─── Response model ───────────────────────────────────────────────────────
+
 class AnalysisResponse(BaseModel):
-    """Response model for analysis."""
     scenario_id: str
     scenario_name: str
     analysis: str
 
 
+# ─── Endpoint ─────────────────────────────────────────────────────────────
+
 @router.post("/scenarios/{scenario_id}/analysis", response_model=AnalysisResponse)
-async def get_ai_analysis(scenario_id: str):
-    """Generate AI-powered financial analysis."""
-    scenario = scenarios_db.get(scenario_id)
-    if scenario is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Scenario '{scenario_id}' not found"
-        )
-    
+async def get_ai_analysis(
+    scenario_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+):
+    """Generate AI-powered financial analysis for a scenario."""
+    user_id = get_current_user_id(request)
+    scenario = load_scenario(scenario_id, user_id, db)
+
     try:
         logger.info(f"Generating AI analysis for: {scenario_id}")
-        
+
         engine = ProjectionEngine(scenario)
         monthly_projections = engine.run()
-        
+
         tax_summaries = calculate_taxes_for_projection(
             monthly_projections,
             scenario.income_streams,
             scenario.tax_settings.filing_status,
             scenario.global_settings.residence_state,
-            scenario.tax_settings.standard_deduction_override
+            scenario.tax_settings.standard_deduction_override,
         )
-        
+
         budget_processor = BudgetProcessor(scenario.budget_settings, scenario.people)
         spending_amounts = [
             budget_processor.process_month(proj.month, int(proj.month.split('-')[1]))
             for proj in monthly_projections
         ]
-        
+
         net_income_projections = calculate_net_income_projections(
             monthly_projections, tax_summaries, spending_amounts
         )
-        
+
         financial_summary = get_financial_summary(net_income_projections)
-        
+
         analysis = generate_financial_analysis(
             scenario, monthly_projections, tax_summaries, financial_summary
         )
-        
+
         logger.info(f"AI analysis generated for: {scenario_id}")
-        
+
         return AnalysisResponse(
             scenario_id=scenario.scenario_id,
             scenario_name=scenario.scenario_name,
-            analysis=analysis
+            analysis=analysis,
         )
+
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error generating analysis: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating analysis: {str(e)}"
+            detail=f"Error generating analysis: {str(e)}",
         )
