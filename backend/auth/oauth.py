@@ -65,7 +65,7 @@ class GoogleUser:
         Args:
             user_info: User info from Google OAuth
         """
-        self.id: str = user_info.get('sub', '')
+        self.id: str = user_info.get('sub') or user_info.get('id', '')
         self.email: str = user_info.get('email', '')
         self.name: str = user_info.get('name', '')
         self.picture: Optional[str] = user_info.get('picture')
