@@ -144,21 +144,14 @@ async def exchange_token(request: Request, response: Response):
     return {"success": True}
 
 
-@router.post("/logout")
-async def logout(request: Request, response: Response):
-    """
-    Log out the current user.
-
-    Deletes the session and clears the cookie.
-    """
+@router.get("/logout")
+async def logout(request: Request):
+    """Log out and redirect to login page."""
     session_id = request.cookies.get(settings.session_cookie_name)
-
     if session_id:
         delete_session(session_id)
 
-    # Cookie deletion attributes must exactly match the set_cookie attributes —
-    # domain, path, samesite, and secure must all be identical or the browser
-    # treats it as a different cookie and won't delete it.
+    response = RedirectResponse(url=f"{settings.frontend_url}/login")
     response.delete_cookie(
         key=settings.session_cookie_name,
         domain=".my-moneyplan.com",
@@ -167,9 +160,7 @@ async def logout(request: Request, response: Response):
         secure=True,
         httponly=True,
     )
-
-    return {"message": "Logged out successfully"}
-
+    return response
 
 @router.get("/status")
 async def auth_status(request: Request):

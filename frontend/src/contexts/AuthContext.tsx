@@ -111,31 +111,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = `${apiBase}/api/auth/login`
   }, [])
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await client.post('/auth/logout')
-    },
-    onSuccess: () => {
-      // Wipe all cached data — scenarios, projections, everything
-      queryClient.clear()
-      // Hard redirect to login — works on all browsers and mobile Safari
-      window.location.href = '/login'
-    },
-    onError: () => {
-      // Even if the server call fails, clear local state and redirect.
-      // Handles cases where the session is already gone server-side.
-      queryClient.clear()
-      window.location.href = '/login'
-    },
-  })
-
-  const logout = useCallback(() => logoutMutation.mutate(), [logoutMutation])
-
-  return (
-    <AuthContext.Provider value={{ isAuthenticated, isLoading, user, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  const logout = useCallback(() => {
+    // Navigate directly to the API logout endpoint.
+    // The server deletes the cookie same-origin and redirects back to /login.
+    queryClient.clear()
+    const apiBase = import.meta.env.PROD
+      ? 'https://api.my-moneyplan.com'
+      : 'http://localhost:8000'
+    window.location.href = `${apiBase}/api/auth/logout`
+  }, [queryClient])
 }
 
 export function useAuth() {
