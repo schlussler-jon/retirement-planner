@@ -34,11 +34,12 @@ interface StepConfig {
   tab: Tab
   label: string
   subtitle: string
-  emptyPrompt: string     // shown in "What's Next" when this step is incomplete
-  emptyAction: string     // CTA label
+  emptyPrompt: string
+  emptyAction: string
   count: (s: Scenario) => number
   isComplete: (s: Scenario) => boolean
   isRequired: boolean
+  supportsAutoAdd: boolean
 }
 
 // ─── step definitions ─────────────────────────────────────────────────────
@@ -53,6 +54,7 @@ const STEPS: StepConfig[] = [
     count: s => s.people.length,
     isComplete: s => s.people.length > 0,
     isRequired: true,
+    supportsAutoAdd: true,
   },
   {
     tab: 'Income',
@@ -63,6 +65,7 @@ const STEPS: StepConfig[] = [
     count: s => s.income_streams.length,
     isComplete: s => s.income_streams.length > 0,
     isRequired: true,
+    supportsAutoAdd: true,
   },
   {
     tab: 'Accounts',
@@ -73,26 +76,29 @@ const STEPS: StepConfig[] = [
     count: s => s.accounts.length,
     isComplete: s => s.accounts.length > 0,
     isRequired: true,
+    supportsAutoAdd: true,
   },
   {
     tab: 'Budget',
     label: 'Budget',
     subtitle: 'Monthly spending categories',
     emptyPrompt: 'Define your monthly budget so the projection knows how much you plan to spend in retirement.',
-    emptyAction: 'Set Up Budget',
+    emptyAction: 'Add a Budget Item',
     count: s => s.budget_settings.categories.filter(c => c.include).length,
     isComplete: s => s.budget_settings.categories.some(c => c.include),
     isRequired: false,
+    supportsAutoAdd: true,
   },
   {
     tab: 'Tax',
     label: 'Tax',
     subtitle: 'Filing status and deductions',
-    emptyPrompt: 'Configure your tax settings — filing status and standard deduction — to get accurate projections.',
-    emptyAction: 'Configure Tax',
+    emptyPrompt: 'Review your tax settings — filing status and standard deduction — for accurate projections.',
+    emptyAction: 'Review Tax Settings',
     count: _ => 0,
     isComplete: s => !!s.tax_settings.filing_status,
     isRequired: false,
+    supportsAutoAdd: false,
   },
   {
     tab: 'Settings',
@@ -101,8 +107,9 @@ const STEPS: StepConfig[] = [
     emptyPrompt: 'Review your projection settings — start date, end year, and state of residence.',
     emptyAction: 'Review Settings',
     count: _ => 0,
-    isComplete: _ => true,   // always has defaults
+    isComplete: _ => true,
     isRequired: false,
+    supportsAutoAdd: false,
   },
 ]
 
@@ -143,7 +150,7 @@ function nextIncompleteStep(s: Scenario): StepConfig | null {
   return STEPS.find(st => !st.isComplete(s)) ?? null
 }
 
-// ─── sub-components ───────────────────────────────────────────────────────
+// ─── ProgressTracker ──────────────────────────────────────────────────────
 
 function ProgressTracker({
   scenario,
@@ -159,8 +166,8 @@ function ProgressTracker({
       <div className="flex items-start justify-between gap-2 flex-wrap sm:flex-nowrap">
         {STEPS.map((step, i) => {
           const complete = step.isComplete(scenario)
-          const active = activeTab === step.tab
-          const count = step.count(scenario)
+          const active   = activeTab === step.tab
+          const count    = step.count(scenario)
 
           return (
             <button
@@ -168,12 +175,8 @@ function ProgressTracker({
               onClick={() => onTabClick(step.tab)}
               className="flex-1 min-w-0 flex flex-col items-center gap-1 group"
             >
-              {/* connector line + circle row */}
               <div className="flex items-center w-full">
-                {/* left line */}
                 <div className={`h-px flex-1 ${i === 0 ? 'opacity-0' : complete ? 'bg-gold-500' : 'bg-slate-700'}`} />
-
-                {/* circle */}
                 <div className={`
                   w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0
                   transition-all duration-200
@@ -186,23 +189,12 @@ function ProgressTracker({
                 `}>
                   {complete && !active ? '✓' : i + 1}
                 </div>
-
-                {/* right line */}
                 <div className={`h-px flex-1 ${i === STEPS.length - 1 ? 'opacity-0' : complete ? 'bg-gold-500' : 'bg-slate-700'}`} />
               </div>
-
-              {/* label */}
-              <span className={`
-                font-sans text-xs font-semibold text-center leading-tight
-                ${active ? 'text-gold-400' : complete ? 'text-gold-600' : 'text-slate-500 group-hover:text-slate-400'}
-              `}>
+              <span className={`font-sans text-xs font-semibold text-center leading-tight ${active ? 'text-gold-400' : complete ? 'text-gold-600' : 'text-slate-500 group-hover:text-slate-400'}`}>
                 {step.label}
-                {count > 0 && (
-                  <span className="ml-1 opacity-60">({count})</span>
-                )}
+                {count > 0 && <span className="ml-1 opacity-60">({count})</span>}
               </span>
-
-              {/* subtitle */}
               <span className="font-sans text-xs text-slate-600 text-center leading-tight hidden sm:block">
                 {step.subtitle}
               </span>
@@ -214,17 +206,21 @@ function ProgressTracker({
   )
 }
 
+// ─── WhatsNext ────────────────────────────────────────────────────────────
+
 function WhatsNext({
   scenario,
   onTabClick,
+  onAddClick,
   isNew,
 }: {
   scenario: Scenario
   onTabClick: (tab: Tab) => void
+  onAddClick: (tab: Tab) => void
   isNew: boolean
 }) {
   const ready = isScenarioReady(scenario)
-  const next = nextIncompleteStep(scenario)
+  const next  = nextIncompleteStep(scenario)
 
   if (ready) {
     return (
@@ -232,12 +228,8 @@ function WhatsNext({
         <div className="flex items-center gap-3">
           <span className="text-2xl">🎉</span>
           <div>
-            <p className="font-sans text-gold-400 font-semibold text-sm">
-              Your scenario is ready to run!
-            </p>
-            <p className="font-sans text-slate-400 text-xs mt-0.5">
-              Save your scenario, then view the projection results.
-            </p>
+            <p className="font-sans text-gold-400 font-semibold text-sm">Your scenario is ready to run!</p>
+            <p className="font-sans text-slate-400 text-xs mt-0.5">Save your scenario, then view the projection results.</p>
           </div>
         </div>
         {!isNew && (
@@ -254,7 +246,6 @@ function WhatsNext({
 
   if (!next) return null
 
-  // find which required steps are still missing for the mini-checklist
   const requiredSteps = STEPS.filter(s => s.isRequired)
 
   return (
@@ -265,18 +256,15 @@ function WhatsNext({
           <p className="font-sans text-white font-semibold text-sm mb-1">
             What's next: <span className="text-gold-400">{next.label}</span>
           </p>
-          <p className="font-sans text-slate-400 text-sm mb-3">
-            {next.emptyPrompt}
-          </p>
+          <p className="font-sans text-slate-400 text-sm mb-3">{next.emptyPrompt}</p>
 
-          {/* mini progress checklist for required steps */}
           <div className="flex flex-wrap gap-3 mb-3">
             {requiredSteps.map(step => (
               <div key={step.tab} className="flex items-center gap-1.5">
                 <span className={`text-xs ${step.isComplete(scenario) ? 'text-gold-400' : 'text-slate-600'}`}>
                   {step.isComplete(scenario) ? '✓' : '○'}
                 </span>
-                <span className={`font-sans text-xs ${step.isComplete(scenario) ? 'text-slate-400 line-through' : 'text-slate-400'}`}>
+                <span className={`font-sans text-xs ${step.isComplete(scenario) ? 'text-slate-500 line-through' : 'text-slate-400'}`}>
                   {step.label}
                 </span>
               </div>
@@ -284,7 +272,7 @@ function WhatsNext({
           </div>
 
           <button
-            onClick={() => onTabClick(next.tab)}
+            onClick={() => next.supportsAutoAdd ? onAddClick(next.tab) : onTabClick(next.tab)}
             className="inline-flex items-center gap-1.5 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-xs px-3 py-1.5 rounded-lg transition-colors"
           >
             {next.emptyAction} →
@@ -295,7 +283,7 @@ function WhatsNext({
   )
 }
 
-// ─── more menu ────────────────────────────────────────────────────────────
+// ─── MoreMenu ─────────────────────────────────────────────────────────────
 
 function MoreMenu({
   onExport,
@@ -336,24 +324,16 @@ function MoreMenu({
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
-          <button
-            onClick={() => { onValidate(); setOpen(false) }}
-            disabled={validating}
-            className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50"
-          >
+          <button onClick={() => { onValidate(); setOpen(false) }} disabled={validating}
+            className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50">
             {validating ? '✓ Validating…' : '✓ Validate'}
           </button>
-          <button
-            onClick={() => { onDuplicate(); setOpen(false) }}
-            disabled={dupLoading}
-            className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50"
-          >
+          <button onClick={() => { onDuplicate(); setOpen(false) }} disabled={dupLoading}
+            className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50">
             {dupLoading ? '⧉ Duplicating…' : '⧉ Duplicate'}
           </button>
-          <button
-            onClick={() => { onExport(); setOpen(false) }}
-            className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-          >
+          <button onClick={() => { onExport(); setOpen(false) }}
+            className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors">
             ↓ Export JSON
           </button>
         </div>
@@ -377,6 +357,7 @@ export default function ScenarioEditor() {
 
   const [scenario,           setScenario]           = useState<Scenario>(emptyScenario)
   const [activeTab,          setActiveTab]          = useState<Tab>('People')
+  const [autoAdd,            setAutoAdd]            = useState(false)
   const [saving,             setSaving]             = useState(false)
   const [saved,              setSaved]              = useState(false)
   const [error,              setError]              = useState<string | null>(null)
@@ -386,29 +367,13 @@ export default function ScenarioEditor() {
   const [validationWarnings, setValidationWarnings] = useState<string[]>([])
   const [validationPassed,   setValidationPassed]   = useState(false)
 
-  // populate when editing
   useEffect(() => {
-    if (scenarioQuery.data) {
-      setScenario(scenarioQuery.data)
-    }
+    if (scenarioQuery.data) setScenario(scenarioQuery.data)
   }, [scenarioQuery.data])
-
-  // auto-advance to next incomplete step when a step becomes complete
-  const prevComplete = useRef<boolean>(false)
-  useEffect(() => {
-    const currentStepComplete = STEPS.find(s => s.tab === activeTab)?.isComplete(scenario) ?? false
-    if (currentStepComplete && !prevComplete.current) {
-      const next = STEPS.find(s => s.tab !== activeTab && !s.isComplete(scenario))
-      if (next) setActiveTab(next.tab)
-    }
-    prevComplete.current = currentStepComplete
-  }, [scenario, activeTab])
 
   // ── save ──────────────────────────────────────────────────────────────
   const handleSave = async () => {
-    setError(null)
-    setSaved(false)
-    setSaving(true)
+    setError(null); setSaved(false); setSaving(true)
     try {
       if (isNew) {
         await createMut.mutateAsync(scenario)
@@ -430,15 +395,10 @@ export default function ScenarioEditor() {
 
   // ── duplicate ─────────────────────────────────────────────────────────
   const handleDuplicate = async () => {
-    setError(null)
-    setDupLoading(true)
+    setError(null); setDupLoading(true)
     try {
       const newId = crypto.randomUUID()
-      await client.post('/scenarios', {
-        ...scenario,
-        scenario_id:   newId,
-        scenario_name: `${scenario.scenario_name} (copy)`,
-      })
+      await client.post('/scenarios', { ...scenario, scenario_id: newId, scenario_name: `${scenario.scenario_name} (copy)` })
       await qc.invalidateQueries({ queryKey: qk.scenarios() })
       navigate(`/scenarios/${newId}`)
     } catch (e: any) {
@@ -450,17 +410,12 @@ export default function ScenarioEditor() {
 
   // ── validate ──────────────────────────────────────────────────────────
   const handleValidate = async () => {
-    setValidationErrors([])
-    setValidationWarnings([])
-    setValidationPassed(false)
-    setValidating(true)
+    setValidationErrors([]); setValidationWarnings([]); setValidationPassed(false); setValidating(true)
     try {
       const result = await validateMut.mutateAsync(scenario)
       setValidationErrors(result.errors ?? [])
       setValidationWarnings(result.warnings ?? [])
-      if (result.valid && !result.errors?.length && !result.warnings?.length) {
-        setValidationPassed(true)
-      }
+      if (result.valid && !result.errors?.length && !result.warnings?.length) setValidationPassed(true)
     } catch (e: any) {
       setError(e?.response?.data?.detail ?? 'Validation request failed.')
     } finally {
@@ -468,7 +423,7 @@ export default function ScenarioEditor() {
     }
   }
 
-  // ── loading / error states ────────────────────────────────────────────
+  // ── loading / error ───────────────────────────────────────────────────
   if (!isNew && scenarioQuery.isLoading) {
     return (
       <div className="animate-fade-in flex items-center justify-center h-64">
@@ -489,7 +444,7 @@ export default function ScenarioEditor() {
   return (
     <div className="animate-fade-in max-w-4xl">
 
-      {/* ── header ── */}
+      {/* header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="font-display text-3xl text-white">
@@ -499,10 +454,9 @@ export default function ScenarioEditor() {
             {isNew ? 'Fill in each step below to build your plan.' : `Editing "${scenario.scenario_name}"`}
           </p>
         </div>
-
         <div className="flex items-center gap-3">
           <MoreMenu
-            onExport={exportScenarioAsFile.bind(null, scenario)}
+            onExport={() => exportScenarioAsFile(scenario)}
             onDuplicate={handleDuplicate}
             onValidate={handleValidate}
             dupLoading={dupLoading}
@@ -512,31 +466,25 @@ export default function ScenarioEditor() {
           <button
             onClick={handleSave}
             disabled={saving || !scenario.scenario_name}
-            className="
-              inline-flex items-center justify-center
-              bg-gold-600 hover:bg-gold-500
-              disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed
-              text-slate-950 font-sans font-semibold text-sm
-              px-6 py-2.5 rounded-lg transition-colors duration-150
-            "
+            className="inline-flex items-center justify-center bg-gold-600 hover:bg-gold-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-slate-950 font-sans font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors duration-150"
           >
             {saving ? 'Saving…' : isNew ? 'Create Scenario' : 'Save Scenario'}
           </button>
         </div>
       </div>
 
-      {/* ── name / description ── */}
+      {/* name / description */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4">
         <div className="mb-4">
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-            Scenario Name <span className="text-danger">*</span>
+            Scenario Name <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
             value={scenario.scenario_name}
             onChange={e => setScenario(prev => ({ ...prev, scenario_name: e.target.value }))}
-            placeholder="e.g. Jon &amp; Rebecca's Retirement"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600"
+            placeholder="e.g. Jon & Rebecca's Retirement"
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
           />
         </div>
         <div>
@@ -548,66 +496,98 @@ export default function ScenarioEditor() {
             onChange={e => setScenario(prev => ({ ...prev, description: e.target.value }))}
             placeholder="e.g. Base plan assuming both retire at 65…"
             rows={2}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 resize-none"
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 resize-none focus:border-gold-600 focus:outline-none"
           />
         </div>
       </div>
 
-      {/* ── banners ── */}
+      {/* banners */}
       {error && (
-        <div className="bg-danger/10 border border-danger/30 rounded-lg px-4 py-3 mb-4">
-          <p className="font-sans text-danger text-sm">{error}</p>
+        <div className="bg-red-900/20 border border-red-700/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-red-400 text-sm">{error}</p>
         </div>
       )}
       {saved && (
-        <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 mb-4">
-          <p className="font-sans text-success text-sm">✓ Changes saved successfully.</p>
+        <div className="bg-green-900/20 border border-green-700/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-green-400 text-sm">✓ Changes saved successfully.</p>
         </div>
       )}
       {validationPassed && (
-        <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 mb-4">
-          <p className="font-sans text-success text-sm">✓ Scenario is valid — ready to run.</p>
+        <div className="bg-green-900/20 border border-green-700/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-green-400 text-sm">✓ Scenario is valid — ready to run.</p>
         </div>
       )}
       {validationErrors.length > 0 && (
-        <div className="bg-danger/10 border border-danger/30 rounded-lg px-4 py-3 mb-4">
-          <p className="font-sans text-danger text-xs font-semibold uppercase tracking-wider mb-2">Validation Errors</p>
-          {validationErrors.map((err, i) => (
-            <p key={i} className="font-sans text-danger text-sm">· {err}</p>
-          ))}
+        <div className="bg-red-900/20 border border-red-700/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-red-400 text-xs font-semibold uppercase tracking-wider mb-2">Validation Errors</p>
+          {validationErrors.map((err, i) => <p key={i} className="font-sans text-red-400 text-sm">· {err}</p>)}
         </div>
       )}
       {validationWarnings.length > 0 && (
         <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg px-4 py-3 mb-4">
           <p className="font-sans text-amber-400 text-xs font-semibold uppercase tracking-wider mb-2">Warnings</p>
-          {validationWarnings.map((warn, i) => (
-            <p key={i} className="font-sans text-amber-400 text-sm">· {warn}</p>
-          ))}
+          {validationWarnings.map((warn, i) => <p key={i} className="font-sans text-amber-400 text-sm">· {warn}</p>)}
         </div>
       )}
 
-      {/* ── progress tracker ── */}
-      <ProgressTracker
-        scenario={scenario}
-        activeTab={activeTab}
-        onTabClick={setActiveTab}
-      />
+      {/* progress tracker */}
+      <ProgressTracker scenario={scenario} activeTab={activeTab} onTabClick={tab => { setAutoAdd(false); setActiveTab(tab) }} />
 
-      {/* ── what's next card ── */}
+      {/* what's next */}
       <WhatsNext
         scenario={scenario}
-        onTabClick={setActiveTab}
+        onTabClick={tab => { setAutoAdd(false); setActiveTab(tab) }}
+        onAddClick={tab => { setActiveTab(tab); setAutoAdd(true) }}
         isNew={isNew}
       />
 
-      {/* ── tab content ── */}
+      {/* tab content */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-        {activeTab === 'People'   && <PeopleTab    people={scenario.people}                    onChange={v => setScenario(prev => ({ ...prev, people: v }))}           />}
-        {activeTab === 'Income'   && <IncomeTab    streams={scenario.income_streams} people={scenario.people} onChange={v => setScenario(prev => ({ ...prev, income_streams: v }))} />}
-        {activeTab === 'Accounts' && <AccountsTab  accounts={scenario.accounts}                onChange={v => setScenario(prev => ({ ...prev, accounts: v }))}        />}
-        {activeTab === 'Budget'   && <BudgetTab    budget={scenario.budget_settings}           onChange={v => setScenario(prev => ({ ...prev, budget_settings: v }))} />}
-        {activeTab === 'Tax'      && <TaxTab       tax={scenario.tax_settings}                 onChange={v => setScenario(prev => ({ ...prev, tax_settings: v }))}    />}
-        {activeTab === 'Settings' && <GlobalSettingsTab settings={scenario.global_settings}   onChange={v => setScenario(prev => ({ ...prev, global_settings: v }))}  />}
+        {activeTab === 'People' && (
+          <PeopleTab
+            people={scenario.people}
+            onChange={v => setScenario(prev => ({ ...prev, people: v }))}
+            autoAdd={autoAdd && activeTab === 'People'}
+            onAutoAddDone={() => setAutoAdd(false)}
+          />
+        )}
+        {activeTab === 'Income' && (
+          <IncomeTab
+            streams={scenario.income_streams}
+            people={scenario.people}
+            onChange={v => setScenario(prev => ({ ...prev, income_streams: v }))}
+            autoAdd={autoAdd && activeTab === 'Income'}
+            onAutoAddDone={() => setAutoAdd(false)}
+          />
+        )}
+        {activeTab === 'Accounts' && (
+          <AccountsTab
+            accounts={scenario.accounts}
+            onChange={v => setScenario(prev => ({ ...prev, accounts: v }))}
+            autoAdd={autoAdd && activeTab === 'Accounts'}
+            onAutoAddDone={() => setAutoAdd(false)}
+          />
+        )}
+        {activeTab === 'Budget' && (
+          <BudgetTab
+            budget={scenario.budget_settings}
+            onChange={v => setScenario(prev => ({ ...prev, budget_settings: v }))}
+            autoAdd={autoAdd && activeTab === 'Budget'}
+            onAutoAddDone={() => setAutoAdd(false)}
+          />
+        )}
+        {activeTab === 'Tax' && (
+          <TaxTab
+            tax={scenario.tax_settings}
+            onChange={v => setScenario(prev => ({ ...prev, tax_settings: v }))}
+          />
+        )}
+        {activeTab === 'Settings' && (
+          <GlobalSettingsTab
+            settings={scenario.global_settings}
+            onChange={v => setScenario(prev => ({ ...prev, global_settings: v }))}
+          />
+        )}
       </div>
     </div>
   )
