@@ -1,195 +1,377 @@
-"""
-Scenario management endpoints with PostgreSQL storage.
+/**
+ * ScenarioEditor
+ *
+ * Dual-mode page:
+ *   /scenarios/new  → POST (create)
+ *   /scenarios/:id  → PUT  (edit)   + "View Results" link
+ *
+ * All state lives in a single `scenario` object.  Each tab receives its
+ * slice plus an onChange; nothing hits the API until the user clicks Save.
+ *
+ * Scenario IDs are auto-generated UUIDs — users never see or type them.
+ */
 
-Replaces in-memory dict with proper database persistence and user isolation.
-"""
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useQueryClient }                                                      from '@tanstack/react-query'
+import { useScenario, useCreateScenario, useUpdateScenario, useScenarios, useValidateScenario, qk } from '@/api/hooks'
+import { saveScenarioToStorage, exportScenarioAsFile } from '@/utils/storage'
+import client                                                                   from '@/api/client'
+import { parseValidationError } from '@/utils/errorParser'
+import type { Scenario, GlobalSettings, Person, IncomeStream, InvestmentAccount, BudgetSettings, TaxSettings } from '@/types/scenario'
 
-from fastapi import APIRouter, Depends, HTTPException, Cookie
-from typing import Optional, List
-from sqlalchemy.orm import Session
-import json
+import GlobalSettingsTab from '@/components/editor/GlobalSettingsTab'
+import PeopleTab         from '@/components/editor/PeopleTab'
+import IncomeTab         from '@/components/editor/IncomeTab'
+import AccountsTab       from '@/components/editor/AccountsTab'
+import BudgetTab         from '@/components/editor/BudgetTab'
+import TaxTab            from '@/components/editor/TaxTab'
 
-from models.scenario import Scenario
-from db.models import get_db, ScenarioModel
-from auth.session import get_user_from_session
+// ─── constants ────────────────────────────────────────────────────────────
 
-router = APIRouter(prefix="/scenarios", tags=["scenarios"])
+const TABS = ['Settings', 'People', 'Income', 'Accounts', 'Budget', 'Tax'] as const
+type Tab = typeof TABS[number]
 
+// ─── helpers ──────────────────────────────────────────────────────────────
 
-def get_current_user_id(retirement_planner_session: Optional[str] = Cookie(None)) -> str:
-    """
-    Extract user ID from session cookie.
-    
-    Raises:
-        HTTPException: If not authenticated
-    """
-    if not retirement_planner_session:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    user = get_user_from_session(retirement_planner_session)
-    if not user:
-        raise HTTPException(status_code=401, detail="Session expired")
-    
-    return user.id
+function emptyScenario(): Scenario {
+  return {
+    scenario_id: crypto.randomUUID(),   // auto-generated, never shown to user
+    scenario_name: '',
+    description: '',
+    global_settings: {
+      projection_start_month: '2026-01',
+      projection_end_year: 2056,
+      residence_state: 'AZ',
+    },
+    people: [],
+    income_streams: [],
+    accounts: [],
+    budget_settings: {
+      categories: [],
+      inflation_annual_percent: 0.025,
+      survivor_flexible_reduction_percent: 0,
+      survivor_reduction_mode: 'flex_only',
+    },
+    tax_settings: {
+      filing_status: 'single',
+      standard_deduction_override: null,
+      tax_year_ruleset: 2024,
+    },
+  }
+}
 
+function tabBadge(s: Scenario, tab: Tab): number | null {
+  const map: Partial<Record<Tab, number>> = {
+    People:   s.people.length,
+    Income:   s.income_streams.length,
+    Accounts: s.accounts.length,
+    Budget:   s.budget_settings.categories.length,
+  }
+  const n = map[tab]
+  return n ? n : null
+}
 
-@router.post("", status_code=201)
-def create_scenario(
-    scenario: Scenario,
-    db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
-    """Create a new scenario."""
-    # Check if already exists
-    existing = db.query(ScenarioModel).filter_by(
-        user_id=user_id,
-        scenario_id=scenario.scenario_id
-    ).first()
-    
-    if existing:
-        raise HTTPException(
-            status_code=409,
-            detail=f"Scenario '{scenario.scenario_id}' already exists"
-        )
-    
-    # Create new
-    db_scenario = ScenarioModel(
-        user_id=user_id,
-        scenario_id=scenario.scenario_id,
-        data=scenario.model_dump_json()
+// ─── component ────────────────────────────────────────────────────────────
+
+export default function ScenarioEditor() {
+  const { id }   = useParams<{ id: string }>()
+  const navigate = useNavigate()
+  const isNew    = !id
+
+  const scenarioQuery  = useScenario(id ?? '', !isNew)
+  const createMut      = useCreateScenario()
+  const updateMut      = useUpdateScenario()
+  const validateMut    = useValidateScenario()
+  const scenariosQuery = useScenarios()
+  const qc             = useQueryClient()
+
+  const [scenario,           setScenario]           = useState<Scenario>(emptyScenario)
+  const [activeTab,          setActiveTab]          = useState<Tab>('Settings')
+  const [saving,             setSaving]             = useState(false)
+  const [saved,              setSaved]              = useState(false)
+  const [error,              setError]              = useState<string | null>(null)
+  const [dupLoading,         setDupLoading]         = useState(false)
+  const [validating,         setValidating]         = useState(false)
+  const [validationErrors,   setValidationErrors]   = useState<string[]>([])
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([])
+  const [validationPassed,   setValidationPassed]   = useState(false)
+
+  // ── populate when editing ───────────────────────────────────────────
+  useEffect(() => {
+    if (scenarioQuery.data) {
+      setScenario(scenarioQuery.data)
+    }
+  }, [scenarioQuery.data])
+
+  // ── save ────────────────────────────────────────────────────────────
+  const handleSave = async () => {
+    setError(null)
+    setSaved(false)
+    setSaving(true)
+    try {
+      if (isNew) {
+        await createMut.mutateAsync(scenario)
+        saveScenarioToStorage(scenario)
+        navigate(`/scenarios/${scenario.scenario_id}`)
+      } else {
+        await updateMut.mutateAsync(scenario)
+        saveScenarioToStorage(scenario)
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+      }
+    } catch (e: any) {
+      const detail = e?.response?.data?.detail
+      setError(detail ? parseValidationError(detail) : 'An unexpected error occurred.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleExportJSON = () => {
+    exportScenarioAsFile(scenario)
+  }
+
+  // ── duplicate ───────────────────────────────────────────────────────────
+  const handleDuplicate = async () => {
+    setError(null)
+    setDupLoading(true)
+    try {
+      const newId = crypto.randomUUID()  // always unique, no collision checking needed
+
+      await client.post('/scenarios', {
+        ...scenario,
+        scenario_id:   newId,
+        scenario_name: `${scenario.scenario_name} (copy)`,
+      })
+      await qc.invalidateQueries({ queryKey: qk.scenarios() })
+      navigate(`/scenarios/${newId}`)
+    } catch (e: any) {
+      setError(e?.response?.data?.detail ?? 'Failed to duplicate scenario.')
+    } finally {
+      setDupLoading(false)
+    }
+  }
+
+  // ── validate ───────────────────────────────────────────────────────────
+  const handleValidate = async () => {
+    setValidationErrors([])
+    setValidationWarnings([])
+    setValidationPassed(false)
+    setValidating(true)
+    try {
+      const result = await validateMut.mutateAsync(scenario)
+      setValidationErrors(result.errors ?? [])
+      setValidationWarnings(result.warnings ?? [])
+      if (result.valid && !result.errors?.length && !result.warnings?.length) {
+        setValidationPassed(true)
+      }
+    } catch (e: any) {
+      setError(e?.response?.data?.detail ?? 'Validation request failed.')
+    } finally {
+      setValidating(false)
+    }
+  }
+
+  // ── loading / error for existing scenario ──────────────────────────
+  if (!isNew && scenarioQuery.isLoading) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center h-64">
+        <p className="font-sans text-slate-500 text-sm">Loading scenario…</p>
+      </div>
     )
-    db.add(db_scenario)
-    db.commit()
-    
-    return {
-        "scenario_id": scenario.scenario_id,
-        "scenario_name": scenario.scenario_name,
-        "message": "Scenario created successfully"
-    }
+  }
+  if (!isNew && scenarioQuery.isError) {
+    return (
+      <div className="animate-fade-in">
+        <p className="font-sans text-danger text-sm">Scenario not found.</p>
+        <a href="/scenarios" className="font-sans text-gold-500 hover:text-gold-400 text-sm mt-2 inline-block">← Back to scenarios</a>
+      </div>
+    )
+  }
 
+  // ── render ──────────────────────────────────────────────────────────
+  return (
+    <div className="animate-fade-in max-w-4xl">
 
-@router.get("")
-def list_scenarios(
-    db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
-    """List all scenarios for the current user."""
-    db_scenarios = db.query(ScenarioModel).filter_by(user_id=user_id).all()
-    
-    scenarios = []
-    for db_s in db_scenarios:
-        try:
-            data = json.loads(db_s.data)
-            scenarios.append({
-                "scenario_id": db_s.scenario_id,
-                "scenario_name": data.get("scenario_name", ""),
-                "people_count": len(data.get("people", [])),
-                "income_streams_count": len(data.get("income_streams", [])),
-                "accounts_count": len(data.get("accounts", [])),
-            })
-        except json.JSONDecodeError:
-            continue
-    
-    return {"scenarios": scenarios, "count": len(scenarios)}
+      {/* header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-6">
+        <div>
+          <h1 className="font-display text-3xl text-white">
+            {isNew ? 'New Scenario' : 'Edit Scenario'}
+          </h1>
+          <p className="font-sans text-slate-500 text-sm mt-1">
+            {isNew
+              ? 'Fill in the details below, then click Create.'
+              : `Editing "${scenario.scenario_name}"`}
+          </p>
+        </div>
 
+        {/* action buttons */}
+        <div className="flex items-center gap-3">
+          {/* View Results – edit mode only */}
+          {!isNew && (
+            <span className="relative inline-flex items-center">
+              <Link
+                to={`/scenarios/${scenario.scenario_id}/results`}
+                className="font-sans text-gold-500 hover:text-gold-400 text-sm transition-colors"
+              >
+                View Results →
+              </Link>
+              {validationErrors.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-danger"></span>
+              )}
+            </span>
+          )}
 
-@router.get("/{scenario_id}")
-def get_scenario(
-    scenario_id: str,
-    db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
-    """Get a specific scenario."""
-    db_scenario = db.query(ScenarioModel).filter_by(
-        user_id=user_id,
-        scenario_id=scenario_id
-    ).first()
-    
-    if not db_scenario:
-        raise HTTPException(status_code=404, detail="Scenario not found")
-    
-    return json.loads(db_scenario.data)
+          {/* Export JSON */}
+          {!isNew && (
+            <button
+              onClick={handleExportJSON}
+              className="font-sans text-slate-500 hover:text-gold-400 text-sm transition-colors"
+            >
+              ↓ Export JSON
+            </button>
+          )}
 
+          {/* Duplicate – edit mode only */}
+          {!isNew && (
+            <button
+              onClick={handleDuplicate}
+              disabled={dupLoading}
+              className="font-sans text-slate-500 hover:text-gold-400 disabled:text-slate-700 disabled:cursor-not-allowed text-sm transition-colors"
+            >
+              {dupLoading ? '⧉ …' : '⧉ Duplicate'}
+            </button>
+          )}
 
-@router.put("/{scenario_id}")
-def update_scenario(
-    scenario_id: str,
-    scenario: Scenario,
-    db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
-    """Update an existing scenario."""
-    if scenario_id != scenario.scenario_id:
-        raise HTTPException(
-            status_code=400,
-            detail="Scenario ID in path must match scenario ID in body"
-        )
-    
-    db_scenario = db.query(ScenarioModel).filter_by(
-        user_id=user_id,
-        scenario_id=scenario_id
-    ).first()
-    
-    if not db_scenario:
-        raise HTTPException(status_code=404, detail="Scenario not found")
-    
-    db_scenario.data = scenario.model_dump_json()
-    db.commit()
-    
-    return {
-        "scenario_id": scenario.scenario_id,
-        "scenario_name": scenario.scenario_name,
-        "message": "Scenario updated successfully"
-    }
+          {/* Validate – edit mode only */}
+          {!isNew && (
+            <button
+              onClick={handleValidate}
+              disabled={validating}
+              className="font-sans text-slate-500 hover:text-gold-400 disabled:text-slate-700 disabled:cursor-not-allowed text-sm transition-colors"
+            >
+              {validating ? '✓ …' : '✓ Validate'}
+            </button>
+          )}
 
+          {/* Save / Create */}
+          <button
+            onClick={handleSave}
+            disabled={saving || !scenario.scenario_name}
+            className="
+              inline-flex items-center justify-center
+              bg-gold-600 hover:bg-gold-500
+              disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed
+              text-slate-950 font-sans font-semibold text-sm
+              px-6 py-2.5 rounded-lg
+              transition-colors duration-150
+            "
+          >
+            {saving ? 'Saving…' : isNew ? 'Create Scenario' : 'Save Scenario'}
+          </button>
+        </div>
+      </div>
 
-@router.delete("/{scenario_id}")
-def delete_scenario(
-    scenario_id: str,
-    db: Session = Depends(get_db),
-    user_id: str = Depends(get_current_user_id)
-):
-    """Delete a scenario."""
-    db_scenario = db.query(ScenarioModel).filter_by(
-        user_id=user_id,
-        scenario_id=scenario_id
-    ).first()
-    
-    if not db_scenario:
-        raise HTTPException(status_code=404, detail="Scenario not found")
-    
-    db.delete(db_scenario)
-    db.commit()
-    
-    return {"scenario_id": scenario_id, "message": "Scenario deleted"}
+      {/* banners */}
+      {error && (
+        <div className="bg-danger/10 border border-danger/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-danger text-sm">{error}</p>
+        </div>
+      )}
+      {saved && (
+        <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-success text-sm">✓ Changes saved successfully.</p>
+        </div>
+      )}
+      {validationPassed && (
+        <div className="bg-success/10 border border-success/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-success text-sm">✓ Scenario is valid — ready to run.</p>
+        </div>
+      )}
+      {validationErrors.length > 0 && (
+        <div className="bg-danger/10 border border-danger/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-danger text-xs font-semibold uppercase tracking-wider mb-2">Validation Errors</p>
+          {validationErrors.map((err, i) => (
+            <p key={i} className="font-sans text-danger text-sm">· {err}</p>
+          ))}
+        </div>
+      )}
+      {validationWarnings.length > 0 && (
+        <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg px-4 py-3 mb-4">
+          <p className="font-sans text-amber-400 text-xs font-semibold uppercase tracking-wider mb-2">Warnings</p>
+          {validationWarnings.map((warn, i) => (
+            <p key={i} className="font-sans text-amber-400 text-sm">· {warn}</p>
+          ))}
+        </div>
+      )}
 
+      {/* name / description — ID is hidden, auto-generated */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4">
+        <div className="mb-4">
+          <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+            Scenario Name <span className="text-danger">*</span>
+          </label>
+          <input
+            type="text"
+            value={scenario.scenario_name}
+            onChange={e => setScenario(prev => ({ ...prev, scenario_name: e.target.value }))}
+            placeholder="e.g. Base Retirement Plan"
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600"
+          />
+        </div>
+        <div>
+          <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+            Description
+          </label>
+          <textarea
+            value={scenario.description}
+            onChange={e => setScenario(prev => ({ ...prev, description: e.target.value }))}
+            placeholder="Optional notes about this scenario…"
+            rows={2}
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 resize-none"
+          />
+        </div>
+      </div>
 
-@router.post("/{scenario_id}/validate")
-def validate_scenario(
-    scenario_id: str,
-    scenario: Scenario,
-    user_id: str = Depends(get_current_user_id)
-):
-    """
-    Validate scenario without saving.
-    
-    Note: This doesn't require DB access - pure validation.
-    """
-    errors = []
-    warnings = []
-    
-    # Basic validation
-    if not scenario.scenario_name:
-        errors.append("Scenario name is required")
-    
-    if not scenario.people:
-        warnings.append("No people defined - projection may not be meaningful")
-    
-    if not scenario.income_streams and not scenario.accounts:
-        warnings.append("No income streams or accounts - projection will show zero income")
-    
-    return {
-        "valid": len(errors) == 0,
-        "errors": errors if errors else None,
-        "warnings": warnings if warnings else None
-    }
+      {/* tab strip */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 mb-4">
+        {TABS.map(tab => {
+          const badge = tabBadge(scenario, tab)
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`
+                font-sans text-xs font-semibold px-2 py-2 rounded-lg
+                transition-colors duration-150 whitespace-nowrap
+                ${activeTab === tab
+                  ? 'bg-slate-800 text-gold-500'
+                  : 'text-slate-500 hover:text-slate-300'
+                }
+              `}
+            >
+              {tab}
+              {badge !== null && (
+                <span className={`ml-1 ${activeTab === tab ? 'text-gold-600' : 'text-slate-600'}`}>
+                  ({badge})
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* tab content */}
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+        {activeTab === 'Settings'  && <GlobalSettingsTab settings={scenario.global_settings}   onChange={v => setScenario(prev => ({ ...prev, global_settings: v }))}  />}
+        {activeTab === 'People'    && <PeopleTab    people={scenario.people}                    onChange={v => setScenario(prev => ({ ...prev, people: v }))}           />}
+        {activeTab === 'Income'    && <IncomeTab    streams={scenario.income_streams} people={scenario.people} onChange={v => setScenario(prev => ({ ...prev, income_streams: v }))} />}
+        {activeTab === 'Accounts'  && <AccountsTab  accounts={scenario.accounts}                onChange={v => setScenario(prev => ({ ...prev, accounts: v }))}        />}
+        {activeTab === 'Budget'    && <BudgetTab    budget={scenario.budget_settings}           onChange={v => setScenario(prev => ({ ...prev, budget_settings: v }))} />}
+        {activeTab === 'Tax'       && <TaxTab       tax={scenario.tax_settings}                 onChange={v => setScenario(prev => ({ ...prev, tax_settings: v }))}    />}
+      </div>
+    </div>
+  )
+}

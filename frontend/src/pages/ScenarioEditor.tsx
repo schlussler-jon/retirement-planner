@@ -7,6 +7,8 @@
  *
  * All state lives in a single `scenario` object.  Each tab receives its
  * slice plus an onChange; nothing hits the API until the user clicks Save.
+ *
+ * Scenario IDs are auto-generated UUIDs — users never see or type them.
  */
 
 import { useState, useEffect } from 'react'
@@ -34,7 +36,7 @@ type Tab = typeof TABS[number]
 
 function emptyScenario(): Scenario {
   return {
-    scenario_id: '',
+    scenario_id: crypto.randomUUID(),   // auto-generated, never shown to user
     scenario_name: '',
     description: '',
     global_settings: {
@@ -57,16 +59,6 @@ function emptyScenario(): Scenario {
       tax_year_ruleset: 2024,
     },
   }
-}
-
-function slugify(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .slice(0, 60)
 }
 
 function tabBadge(s: Scenario, tab: Tab): number | null {
@@ -99,7 +91,6 @@ export default function ScenarioEditor() {
   const [saving,             setSaving]             = useState(false)
   const [saved,              setSaved]              = useState(false)
   const [error,              setError]              = useState<string | null>(null)
-  const [idTouched,          setIdTouched]          = useState(false)
   const [dupLoading,         setDupLoading]         = useState(false)
   const [validating,         setValidating]         = useState(false)
   const [validationErrors,   setValidationErrors]   = useState<string[]>([])
@@ -110,33 +101,22 @@ export default function ScenarioEditor() {
   useEffect(() => {
     if (scenarioQuery.data) {
       setScenario(scenarioQuery.data)
-      setIdTouched(true)
     }
   }, [scenarioQuery.data])
 
-  // ── auto-generate ID from name ──────────────────────────────────────
-  useEffect(() => {
-    if (isNew && !idTouched) {
-      setScenario(prev => ({
-        ...prev,
-        scenario_id: prev.scenario_name ? slugify(prev.scenario_name) : '',
-      }))
-    }
-  }, [scenario.scenario_name, isNew, idTouched])
-
   // ── save ────────────────────────────────────────────────────────────
-const handleSave = async () => {
+  const handleSave = async () => {
     setError(null)
     setSaved(false)
     setSaving(true)
     try {
       if (isNew) {
         await createMut.mutateAsync(scenario)
-        saveScenarioToStorage(scenario)  // Save to LocalStorage too
+        saveScenarioToStorage(scenario)
         navigate(`/scenarios/${scenario.scenario_id}`)
       } else {
         await updateMut.mutateAsync(scenario)
-        saveScenarioToStorage(scenario)  // Save to LocalStorage too
+        saveScenarioToStorage(scenario)
         setSaved(true)
         setTimeout(() => setSaved(false), 3000)
       }
@@ -148,11 +128,6 @@ const handleSave = async () => {
     }
   }
 
-  const handleSaveToLocal = () => {
-    saveScenarioToStorage(scenario)
-    alert(`"${scenario.scenario_name}" saved to LocalStorage!`)
-  }
-
   const handleExportJSON = () => {
     exportScenarioAsFile(scenario)
   }
@@ -162,12 +137,7 @@ const handleSave = async () => {
     setError(null)
     setDupLoading(true)
     try {
-      const existingIds = new Set(
-        (scenariosQuery.data?.scenarios ?? []).map(s => s.scenario_id)
-      )
-      let newId = `${scenario.scenario_id}-copy`
-      let n = 2
-      while (existingIds.has(newId)) { newId = `${scenario.scenario_id}-copy-${n}`; n++ }
+      const newId = crypto.randomUUID()  // always unique, no collision checking needed
 
       await client.post('/scenarios', {
         ...scenario,
@@ -239,7 +209,7 @@ const handleSave = async () => {
 
         {/* action buttons */}
         <div className="flex items-center gap-3">
-          {/* View Results – edit mode only, red dot when validation errors exist */}
+          {/* View Results – edit mode only */}
           {!isNew && (
             <span className="relative inline-flex items-center">
               <Link
@@ -289,7 +259,7 @@ const handleSave = async () => {
           {/* Save / Create */}
           <button
             onClick={handleSave}
-            disabled={saving || !scenario.scenario_name || !scenario.scenario_id}
+            disabled={saving || !scenario.scenario_name}
             className="
               inline-flex items-center justify-center
               bg-gold-600 hover:bg-gold-500
@@ -337,39 +307,21 @@ const handleSave = async () => {
         </div>
       )}
 
-      {/* name / id / description */}
+      {/* name / description — ID is hidden, auto-generated */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Scenario Name <span className="text-danger">*</span>
-            </label>
-            <input
-              type="text"
-              value={scenario.scenario_name}
-              onChange={e => setScenario(prev => ({ ...prev, scenario_name: e.target.value }))}
-              placeholder="e.g. Base Retirement Plan"
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600"
-            />
-          </div>
-          <div>
-            <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Scenario ID <span className="text-danger">*</span>
-            </label>
-            <input
-              type="text"
-              value={scenario.scenario_id}
-              onChange={e => { setIdTouched(true); setScenario(prev => ({ ...prev, scenario_id: e.target.value })) }}
-              placeholder="auto-generated from name"
-              disabled={!isNew}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <p className="font-sans text-slate-600 text-xs mt-1">
-              {isNew ? 'Auto-fills as you type the name.' : 'Cannot be changed after creation.'}
-            </p>
-          </div>
+        <div className="mb-4">
+          <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+            Scenario Name <span className="text-danger">*</span>
+          </label>
+          <input
+            type="text"
+            value={scenario.scenario_name}
+            onChange={e => setScenario(prev => ({ ...prev, scenario_name: e.target.value }))}
+            placeholder="e.g. Base Retirement Plan"
+            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600"
+          />
         </div>
-        <div className="mt-4">
+        <div>
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
             Description
           </label>
