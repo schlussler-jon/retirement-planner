@@ -5,11 +5,12 @@
  *   • isAuthenticated – true if user has valid session
  *   • user            – user profile data
  *   • login()         – redirects to Google OAuth
- *   • logout()        – POST /api/auth/logout then redirect to /login
+ *   • logout()        – navigates to API logout endpoint (handles cookie
+ *                       deletion same-origin, then redirects to /login)
  */
 
 import React, { createContext, useContext, useCallback, useEffect, useState } from 'react'
-import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import client from '@/api/client'
 
 interface User {
@@ -60,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     new URLSearchParams(window.location.search).has('token')
   )
 
+  // ── token exchange ────────────────────────────────────────────────────
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const token = params.get('token')
@@ -88,8 +90,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
   }, [queryClient])
 
-  // Don't run the auth status query while exchange is in flight —
-  // prevents a stale `authenticated: false` from racing the exchange.
+  // ── auth status query ─────────────────────────────────────────────────
+  // Don't run while exchange is in flight — prevents a stale
+  // `authenticated: false` from racing the exchange and redirecting to /login.
   const statusQuery = useQuery({
     queryKey: ['authStatus'],
     queryFn: fetchAuthStatus,
@@ -100,10 +103,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = statusQuery.data?.authenticated ?? false
   const isLoading = isExchanging || statusQuery.isLoading
-
-  // User object lives directly on the status response
   const user: User | null = statusQuery.data?.user ?? null
 
+  // ── login ─────────────────────────────────────────────────────────────
   const login = useCallback(() => {
     const apiBase = import.meta.env.PROD
       ? 'https://api.my-moneyplan.com'
@@ -111,15 +113,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     window.location.href = `${apiBase}/api/auth/login`
   }, [])
 
+  // ── logout ────────────────────────────────────────────────────────────
+  // Navigate directly to the API logout endpoint rather than making an
+  // axios call. This ensures the cookie deletion is same-origin on
+  // api.my-moneyplan.com, which is the only reliable way to clear a
+  // SameSite=None cookie on Safari and iOS.
   const logout = useCallback(() => {
-    // Navigate directly to the API logout endpoint.
-    // The server deletes the cookie same-origin and redirects back to /login.
     queryClient.clear()
     const apiBase = import.meta.env.PROD
       ? 'https://api.my-moneyplan.com'
       : 'http://localhost:8000'
     window.location.href = `${apiBase}/api/auth/logout`
   }, [queryClient])
+
+  return (
+    <AuthContext.Provider value={{ isAuthenticated, isLoading, user, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {
