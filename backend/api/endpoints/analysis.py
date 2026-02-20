@@ -106,6 +106,8 @@ def generate_financial_analysis(
     else:
         greeting = "your household"
 
+    pct = lambda n: (n / ending_portfolio * 100) if ending_portfolio else 0
+
     prompt = f"""You are a Certified Financial Planner analyzing a retirement scenario for {greeting}. Generate a professional analysis following this EXACT structure:
 
 CLIENT SCENARIO:
@@ -118,9 +120,9 @@ CLIENT SCENARIO:
 - Cumulative surplus: ${total_surplus:,.0f}
 
 TAX ARCHITECTURE:
-- Tax-deferred: ${tax_deferred:,.0f} ({tax_deferred/ending_portfolio*100:.1f}%)
-- Roth: ${roth:,.0f} ({roth/ending_portfolio*100:.1f}%)
-- Taxable: ${taxable:,.0f} ({taxable/ending_portfolio*100:.1f}%)
+- Tax-deferred: ${tax_deferred:,.0f} ({pct(tax_deferred):.1f}%)
+- Roth: ${roth:,.0f} ({pct(roth):.1f}%)
+- Taxable: ${taxable:,.0f} ({pct(taxable):.1f}%)
 - Effective tax rate: {effective_tax_rate:.1f}%
 - Total taxes paid: ${total_taxes:,.0f}
 
