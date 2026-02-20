@@ -33,8 +33,8 @@ router = APIRouter()
 
 # ─── Auth + DB helpers ────────────────────────────────────────────────────
 
-def get_current_user_email(request: Request) -> str:
-    """Extract authenticated user email from session cookie."""
+def get_current_user_id(request: Request) -> str:
+    """Extract authenticated user ID from session cookie."""
     settings = get_oauth_settings()
     session_id = request.cookies.get(settings.session_cookie_name)
     if not session_id:
@@ -42,10 +42,10 @@ def get_current_user_email(request: Request) -> str:
     user = get_user_from_session(session_id)
     if not user:
         raise HTTPException(status_code=401, detail="Session expired")
-    return user.email
+    return user.id  # ← .id not .email, matches how scenarios_db.py stores them
 
 
-def load_scenario(scenario_id: str, user_email: str, db: Session) -> Scenario:
+def load_scenario(scenario_id: str, user_id: str, db: Session) -> Scenario:
     """
     Load a scenario from the database, enforcing user ownership.
 
@@ -53,7 +53,7 @@ def load_scenario(scenario_id: str, user_email: str, db: Session) -> Scenario:
     'not found' from 'belongs to another user' for security).
     """
     db_scenario = db.query(ScenarioModel).filter_by(
-        user_id=user_email,
+        user_id=user_id,
         scenario_id=scenario_id,
     ).first()
 
@@ -105,7 +105,7 @@ async def calculate_projection(
     """
     logger.info(f"=== PROJECTION ENDPOINT CALLED for scenario: {scenario_id} ===")
 
-    user_email = get_current_user_email(request)
+    user_email = get_current_user_id(request)
     scenario = load_scenario(scenario_id, user_email, db)
 
     start_time = time.time()
@@ -189,8 +189,8 @@ async def quick_projection(
     """
     Calculate a quick projection — financial summary only, no full data tables.
     """
-    user_email = get_current_user_email(request)
-    scenario = load_scenario(scenario_id, user_email, db)
+    user_id = get_current_user_id(request)
+    scenario = load_scenario(scenario_id, user_id, db)
 
     start_time = time.time()
 
