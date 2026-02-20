@@ -65,9 +65,11 @@ class InMemorySessionStore:
         """Get key value."""
         return self.store.get(key)
     
-    def delete(self, key: str):
+    def delete(self, key: str) -> int:
         """Delete key."""
+        existed = key in self.store
         self.store.pop(key, None)
+        return 1 if existed else 0
     
     def ping(self):
         """Health check."""
