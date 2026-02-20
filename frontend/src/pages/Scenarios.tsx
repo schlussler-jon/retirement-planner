@@ -46,7 +46,7 @@ export default function Scenarios() {
 
       // pick a unique ID: id-copy, id-copy-2, id-copy-3 …
       const existingIds = new Set(scenarios.map(s => s.scenario_id))
-      let newId = `${id}-copy`
+      const newId = crypto.randomUUID()  // replace the existingIds/while loop block
       let n = 2
       while (existingIds.has(newId)) { newId = `${id}-copy-${n}`; n++ }
 
@@ -75,6 +75,8 @@ export default function Scenarios() {
 
     try {
       const scenario = await importScenarioFromFile(file)
+      // Assign a fresh ID so it never conflicts with the original
+      const imported = { ...scenario, scenario_id: crypto.randomUUID() }
       
       // Load to backend so it can be edited
       await client.post('/scenarios', scenario)
