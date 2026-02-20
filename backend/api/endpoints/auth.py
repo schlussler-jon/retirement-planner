@@ -41,7 +41,7 @@ async def login(request: Request):
     google = get_google_oauth()
     redirect_uri = settings.google_redirect_uri
 
-    return await google.authorize_redirect(request, redirect_uri)
+    return await google.authorize_redirect(request, redirect_uri, prompt='select_account')
 
 
 @router.get("/callback")
