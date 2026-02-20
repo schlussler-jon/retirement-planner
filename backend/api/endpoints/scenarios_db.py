@@ -1,15 +1,10 @@
-/**
- * ScenarioEditor
- *
- * Dual-mode page:
- *   /scenarios/new  → POST (create)
- *   /scenarios/:id  → PUT  (edit)   + "View Results" link
- *
- * All state lives in a single `scenario` object.  Each tab receives its
- * slice plus an onChange; nothing hits the API until the user clicks Save.
- *
- * Scenario IDs are auto-generated UUIDs — users never see or type them.
- */
+"""
+Scenario management endpoints with PostgreSQL storage.
+
+Replaces in-memory dict with proper database persistence and user isolation.
+Scenario IDs are UUIDs generated on the frontend; backend generates one as
+a safety net if none is provided.
+"""
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
