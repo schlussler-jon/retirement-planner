@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useScenarios, useQuickProjection } from '@/api/hooks'
 import type { ScenarioListItem } from '@/types/api'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { useState } from 'react'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,8 @@ const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
 function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
   if (values.length < 2) return null
 
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; value: number; index: number } | null>(null)
+
   const min = Math.min(...values)
   const max = Math.max(...values)
   const range = max - min || 1
@@ -32,19 +35,13 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
   const h   = 40
   const pad = 2
 
-  const points = values
-    .map((v, i) => {
-      const x = pad + (i / (values.length - 1)) * (w - pad * 2)
-      const y = h - pad - ((v - min) / range) * (h - pad * 2)
-      return `${x},${y}`
-    })
-    .join(' ')
-
-  // Build a filled area path (line + drop down to baseline)
   const pts = values.map((v, i) => ({
     x: pad + (i / (values.length - 1)) * (w - pad * 2),
     y: h - pad - ((v - min) / range) * (h - pad * 2),
+    v,
   }))
+
+  const points   = pts.map(p => `${p.x},${p.y}`).join(' ')
   const areaPath =
     `M ${pts[0].x},${h - pad} ` +
     pts.map(p => `L ${p.x},${p.y}`).join(' ') +
@@ -53,20 +50,51 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
   const strokeColor = positive ? '#22c55e' : '#ef4444'
   const fillColor   = positive ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)'
 
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const mouseX = (e.clientX - rect.left) * (w / rect.width)
+    // Find closest point
+    let closest = 0
+    let minDist = Infinity
+    pts.forEach((p, i) => {
+      const dist = Math.abs(p.x - mouseX)
+      if (dist < minDist) { minDist = dist; closest = i }
+    })
+    setTooltip({ x: pts[closest].x, y: pts[closest].y, value: pts[closest].v, index: closest })
+  }
+
+  const startYear = new Date().getFullYear()
+
   return (
-    <svg width={w} height={h} className="opacity-90">
-      {/* filled area under the line */}
-      <path d={areaPath} fill={fillColor} />
-      {/* the line itself */}
-      <polyline
-        points={points}
-        fill="none"
-        stroke={strokeColor}
-        strokeWidth="1.5"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
+    <div className="relative inline-block">
+      <svg
+        width={w} height={h}
+        className="opacity-90 cursor-crosshair"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={() => setTooltip(null)}
+      >
+        <path d={areaPath} fill={fillColor} />
+        <polyline points={points} fill="none" stroke={strokeColor} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+
+        {/* hover dot */}
+        {tooltip && (
+          <circle cx={tooltip.x} cy={tooltip.y} r={3} fill={strokeColor} />
+        )}
+      </svg>
+
+      {/* tooltip bubble */}
+      {tooltip && (
+        <div
+          className="absolute bottom-full mb-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs font-sans text-white whitespace-nowrap pointer-events-none z-10"
+          style={{
+            left: tooltip.x,
+            transform: tooltip.index > values.length / 2 ? 'translateX(-100%)' : 'translateX(-50%)',
+          }}
+        >
+          <span className="text-slate-400">{startYear + tooltip.index}:</span> ${Math.round(tooltip.value).toLocaleString()}
+        </div>
+      )}
+    </div>
   )
 }
 
