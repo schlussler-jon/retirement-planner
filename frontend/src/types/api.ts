@@ -115,7 +115,8 @@ export interface ProjectionResponse {
   annual_summaries: AnnualSummary[] | null
   tax_summaries: TaxSummary[] | null
   net_income_projections: NetIncomeProjection[] | null
-  financial_summary: FinancialSummary | null
+  financial_summary: FinancialSummary
+  portfolio_series: number[] | null
 }
 
 // ─── Quick projection response ────────────────────────────────────────────
@@ -129,6 +130,7 @@ export interface QuickProjectionResponse {
   ending_portfolio: number
   portfolio_growth: number
   financial_summary: FinancialSummary
+  portfolio_series: number[]
 }
 
 // ─── Drive endpoints (api/endpoints/drive.py) ────────────────────────────

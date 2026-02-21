@@ -220,6 +220,15 @@ async def quick_projection(
 
         first_month = monthly_projections[0]
         last_month = monthly_projections[-1]
+        
+        # Sample every 12th month for sparkline (one point per year)
+        portfolio_series = [
+            round(proj.total_investments)
+            for i, proj in enumerate(monthly_projections)
+            if i % 12 == 0
+        ]
+        if len(monthly_projections) % 12 != 0:
+            portfolio_series.append(round(monthly_projections[-1].total_investments))
 
         return {
             "scenario_id": scenario.scenario_id,
@@ -230,6 +239,7 @@ async def quick_projection(
             "ending_portfolio": last_month.total_investments,
             "portfolio_growth": last_month.total_investments - first_month.total_investments,
             "financial_summary": financial_summary,
+            "portfolio_series": portfolio_series,
         }
 
     except HTTPException:
