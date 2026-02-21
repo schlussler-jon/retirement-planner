@@ -39,3 +39,4 @@ python-dotenv
 openai
 python-dotenv
 python-multipart
+cryptography
