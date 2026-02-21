@@ -17,7 +17,7 @@ from models.scenario import Scenario
 from db.models import get_db, ScenarioModel
 from auth.session import get_user_from_session
 from auth.config import get_oauth_settings
-from utils.encryption import encrypt_data, decrypt_data
+from api.utils.encryption import encrypt_data, decrypt_data
 
 router = APIRouter()
 
