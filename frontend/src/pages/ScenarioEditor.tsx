@@ -122,7 +122,7 @@ function emptyScenario(): Scenario {
     description: '',
     global_settings: {
       projection_start_month: '2026-01',
-      projection_end_year: 2056,
+      projection_end_year: 2060,
       residence_state: 'AZ',
     },
     people: [],
@@ -137,7 +137,7 @@ function emptyScenario(): Scenario {
     tax_settings: {
       filing_status: 'single',
       standard_deduction_override: null,
-      tax_year_ruleset: 2024,
+      tax_year_ruleset: 2025,
     },
   }
 }
@@ -483,7 +483,7 @@ export default function ScenarioEditor() {
             type="text"
             value={scenario.scenario_name}
             onChange={e => setScenario(prev => ({ ...prev, scenario_name: e.target.value }))}
-            placeholder="e.g. Jon & Rebecca's Retirement"
+            placeholder="e.g. Ted & Veronica's Retirement"
             className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
           />
         </div>
