@@ -34,6 +34,7 @@ export interface ScenarioCreateResponse {
 export interface ScenarioListItem {
   scenario_id: string
   scenario_name: string
+  description: string
   people_count: number
   income_streams_count: number
   accounts_count: number

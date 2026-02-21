@@ -110,6 +110,10 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
       {/* name */}
       <p className="font-sans text-white text-sm font-semibold">{sc.scenario_name}</p>
+      {/* description */}
+      {sc.description && (
+        <p className="font-sans text-slate-400 text-xs mt-1 leading-relaxed">{sc.description}</p>
+      )}
 
       {/* counts */}
       <p className="font-sans text-slate-300 text-xs mt-2">

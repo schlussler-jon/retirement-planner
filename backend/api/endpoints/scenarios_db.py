@@ -76,6 +76,7 @@ def list_scenarios(request: Request, db: Session = Depends(get_db)):
             scenarios.append({
                 "scenario_id": db_s.scenario_id,
                 "scenario_name": data.get("scenario_name", ""),
+                "description": data.get("description", ""),
                 "people_count": len(data.get("people", [])),
                 "income_streams_count": len(data.get("income_streams", [])),
                 "accounts_count": len(data.get("accounts", [])),
