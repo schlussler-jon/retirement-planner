@@ -113,13 +113,13 @@ export default function Login() {
           </button>
 
           <p className="font-sans text-slate-400 text-xs text-center leading-relaxed">
-            No ads, no data sharing.
+            Your retirement data is private and secure · No ads, no data sharing.
           </p>
         </div>
 
         {/* bottom note */}
         <p className="font-sans text-slate-400 text-xs text-center mt-8">
-          All calculations run securely on our server · Your data is NEVER shared!
+          All calculations run securely on our server
       </div>
     </div>
   )
