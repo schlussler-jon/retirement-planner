@@ -113,15 +113,13 @@ export default function Login() {
           </button>
 
           <p className="font-sans text-slate-400 text-xs text-center leading-relaxed">
-            We only access files created by this app in your Google Drive.
-            <br/>No ads, no data sharing.
+            No ads, no data sharing.
           </p>
         </div>
 
         {/* bottom note */}
         <p className="font-sans text-slate-400 text-xs text-center mt-8">
-          All calculations run on your own server · Your data stays in your Drive
-        </p>
+          All calculations run securely on our server · Your data is NEVER shared!
       </div>
     </div>
   )
