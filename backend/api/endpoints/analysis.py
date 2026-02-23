@@ -206,7 +206,6 @@ async def get_ai_analysis(
             scenario.income_streams,
             scenario.tax_settings.filing_status,
             scenario.global_settings.residence_state,
-            scenario.tax_settings.standard_deduction_override,
         )
 
         budget_processor = BudgetProcessor(scenario.budget_settings, scenario.people)

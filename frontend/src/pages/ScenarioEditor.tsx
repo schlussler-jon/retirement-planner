@@ -136,7 +136,6 @@ function emptyScenario(): Scenario {
     },
     tax_settings: {
       filing_status: 'single',
-      standard_deduction_override: null,
       tax_year_ruleset: 2025,
     },
   }

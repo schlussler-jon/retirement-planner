@@ -62,23 +62,16 @@ STANDARD_DEDUCTION_2025 = {
 }
 
 
-def get_standard_deduction(
-    filing_status: FilingStatus,
-    override: float = None
-) -> float:
+def get_standard_deduction(filing_status: FilingStatus) -> float:
     """
-    Get standard deduction for a filing status.
+    Get the 2025 standard deduction for a filing status.
 
     Args:
         filing_status: Tax filing status
-        override: Optional override amount
 
     Returns:
         Standard deduction amount
     """
-    if override is not None:
-        return override
-
     return STANDARD_DEDUCTION_2025.get(
         filing_status,
         STANDARD_DEDUCTION_2025[FilingStatus.SINGLE]
@@ -94,9 +87,6 @@ def calculate_agi(
     """
     Calculate Adjusted Gross Income.
 
-    AGI = All income - above-the-line adjustments
-
-    In v1, we simplify:
     AGI = ordinary income + taxable SSA + capital gains - adjustments
 
     Args:
@@ -114,25 +104,21 @@ def calculate_agi(
 def calculate_taxable_income(
     agi: float,
     filing_status: FilingStatus,
-    standard_deduction_override: float = None
 ) -> float:
     """
-    Calculate taxable income.
+    Calculate taxable income using 2025 standard deduction.
 
     Taxable Income = AGI - Standard Deduction
 
     Args:
         agi: Adjusted Gross Income
         filing_status: Filing status
-        standard_deduction_override: Optional override for standard deduction
 
     Returns:
         Taxable income (cannot be negative)
     """
-    deduction = get_standard_deduction(filing_status, standard_deduction_override)
-    taxable = agi - deduction
-
-    return max(0.0, taxable)
+    deduction = get_standard_deduction(filing_status)
+    return max(0.0, agi - deduction)
 
 
 def calculate_federal_tax(
@@ -142,11 +128,6 @@ def calculate_federal_tax(
 ) -> float:
     """
     Calculate federal income tax using 2025 progressive brackets.
-
-    Progressive taxation means:
-    - First portion taxed at 10%
-    - Next portion taxed at 12%
-    - And so on...
 
     Args:
         taxable_income: Taxable income after deductions
@@ -177,26 +158,19 @@ def calculate_federal_tax(
     for upper_limit, rate in brackets:
         if taxable_income <= previous_limit:
             break
-
         if taxable_income <= upper_limit:
             amount_in_bracket = taxable_income - previous_limit
         else:
             amount_in_bracket = upper_limit - previous_limit
-
         total_tax += amount_in_bracket * rate
         previous_limit = upper_limit
 
     return total_tax
 
 
-def calculate_effective_tax_rate(
-    total_tax: float,
-    agi: float
-) -> float:
+def calculate_effective_tax_rate(total_tax: float, agi: float) -> float:
     """
     Calculate effective tax rate.
-
-    Effective Rate = Total Tax / AGI
 
     Args:
         total_tax: Total tax owed
@@ -207,7 +181,6 @@ def calculate_effective_tax_rate(
     """
     if agi <= 0:
         return 0.0
-
     return total_tax / agi
 
 
@@ -223,13 +196,8 @@ def get_tax_bracket_breakdown(
         filing_status: Filing status
 
     Returns:
-        List of dictionaries, one per bracket with:
-        - bracket_name: Description (e.g., "10% bracket")
-        - lower_limit: Start of bracket
-        - upper_limit: End of bracket
-        - rate: Tax rate
-        - amount_in_bracket: How much income in this bracket
-        - tax_in_bracket: Tax owed for this bracket
+        List of dicts with bracket_name, lower_limit, upper_limit,
+        rate, amount_in_bracket, tax_in_bracket
     """
     if taxable_income <= 0:
         return []
@@ -245,13 +213,10 @@ def get_tax_bracket_breakdown(
     for upper_limit, rate in brackets:
         if taxable_income <= previous_limit:
             break
-
         if taxable_income <= upper_limit:
             amount_in_bracket = taxable_income - previous_limit
         else:
             amount_in_bracket = upper_limit - previous_limit
-
-        tax_in_bracket = amount_in_bracket * rate
 
         breakdown.append({
             "bracket_name": f"{int(rate * 100)}% bracket",
@@ -259,7 +224,7 @@ def get_tax_bracket_breakdown(
             "upper_limit": upper_limit if upper_limit != float('inf') else None,
             "rate": rate,
             "amount_in_bracket": amount_in_bracket,
-            "tax_in_bracket": tax_in_bracket,
+            "tax_in_bracket": amount_in_bracket * rate,
         })
 
         previous_limit = upper_limit
@@ -283,5 +248,4 @@ def estimate_monthly_federal_tax(
     """
     if months_in_year <= 0:
         return 0.0
-
     return annual_tax / months_in_year

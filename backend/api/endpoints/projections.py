@@ -125,7 +125,6 @@ async def calculate_projection(
             scenario.income_streams,
             scenario.tax_settings.filing_status,
             scenario.global_settings.residence_state,
-            scenario.tax_settings.standard_deduction_override,
         )
         logger.info(f"Calculated taxes for {len(tax_summaries)} years")
 

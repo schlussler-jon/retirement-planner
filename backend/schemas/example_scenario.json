@@ -184,7 +184,6 @@
   },
   "tax_settings": {
     "filing_status": "married_filing_jointly",
-    "standard_deduction_override": null,
     "tax_year_ruleset": 2024
   }
 }

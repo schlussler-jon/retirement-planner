@@ -47,15 +47,12 @@ export default function TaxTab({ tax, onChange }: Props) {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
-              value={tax.standard_deduction_override ?? ''}
               min={0} step={1000}
               onChange={e => {
                 const raw = e.target.value
                 if (raw === '') {
-                  onChange({ ...tax, standard_deduction_override: null })
                 } else {
                   const v = e.target.valueAsNumber
-                  onChange({ ...tax, standard_deduction_override: isNaN(v) ? null : v })
                 }
               }}
               placeholder="Use 2025 default"

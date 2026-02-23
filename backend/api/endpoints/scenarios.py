@@ -108,7 +108,6 @@ async def create_scenario(
         if 'tax_settings' not in scenario_data:
             scenario_data['tax_settings'] = {
                 'filing_status': 'married_filing_jointly',
-                'standard_deduction_override': None
             }
         
         # Parse and validate scenario
@@ -209,7 +208,6 @@ async def update_scenario(
         if 'tax_settings' not in scenario_data:
             scenario_data['tax_settings'] = {
                 'filing_status': 'married_filing_jointly',
-                'standard_deduction_override': None
             }
         
         scenario = Scenario(**scenario_data)
@@ -348,7 +346,6 @@ async def import_scenario(
         if 'tax_settings' not in scenario_data:
             scenario_data['tax_settings'] = {
                 'filing_status': 'married_filing_jointly',
-                'standard_deduction_override': None
             }
         
         scenario = Scenario(**scenario_data)
