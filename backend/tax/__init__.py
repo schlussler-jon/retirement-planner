@@ -20,8 +20,8 @@ from .federal import (
     get_standard_deduction,
     get_tax_bracket_breakdown,
     estimate_monthly_federal_tax,
-    FEDERAL_TAX_BRACKETS_2024,
-    STANDARD_DEDUCTION_2024,
+    FEDERAL_TAX_BRACKETS_2025,
+    STANDARD_DEDUCTION_2025,
 )
 from .state import (
     calculate_state_tax,
@@ -50,8 +50,8 @@ __all__ = [
     "get_standard_deduction",
     "get_tax_bracket_breakdown",
     "estimate_monthly_federal_tax",
-    "FEDERAL_TAX_BRACKETS_2024",
-    "STANDARD_DEDUCTION_2024",
+    "FEDERAL_TAX_BRACKETS_2025",
+    "STANDARD_DEDUCTION_2025",
     # State
     "calculate_state_tax",
     "get_state_tax_rate",
