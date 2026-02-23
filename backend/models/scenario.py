@@ -145,7 +145,7 @@ class Scenario(BaseModel):
                     },
                     "tax_settings": {
                         "filing_status": "married_filing_jointly",
-                        "tax_year_ruleset": 2024
+                        "tax_year_ruleset": 2025
                     }
                 }
             ]

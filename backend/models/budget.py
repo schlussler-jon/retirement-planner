@@ -232,7 +232,7 @@ class TaxSettings(BaseModel):
     Attributes:
         filing_status: Federal filing status
         standard_deduction_override: Optional override for standard deduction
-        tax_year_ruleset: Which year's tax brackets to use (e.g., 2024)
+        tax_year_ruleset: Which year's tax brackets to use (e.g., 2025)
     """
     filing_status: FilingStatus = Field(
         ...,
@@ -244,7 +244,7 @@ class TaxSettings(BaseModel):
         description="Override standard deduction amount (optional)"
     )
     tax_year_ruleset: int = Field(
-        default=2024,
+        default=2025,
         ge=2020,
         le=2030,
         description="Tax year for bracket rules"
@@ -256,12 +256,12 @@ class TaxSettings(BaseModel):
                 {
                     "filing_status": "married_filing_jointly",
                     "standard_deduction_override": None,
-                    "tax_year_ruleset": 2024
+                    "tax_year_ruleset": 2025
                 },
                 {
                     "filing_status": "single",
                     "standard_deduction_override": 15000.0,
-                    "tax_year_ruleset": 2024
+                    "tax_year_ruleset": 2025
                 }
             ]
         }

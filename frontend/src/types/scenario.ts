@@ -102,7 +102,7 @@ export interface BudgetSettings {
 export interface TaxSettings {
   filing_status: FilingStatus
   standard_deduction_override?: number | null
-  tax_year_ruleset: number         // e.g. 2024
+  tax_year_ruleset: number         // e.g. 2025
 }
 
 // ─── Top-level Scenario (models/scenario.py) ─────────────────────────────
