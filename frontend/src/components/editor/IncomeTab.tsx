@@ -47,8 +47,9 @@ function IncomeStreamCard({
   const owner = people.find(p => p.person_id === stream.owner_person_id)
 
   return (
-    <div className="py-5 first:pt-0">
-      {/* header */}
+    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+
+      {/* Card header */}
       <div className="flex items-center justify-between mb-4">
         <span className="font-sans text-white text-sm font-semibold">
           {INCOME_STREAM_TYPES.find(t => t.value === stream.type)?.label ?? stream.type}
@@ -62,7 +63,7 @@ function IncomeStreamCard({
         </button>
       </div>
 
-      {/* row 1: type · owner · amount */}
+      {/* Row 1: type · owner · amount */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -114,7 +115,7 @@ function IncomeStreamCard({
         </div>
       </div>
 
-      {/* row 2: start date · COLA */}
+      {/* Row 2: start date · COLA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
         <div>
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -151,7 +152,7 @@ function IncomeStreamCard({
         </div>
       </div>
 
-      {/* advanced toggle */}
+      {/* Advanced toggle */}
       <button
         onClick={() => setShowAdvanced(v => !v)}
         className="font-sans text-slate-300 hover:text-white text-xs transition-colors flex items-center gap-1 mb-3"
@@ -161,7 +162,7 @@ function IncomeStreamCard({
       </button>
 
       {showAdvanced && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-800/40 rounded-lg p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-800/60 rounded-lg p-4">
           <div>
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
               End Date
@@ -246,7 +247,8 @@ export default function IncomeTab({ streams, people, onChange, autoAdd, onAutoAd
         </div>
       )}
 
-      <div className={`divide-y divide-slate-800 ${streams.length > 0 ? 'mb-4' : ''}`}>
+      {/* Income stream cards */}
+      <div className={`space-y-3 ${streams.length > 0 ? 'mb-4' : ''}`}>
         {streams.map((stream, idx) => (
           <IncomeStreamCard
             key={idx}
