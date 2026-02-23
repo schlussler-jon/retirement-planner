@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 import logging
 import os
 import json
+from api.utils.encryption import decrypt_data
 from typing import Dict, Any, List
 from openai import OpenAI
 
@@ -58,7 +59,7 @@ def load_scenario(scenario_id: str, user_id: str, db: Session) -> Scenario:
             detail=f"Scenario '{scenario_id}' not found",
         )
 
-    return Scenario(**json.loads(db_scenario.data))
+    return Scenario(**json.loads(decrypt_data(db_scenario.data)))
 
 
 # ─── AI analysis logic ────────────────────────────────────────────────────
