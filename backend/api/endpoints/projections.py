@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 import logging
 import time
 import json
+from api.utils.encryption import decrypt_data
 
 from models import Scenario, MonthlyProjection, TaxSummary, NetIncomeProjection
 from engine import ProjectionEngine, AnnualAggregator
@@ -63,7 +64,7 @@ def load_scenario(scenario_id: str, user_id: str, db: Session) -> Scenario:
             detail=f"Scenario '{scenario_id}' not found",
         )
 
-    return Scenario(**json.loads(db_scenario.data))
+    return Scenario(**json.loads(decrypt_data(db_scenario.data)))
 
 
 # ─── Request / Response models ────────────────────────────────────────────
