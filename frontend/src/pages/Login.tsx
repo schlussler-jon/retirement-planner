@@ -120,7 +120,7 @@ export default function Login() {
         {/* bottom note */}
         <p className="font-sans text-slate-400 text-xs text-center mt-8">
           Your scenarios are encrypted and visible only to you
-      </div>
+      </p>
     </div>
   )
 }
