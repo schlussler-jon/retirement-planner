@@ -206,14 +206,15 @@ function AccountCard({
       {/* advanced toggle */}
       <button
         onClick={() => setShowAdvanced(v => !v)}
-        className="font-sans text-slate-300 hover:text-slate-300 text-xs transition-colors flex items-center gap-1 mb-3"
+        className="font-sans text-slate-300 hover:text-white text-xs transition-colors flex items-center gap-1 mb-3"
       >
         <span>{showAdvanced ? '▾' : '▸'}</span>
         {showAdvanced ? 'Hide' : 'Show'} contribution & withdrawal date ranges
       </button>
 
+      {/* Advanced: date ranges — 1 col mobile, 2 col tablet, 4 col desktop */}
       {showAdvanced && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 bg-slate-800/40 rounded-lg p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-800/40 rounded-lg p-4">
           <div>
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
               Contribution Start

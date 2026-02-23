@@ -154,7 +154,7 @@ function IncomeStreamCard({
       {/* advanced toggle */}
       <button
         onClick={() => setShowAdvanced(v => !v)}
-        className="font-sans text-slate-300 hover:text-slate-300 text-xs transition-colors flex items-center gap-1 mb-3"
+        className="font-sans text-slate-300 hover:text-white text-xs transition-colors flex items-center gap-1 mb-3"
       >
         <span>{showAdvanced ? '▾' : '▸'}</span>
         {showAdvanced ? 'Hide' : 'Show'} advanced options
