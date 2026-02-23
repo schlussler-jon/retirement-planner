@@ -3,6 +3,8 @@
  *
  * Mobile: card layout (stacked fields per category)
  * Desktop: compact table row layout
+ *
+ * Note: Inflation & Survivor settings have moved to the Settings tab.
  */
 
 import { useEffect, useRef } from 'react'
@@ -15,9 +17,6 @@ interface Props {
   autoAdd?: boolean
   onAutoAddDone?: () => void
 }
-
-const toDisplay = (d: number) => Math.round(d * 10000) / 100
-const toDecimal = (p: number) => p / 100
 
 function updateAt<T>(arr: T[], idx: number, fn: (item: T) => T): T[] {
   return arr.map((item, i) => (i === idx ? fn(item) : item))
@@ -98,7 +97,6 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
         <div className="md:hidden space-y-3">
           {budget.categories.map((cat, idx) => (
             <div key={idx} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 overflow-hidden">
-              {/* Header row: checkbox + label + delete */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <input
@@ -117,7 +115,6 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 >×</button>
               </div>
 
-              {/* Row 1: Category + Type */}
               <div className="grid grid-cols-2 gap-2 mb-2">
                 <div>
                   <label className="block font-sans text-slate-400 text-xs uppercase tracking-wider mb-1">Category</label>
@@ -141,7 +138,6 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 </div>
               </div>
 
-              {/* Row 2: Description full width */}
               <div className="mb-2">
                 <label className="block font-sans text-slate-400 text-xs uppercase tracking-wider mb-1">Description</label>
                 <input
@@ -153,7 +149,6 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 />
               </div>
 
-              {/* Row 3: Amount + End Date */}
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="block font-sans text-slate-400 text-xs uppercase tracking-wider mb-1">Monthly Amount</label>
@@ -260,7 +255,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
 
       {/* Totals */}
       {budget.categories.length > 0 && (
-        <div className="bg-slate-800/50 rounded-xl px-5 py-4 mb-6 flex flex-wrap justify-between items-center gap-3">
+        <div className="bg-slate-800/50 rounded-xl px-5 py-4 flex flex-wrap justify-between items-center gap-3">
           <div className="flex gap-6">
             <div>
               <p className="font-sans text-slate-300 text-xs mb-0.5">Fixed monthly</p>
@@ -278,75 +273,6 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
           </div>
         </div>
       )}
-
-      {/* Inflation & Survivor settings */}
-      <div className="border-t border-slate-800 pt-5">
-        <p className="font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">
-          Inflation &amp; Survivor Settings
-        </p>
-        <p className="font-sans text-slate-400 text-xs mb-4">
-          How spending changes over time and if one spouse passes away.
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div>
-            <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Annual Inflation
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={toDisplay(budget.inflation_annual_percent)}
-                min={0} max={20} step={0.1}
-                onFocus={handleFocus}
-                onChange={e => {
-                  const v = e.target.valueAsNumber
-                  onChange({ ...budget, inflation_annual_percent: isNaN(v) ? 0 : toDecimal(v) })
-                }}
-                className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
-            </div>
-            <p className="font-sans text-slate-400 text-xs mt-1">How much spending grows each year (2.5% is typical)</p>
-          </div>
-
-          <div>
-            <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Survivor Spending Reduction
-            </label>
-            <div className="relative">
-              <input
-                type="number"
-                value={toDisplay(budget.survivor_flexible_reduction_percent)}
-                min={0} max={100} step={5}
-                onFocus={handleFocus}
-                onChange={e => {
-                  const v = e.target.valueAsNumber
-                  onChange({ ...budget, survivor_flexible_reduction_percent: isNaN(v) ? 0 : toDecimal(v) })
-                }}
-                className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
-            </div>
-            <p className="font-sans text-slate-400 text-xs mt-1">Spending cut when one spouse passes (e.g. 20%)</p>
-          </div>
-
-          <div>
-            <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Reduction Applies To
-            </label>
-            <select
-              value={budget.survivor_reduction_mode}
-              onChange={e => onChange({ ...budget, survivor_reduction_mode: e.target.value as BudgetSettings['survivor_reduction_mode'] })}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
-            >
-              <option value="flex_only">Flexible categories only</option>
-              <option value="all">All categories</option>
-            </select>
-            <p className="font-sans text-slate-400 text-xs mt-1">Which expenses get reduced</p>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }

@@ -598,6 +598,8 @@ export default function ScenarioEditor() {
           <GlobalSettingsTab
             settings={scenario.global_settings}
             onChange={v => setScenario(prev => ({ ...prev, global_settings: v }))}
+            budget={scenario.budget_settings}
+            onBudgetChange={v => setScenario(prev => ({ ...prev, budget_settings: v }))}
           />
         )}
       </div>
