@@ -213,11 +213,13 @@ function WhatsNext({
   onTabClick,
   onAddClick,
   isNew,
+  onSave,
 }: {
   scenario: Scenario
   onTabClick: (tab: Tab) => void
   onAddClick: (tab: Tab) => void
   isNew: boolean
+  onSave: () => Promise<void>
 }) {
   const ready = isScenarioReady(scenario)
   const next  = nextIncompleteStep(scenario)
@@ -233,12 +235,12 @@ function WhatsNext({
           </div>
         </div>
         {!isNew && (
-          <Link
-            to={`/scenarios/${scenario.scenario_id}/results`}
+          <button
+            onClick={async () => { await onSave(); navigate(`/scenarios/${scenario.scenario_id}/results`) }}
             className="shrink-0 inline-flex items-center gap-1.5 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
           >
             View Results →
-          </Link>
+          </button>
         )}
       </div>
     )
@@ -539,6 +541,7 @@ export default function ScenarioEditor() {
         onTabClick={tab => { setAutoAdd(false); setActiveTab(tab) }}
         onAddClick={tab => { setActiveTab(tab); setAutoAdd(true) }}
         isNew={isNew}
+        onSave={handleSave}
       />
 
       {/* tab content */}
