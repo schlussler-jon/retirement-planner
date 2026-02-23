@@ -12,7 +12,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
-import { useScenario, useCreateScenario, useUpdateScenario, useValidateScenario, qk } from '@/api/hooks'
+import { useScenario, useCreateScenario, useUpdateScenario, qk } from '@/api/hooks'
 import { saveScenarioToStorage, exportScenarioAsFile } from '@/utils/storage'
 import client from '@/api/client'
 import { parseValidationError } from '@/utils/errorParser'
@@ -291,16 +291,12 @@ function WhatsNext({
 function MoreMenu({
   onExport,
   onDuplicate,
-  onValidate,
   dupLoading,
-  validating,
   isNew,
 }: {
   onExport: () => void
   onDuplicate: () => void
-  onValidate: () => void
   dupLoading: boolean
-  validating: boolean
   isNew: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -327,10 +323,6 @@ function MoreMenu({
       </button>
       {open && (
         <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
-          <button onClick={() => { onValidate(); setOpen(false) }} disabled={validating}
-            className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50">
-            {validating ? '✓ Validating…' : '✓ Validate'}
-          </button>
           <button onClick={() => { onDuplicate(); setOpen(false) }} disabled={dupLoading}
             className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50">
             {dupLoading ? '⧉ Duplicating…' : '⧉ Duplicate'}
@@ -355,7 +347,6 @@ export default function ScenarioEditor() {
   const scenarioQuery = useScenario(id ?? '', !isNew)
   const createMut     = useCreateScenario()
   const updateMut     = useUpdateScenario()
-  const validateMut   = useValidateScenario()
   const qc            = useQueryClient()
 
   const [scenario,           setScenario]           = useState<Scenario>(emptyScenario)
@@ -365,10 +356,6 @@ export default function ScenarioEditor() {
   const [saved,              setSaved]              = useState(false)
   const [error,              setError]              = useState<string | null>(null)
   const [dupLoading,         setDupLoading]         = useState(false)
-  const [validating,         setValidating]         = useState(false)
-  const [validationErrors,   setValidationErrors]   = useState<string[]>([])
-  const [validationWarnings, setValidationWarnings] = useState<string[]>([])
-  const [validationPassed,   setValidationPassed]   = useState(false)
 
   useEffect(() => {
     if (scenarioQuery.data) setScenario(scenarioQuery.data)
@@ -411,21 +398,6 @@ export default function ScenarioEditor() {
     }
   }
 
-  // ── validate ──────────────────────────────────────────────────────────
-  const handleValidate = async () => {
-    setValidationErrors([]); setValidationWarnings([]); setValidationPassed(false); setValidating(true)
-    try {
-      const result = await validateMut.mutateAsync(scenario)
-      setValidationErrors(result.errors ?? [])
-      setValidationWarnings(result.warnings ?? [])
-      if (result.valid && !result.errors?.length && !result.warnings?.length) setValidationPassed(true)
-    } catch (e: any) {
-      setError(e?.response?.data?.detail ?? 'Validation request failed.')
-    } finally {
-      setValidating(false)
-    }
-  }
-
   // ── loading / error ───────────────────────────────────────────────────
   if (!isNew && scenarioQuery.isLoading) {
     return (
@@ -461,9 +433,7 @@ export default function ScenarioEditor() {
           <MoreMenu
             onExport={() => exportScenarioAsFile(scenario)}
             onDuplicate={handleDuplicate}
-            onValidate={handleValidate}
             dupLoading={dupLoading}
-            validating={validating}
             isNew={isNew}
           />
           <button
@@ -513,23 +483,6 @@ export default function ScenarioEditor() {
       {saved && (
         <div className="bg-green-900/20 border border-green-700/30 rounded-lg px-4 py-3 mb-4">
           <p className="font-sans text-green-400 text-sm">✓ Changes saved successfully.</p>
-        </div>
-      )}
-      {validationPassed && (
-        <div className="bg-green-900/20 border border-green-700/30 rounded-lg px-4 py-3 mb-4">
-          <p className="font-sans text-green-400 text-sm">✓ Scenario is valid — ready to run.</p>
-        </div>
-      )}
-      {validationErrors.length > 0 && (
-        <div className="bg-red-900/20 border border-red-700/30 rounded-lg px-4 py-3 mb-4">
-          <p className="font-sans text-red-400 text-xs font-semibold uppercase tracking-wider mb-2">Validation Errors</p>
-          {validationErrors.map((err, i) => <p key={i} className="font-sans text-red-400 text-sm">· {err}</p>)}
-        </div>
-      )}
-      {validationWarnings.length > 0 && (
-        <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg px-4 py-3 mb-4">
-          <p className="font-sans text-amber-400 text-xs font-semibold uppercase tracking-wider mb-2">Warnings</p>
-          {validationWarnings.map((warn, i) => <p key={i} className="font-sans text-amber-400 text-sm">· {warn}</p>)}
         </div>
       )}
 
