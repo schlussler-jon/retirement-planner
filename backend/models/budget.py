@@ -237,10 +237,6 @@ class TaxSettings(BaseModel):
         ...,
         description="Federal tax filing status"
     )
-        None,
-        ge=0,
-        description="Override standard deduction amount (optional)"
-    )
     tax_year_ruleset: int = Field(
         default=2025,
         ge=2020,
