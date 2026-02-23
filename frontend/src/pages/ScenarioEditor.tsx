@@ -92,7 +92,7 @@ const STEPS: StepConfig[] = [
   {
     tab: 'Tax',
     label: 'Tax',
-    subtitle: 'Filing status and deductions',
+    subtitle: 'Filing status',
     emptyPrompt: 'Review your tax settings — filing status and standard deduction — for accurate projections.',
     emptyAction: 'Review Tax Settings',
     count: _ => 0,
