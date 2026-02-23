@@ -51,7 +51,6 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
         Income streams will be linked to each person.
       </p>
 
-      {/* Empty state */}
       {people.length === 0 && (
         <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
           <p className="text-3xl mb-2">👤</p>
@@ -60,12 +59,10 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
         </div>
       )}
 
-      {/* Person cards */}
       <div className={`space-y-3 ${people.length > 0 ? 'mb-4' : ''}`}>
         {people.map((person, idx) => (
-          <div key={idx} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+          <div key={idx} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 overflow-hidden">
 
-            {/* Card header: name + remove */}
             <div className="flex items-center justify-between mb-4">
               <span className="font-sans text-white text-sm font-semibold">
                 {person.name || `Person ${idx + 1}`}
@@ -78,7 +75,6 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
               </button>
             </div>
 
-            {/* Fields: 1 col mobile, 3 col desktop */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -89,7 +85,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                   value={person.name}
                   onChange={e => update(idx, p => ({ ...p, name: e.target.value }))}
                   placeholder="e.g. Jon"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
+                  className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
                 />
               </div>
 
@@ -101,7 +97,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                   type="date"
                   value={person.birth_date}
                   onChange={e => update(idx, p => ({ ...p, birth_date: e.target.value }))}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                  className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                 />
                 <p className="font-sans text-slate-400 text-xs mt-1">Used to calculate retirement age</p>
               </div>
@@ -120,7 +116,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                       update(idx, p => ({ ...p, life_expectancy_years: isNaN(v) ? null : v }))
                     }}
                     placeholder="e.g. 90"
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-14 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
+                    className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-14 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
                   />
                   <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-xs">years</span>
                 </div>
@@ -132,7 +128,6 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
         ))}
       </div>
 
-      {/* Add button */}
       <button
         onClick={addPerson}
         className="w-full border border-slate-700 border-dashed rounded-xl px-4 py-4 font-sans text-slate-400 hover:text-gold-400 hover:border-gold-600 text-sm transition-colors duration-150 flex items-center justify-center gap-2"

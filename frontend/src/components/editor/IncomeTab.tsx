@@ -47,7 +47,7 @@ function IncomeStreamCard({
   const owner = people.find(p => p.person_id === stream.owner_person_id)
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 overflow-hidden">
 
       {/* Card header */}
       <div className="flex items-center justify-between mb-4">
@@ -108,7 +108,7 @@ function IncomeStreamCard({
                 const v = e.target.valueAsNumber
                 onUpdate(s => ({ ...s, monthly_amount_at_start: isNaN(v) ? 0 : v }))
               }}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
           <p className="font-sans text-slate-400 text-xs mt-1">Amount at start of income</p>
@@ -125,7 +125,7 @@ function IncomeStreamCard({
             type="month"
             value={stream.start_month}
             onChange={e => onUpdate(s => ({ ...s, start_month: e.target.value }))}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+            className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
           />
           <p className="font-sans text-slate-400 text-xs mt-1">When does this income begin?</p>
         </div>
@@ -144,7 +144,7 @@ function IncomeStreamCard({
                 const v = e.target.valueAsNumber
                 onUpdate(s => ({ ...s, cola_percent_annual: isNaN(v) ? 0 : toDecimal(v) }))
               }}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
           </div>
@@ -171,7 +171,7 @@ function IncomeStreamCard({
               type="month"
               value={stream.end_month || ''}
               onChange={e => onUpdate(s => ({ ...s, end_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
             <p className="font-sans text-slate-400 text-xs mt-1">Leave blank if income continues indefinitely</p>
           </div>
@@ -247,7 +247,6 @@ export default function IncomeTab({ streams, people, onChange, autoAdd, onAutoAd
         </div>
       )}
 
-      {/* Income stream cards */}
       <div className={`space-y-3 ${streams.length > 0 ? 'mb-4' : ''}`}>
         {streams.map((stream, idx) => (
           <IncomeStreamCard

@@ -92,12 +92,12 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
         </div>
       )}
 
-      <div className={`divide-y divide-slate-800 ${budget.categories.length > 0 ? 'mb-4' : ''}`}>
-        {budget.categories.map((cat, idx) => (
-          <div key={idx} className="py-3 first:pt-0">
+      <div className={`${budget.categories.length > 0 ? 'mb-4' : ''}`}>
 
-            {/* ── MOBILE card layout ── */}
-            <div className="md:hidden bg-slate-800/50 rounded-xl p-3 mb-1">
+        {/* ── MOBILE cards ── */}
+        <div className="md:hidden space-y-3">
+          {budget.categories.map((cat, idx) => (
+            <div key={idx} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 overflow-hidden">
               {/* Header row: checkbox + label + delete */}
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -149,7 +149,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                   value={cat.category_name}
                   onChange={e => updateCategory(idx, c => ({ ...c, category_name: e.target.value }))}
                   placeholder="e.g. Mortgage Payment"
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
+                  className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
                 />
               </div>
 
@@ -168,7 +168,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                         const v = e.target.valueAsNumber
                         updateCategory(idx, c => ({ ...c, monthly_amount: isNaN(v) ? 0 : v }))
                       }}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                      className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -178,14 +178,18 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                     type="month"
                     value={cat.end_month || ''}
                     onChange={e => updateCategory(idx, c => ({ ...c, end_month: e.target.value || null }))}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                    className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                   />
                 </div>
               </div>
             </div>
+          ))}
+        </div>
 
-            {/* ── DESKTOP table row ── */}
-            <div className="hidden md:flex items-center gap-2.5">
+        {/* ── DESKTOP table rows ── */}
+        <div className="hidden md:block divide-y divide-slate-800">
+          {budget.categories.map((cat, idx) => (
+            <div key={idx} className="flex items-center gap-2.5 py-3 first:pt-0">
               <input
                 type="checkbox"
                 checked={cat.include}
@@ -225,7 +229,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                     const v = e.target.valueAsNumber
                     updateCategory(idx, c => ({ ...c, monthly_amount: isNaN(v) ? 0 : v }))
                   }}
-                  className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                  className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                 />
               </div>
               <input
@@ -233,7 +237,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 value={cat.end_month || ''}
                 onChange={e => updateCategory(idx, c => ({ ...c, end_month: e.target.value || null }))}
                 title="Optional: when does this expense end?"
-                className="w-36 shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                className="w-36 min-w-0 shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
               />
               <button
                 onClick={() => removeCategory(idx)}
@@ -241,9 +245,9 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 title="Remove category"
               >×</button>
             </div>
+          ))}
+        </div>
 
-          </div>
-        ))}
       </div>
 
       {/* Add button */}
@@ -299,7 +303,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                   const v = e.target.valueAsNumber
                   onChange({ ...budget, inflation_annual_percent: isNaN(v) ? 0 : toDecimal(v) })
                 }}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
             </div>
@@ -320,7 +324,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                   const v = e.target.valueAsNumber
                   onChange({ ...budget, survivor_flexible_reduction_percent: isNaN(v) ? 0 : toDecimal(v) })
                 }}
-                className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
             </div>
