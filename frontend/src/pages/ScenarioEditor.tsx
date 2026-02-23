@@ -213,13 +213,13 @@ function WhatsNext({
   onTabClick,
   onAddClick,
   isNew,
-  onSave,
+  onSaveAndNavigate,
 }: {
   scenario: Scenario
   onTabClick: (tab: Tab) => void
   onAddClick: (tab: Tab) => void
   isNew: boolean
-  onSave: () => Promise<void>
+  onSaveAndNavigate: () => Promise<void>
 }) {
   const ready = isScenarioReady(scenario)
   const next  = nextIncompleteStep(scenario)
@@ -231,12 +231,12 @@ function WhatsNext({
           <span className="text-2xl">🎉</span>
           <div>
             <p className="font-sans text-gold-400 font-semibold text-sm">Your scenario is ready to run!</p>
-            <p className="font-sans text-slate-400 text-xs mt-0.5">Save your scenario, then view the projection results.</p>
+            <p className="font-sans text-slate-400 text-xs mt-0.5">Your scenario will be saved automatically when you view results.</p>
           </div>
         </div>
         {!isNew && (
           <button
-            onClick={async () => { await onSave(); navigate(`/scenarios/${scenario.scenario_id}/results`) }}
+            onClick={onSaveAndNavigate}
             className="shrink-0 inline-flex items-center gap-1.5 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-4 py-2 rounded-lg transition-colors"
           >
             View Results →
@@ -245,6 +245,7 @@ function WhatsNext({
       </div>
     )
   }
+
 
   if (!next) return null
 
@@ -541,7 +542,15 @@ export default function ScenarioEditor() {
         onTabClick={tab => { setAutoAdd(false); setActiveTab(tab) }}
         onAddClick={tab => { setActiveTab(tab); setAutoAdd(true) }}
         isNew={isNew}
-        onSave={handleSave}
+        onSaveAndNavigate={async () => {
+          try {
+            await updateMut.mutateAsync(scenario)
+            saveScenarioToStorage(scenario)
+            navigate(`/scenarios/${scenario.scenario_id}/results`)
+          } catch {
+            // save failed silently
+          }
+        }}
       />
 
       {/* tab content */}
