@@ -34,7 +34,6 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
   const removePerson = (idx: number) => onChange(people.filter((_, i) => i !== idx))
   const update = (idx: number, fn: (p: Person) => Person) => onChange(updateAt(people, idx, fn))
 
-  // Trigger add when WhatsNext button is clicked
   const didAutoAdd = useRef(false)
   useEffect(() => {
     if (autoAdd && !didAutoAdd.current) {
@@ -52,6 +51,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
         Income streams will be linked to each person.
       </p>
 
+      {/* Empty state */}
       {people.length === 0 && (
         <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
           <p className="text-3xl mb-2">👤</p>
@@ -60,9 +60,12 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
         </div>
       )}
 
-      <div className={`divide-y divide-slate-800 ${people.length > 0 ? 'mb-4' : ''}`}>
+      {/* Person cards */}
+      <div className={`space-y-3 ${people.length > 0 ? 'mb-4' : ''}`}>
         {people.map((person, idx) => (
-          <div key={idx} className="py-5 first:pt-0">
+          <div key={idx} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4">
+
+            {/* Card header: name + remove */}
             <div className="flex items-center justify-between mb-4">
               <span className="font-sans text-white text-sm font-semibold">
                 {person.name || `Person ${idx + 1}`}
@@ -75,6 +78,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
               </button>
             </div>
 
+            {/* Fields: 1 col mobile, 3 col desktop */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -123,10 +127,12 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                 <p className="font-sans text-slate-400 text-xs mt-1">How long to run the projection</p>
               </div>
             </div>
+
           </div>
         ))}
       </div>
 
+      {/* Add button */}
       <button
         onClick={addPerson}
         className="w-full border border-slate-700 border-dashed rounded-xl px-4 py-4 font-sans text-slate-400 hover:text-gold-400 hover:border-gold-600 text-sm transition-colors duration-150 flex items-center justify-center gap-2"
