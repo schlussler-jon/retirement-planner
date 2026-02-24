@@ -128,7 +128,7 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
       {/* income stream types */}
       {sc.income_stream_types && sc.income_stream_types.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
-          {sc.income_stream_types.map((t, i) => (
+          {[...new Set(sc.income_stream_types)].map((t, i) => (
             <span key={i} className="font-sans text-xs bg-slate-800 text-slate-300 rounded px-1.5 py-0.5">
               {humanizeType(t)}
             </span>
