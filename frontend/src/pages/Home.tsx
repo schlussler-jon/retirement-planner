@@ -19,7 +19,8 @@ import { useState } from 'react'
 
 const pl  = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
-
+const humanizeType = (t: string) =>
+  t.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 // ─── Sparkline ──────────────────────────────────────────────────────────────
 
 function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
@@ -123,6 +124,28 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
         {' · '}
         {pl(sc.accounts_count, 'account')}
       </p>
+
+      {/* income stream types */}
+      {sc.income_stream_types && sc.income_stream_types.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {sc.income_stream_types.map((t, i) => (
+            <span key={i} className="font-sans text-xs bg-slate-800 text-slate-300 rounded px-1.5 py-0.5">
+              {humanizeType(t)}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* account names */}
+      {sc.account_names && sc.account_names.length > 0 && (
+        <div className="flex flex-wrap gap-1 mt-1">
+          {sc.account_names.map((name, i) => (
+            <span key={i} className="font-sans text-xs bg-slate-800/60 text-slate-400 rounded px-1.5 py-0.5 border border-slate-700/50">
+              {name}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* shimmer while loading */}
       {quickQuery.isLoading && (

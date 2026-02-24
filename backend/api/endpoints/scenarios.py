@@ -69,6 +69,8 @@ class ScenarioListItem(BaseModel):
     people_count: int
     income_streams_count: int
     accounts_count: int
+    income_stream_types: list[str]
+    account_names: list[str]
 
 
 class ScenarioListResponse(BaseModel):
@@ -305,6 +307,8 @@ async def list_scenarios(
             people_count=len(scenario.people),
             income_streams_count=len(scenario.income_streams),
             accounts_count=len(scenario.accounts),
+            income_stream_types=[s.type.value for s in scenario.income_streams],
+            account_names=[a.name for a in scenario.accounts],
         ))
     
     return ScenarioListResponse(
