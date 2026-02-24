@@ -38,7 +38,7 @@ export interface ScenarioListItem {
   people_count: number
   income_streams_count: number
   accounts_count: number
-  income_stream_types: string[]
+  income_stream_labels: string[]
   account_names: string[]
 }
 
