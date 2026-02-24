@@ -120,7 +120,7 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
       <p className="font-sans text-slate-300 text-xs mt-2">
         {pl(sc.people_count, 'person')}
         {' · '}
-        {pl(sc.income_streams_count, 'stream')}
+        {pl(sc.income_streams_count, 'income stream')}
         {' · '}
         {pl(sc.accounts_count, 'account')}
       </p>
