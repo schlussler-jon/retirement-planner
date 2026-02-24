@@ -188,18 +188,18 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
       )}
 
       {/* action links */}
-      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-slate-800">
+      <div className="flex items-center gap-3 mt-4 pt-3 border-t border-slate-800">
         <Link
           to={`/scenarios/${sc.scenario_id}`}
-          className="font-sans text-gold-500 hover:text-gold-400 text-xs transition-colors"
+          className="font-sans text-slate-300 hover:text-white text-xs border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg transition-colors"
         >
           Edit →
         </Link>
         <Link
           to={`/scenarios/${sc.scenario_id}/results`}
-          className="font-sans text-slate-300 hover:text-gold-400 text-xs transition-colors"
+          className="font-sans bg-gold-600 hover:bg-gold-500 text-slate-950 font-semibold text-xs px-4 py-1.5 rounded-lg transition-colors"
         >
-          Results →
+          View Results →
         </Link>
       </div>
     </div>
