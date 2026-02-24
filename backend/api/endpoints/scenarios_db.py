@@ -103,6 +103,8 @@ def list_scenarios(request: Request, db: Session = Depends(get_db)):
                 "people_count":         len(data.get("people", [])),
                 "income_streams_count": len(data.get("income_streams", [])),
                 "accounts_count":       len(data.get("accounts", [])),
+                "income_stream_types":   [s.get("type", "") for s in data.get("income_streams", [])],
+                "account_names":         [a.get("name", "") for a in data.get("accounts", [])],
             })
         except Exception:
             continue
