@@ -21,10 +21,11 @@ interface Props {
   stateTax: number
   savings: number
   surplusAccountName?: string
+  contributionsByAccount?: Record<string, number>
 }
 type IncomeStreamType = 'pension' | 'social_security' | 'salary' | 'self_employment' | 'other'
 
-export default function SankeyChart({ incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings, surplusAccountName }: Props) {
+export default function SankeyChart({ incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings, surplusAccountName, contributionsByAccount }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
   const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null)
 
@@ -132,7 +133,26 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
           }
         })
       }
+    // Account contributions
+      Object.entries(contributionsByAccount ?? {}).forEach(([accountName, amount]) => {
+        if (amount > 0) {
+          const contribIndex = nodeIndex
+          nodes.push({ name: accountName, category: 'contribution' })
+          nodeIndex++
 
+          const totalIncome = Object.values(incomeBySource).reduce((sum, v) => sum + v, 0)
+          Object.entries(incomeBySource).forEach(([source, incomeAmount]) => {
+            if (incomeAmount > 0) {
+              const proportion = incomeAmount / totalIncome
+              links.push({
+                source: incomeNodes[source],
+                target: contribIndex,
+                value: amount * proportion
+              })
+            }
+          })
+        }
+      })
     // Create sankey generator
     const sankeyGenerator = sankey<SankeyNode, SankeyLink>()
       .nodeWidth(15)
@@ -163,7 +183,8 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       other: '#FFFF00',             // Sky blue
       tax: '#FF6B6B',               // Coral/Red
       expense: '#FFD700',           // Gold
-      savings: '#32CD32'            // Green
+      savings: '#32CD32',           // Green
+      contribution: '#60a5fa',      // Blue
     }
 
 // Draw links
@@ -238,8 +259,7 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
         const percentage = totalIncome > 0 ? ((d.value / totalIncome) * 100).toFixed(0) : '0'
         return `${d.name} ($${(d.value / 1000).toFixed(0)}K, ${percentage}%)`
       })
-  }, [incomeBySource, expensesByCategory, federalTax, stateTax, savings])
-
+  }, [incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings, surplusAccountName, contributionsByAccount])
 return (
     <>
       <div className="bg-slate-900 rounded-lg p-6">

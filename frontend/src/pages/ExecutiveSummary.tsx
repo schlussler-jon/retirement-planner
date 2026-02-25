@@ -90,6 +90,13 @@ export default function ExecutiveSummary() {
   const netSavings = summary.total_surplus_deficit || 0
   // Find surplus account name
   const surplusAccount = scenario.accounts.find(acc => acc.receives_surplus)
+  // Account contributions
+  const contributionsByAccount: Record<string, number> = {}
+  scenario.accounts?.forEach(acc => {
+    if ((acc.monthly_contribution ?? 0) > 0) {
+      contributionsByAccount[acc.name] = acc.monthly_contribution * totalMonths
+    }
+  })
   const surplusAccountName = surplusAccount?.name || 'Net Savings'
   console.log('DEBUG Executive Summary:', {
     hasScenario: !!scenario,
@@ -257,6 +264,7 @@ export default function ExecutiveSummary() {
             stateTax={totalStateTax}
             savings={netSavings}
             surplusAccountName={surplusAccountName}
+            contributionsByAccount={contributionsByAccount}
           />
         </div>
 
