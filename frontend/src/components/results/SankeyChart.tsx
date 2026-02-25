@@ -13,6 +13,7 @@ interface SankeyLink {
   value: number
 }
 
+type IncomeStreamType = 'pension' | 'social_security' | 'salary' | 'self_employment' | 'other'
 interface Props {
   incomeBySource: Record<string, number>
   incomeSourceTypes: Record<string, IncomeStreamType>  // NEW: map source name to type
@@ -23,7 +24,6 @@ interface Props {
   surplusAccountName?: string
   contributionsByAccount?: Record<string, number>
 }
-type IncomeStreamType = 'pension' | 'social_security' | 'salary' | 'self_employment' | 'other'
 
 export default function SankeyChart({ incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings, surplusAccountName, contributionsByAccount }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
