@@ -88,11 +88,6 @@ export default function ExecutiveSummary() {
   })
 
   const netSavings = summary.total_surplus_deficit || 0
-  // Total contributions across all accounts
-  const totalContributions = Object.values(contributionsByAccount).reduce((s, v) => s + v, 0)
-
-  // Reduce netSavings so the Sankey balances (contributions are a subset of savings)
-  const sankeyNetSavings = Math.max(0, netSavings - totalContributions)
   // Find surplus account name
   const surplusAccount = scenario.accounts.find(acc => acc.receives_surplus)
   // Account contributions
@@ -115,6 +110,12 @@ export default function ExecutiveSummary() {
   } catch (e) {
     console.warn('contributionsByAccount calculation failed:', e)
   }
+    // Total contributions across all accounts
+  const totalContributions = Object.values(contributionsByAccount).reduce((s, v) => s + v, 0)
+
+  // Reduce netSavings so the Sankey balances (contributions are a subset of savings)
+  const sankeyNetSavings = Math.max(0, netSavings - totalContributions)
+
   const surplusAccountName = surplusAccount?.name || 'Net Savings'
   console.log('DEBUG Executive Summary:', {
     hasScenario: !!scenario,
