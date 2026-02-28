@@ -92,11 +92,24 @@ export default function ExecutiveSummary() {
   const surplusAccount = scenario.accounts.find(acc => acc.receives_surplus)
   // Account contributions
   const contributionsByAccount: Record<string, number> = {}
-  scenario.accounts?.forEach(acc => {
-    if ((acc.monthly_contribution ?? 0) > 0) {
-      contributionsByAccount[acc.name] = acc.monthly_contribution * totalMonths
-    }
-  })
+  try {
+    scenario.accounts?.forEach(acc => {
+      if ((acc.monthly_contribution ?? 0) > 0) {
+        const start = acc.contribution_start_month ?? projStart
+        const end   = acc.contribution_end_month   ?? projEnd
+        const effectiveStart = start < projStart ? projStart : start
+        const effectiveEnd   = end   > projEnd   ? projEnd   : end
+        const [sy, sm] = effectiveStart.split('-').map(Number)
+        const [ey, em] = effectiveEnd.split('-').map(Number)
+        const months = Math.max(0, (ey - sy) * 12 + (em - sm) + 1)
+        if (months > 0) {
+          contributionsByAccount[acc.name] = acc.monthly_contribution * months
+        }
+      }
+    })
+  } catch (e) {
+    console.warn('contributionsByAccount calculation failed:', e)
+  }
   const surplusAccountName = surplusAccount?.name || 'Net Savings'
   console.log('DEBUG Executive Summary:', {
     hasScenario: !!scenario,
