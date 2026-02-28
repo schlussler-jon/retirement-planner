@@ -3,7 +3,8 @@
  *
  * Authenticated landing page.
  *   • Greeting + Import + Compare + New Scenario
- *   • Scenario cards with Plan Health Score, sparkline, Edit/Results/Duplicate/Export/Delete
+ *   • Scenario cards with speedometer Plan Health Score, sparkline
+ *   • Duplicate, Export, Delete actions on each card
  *   • Onboarding empty state when no scenarios exist
  */
 
@@ -32,7 +33,6 @@ function calcHealthScore(quick: QuickProjectionResponse, sc: ScenarioListItem): 
   label: string
   color: string
   insight: string
-  breakdown: { label: string; pts: number; max: number }[]
 } {
   const fs = quick.financial_summary
 
@@ -40,106 +40,164 @@ function calcHealthScore(quick: QuickProjectionResponse, sc: ScenarioListItem): 
   const survivalRate = quick.total_months > 0 ? fs.months_in_surplus / quick.total_months : 0
   const survivalPts  = Math.round(survivalRate * 35)
 
-  // 2. Portfolio Growth (25 pts) — full points at 2x, scaled
+  // 2. Portfolio Growth (25 pts) — full points at 2x
   const growthRatio = quick.starting_portfolio > 0
-    ? quick.ending_portfolio / quick.starting_portfolio
-    : 1
+    ? quick.ending_portfolio / quick.starting_portfolio : 1
   const growthPts = Math.min(25, Math.round((growthRatio / 2) * 25))
 
-  // 3. Surplus Cushion (25 pts) — avg monthly surplus vs avg monthly spending
+  // 3. Surplus Cushion (25 pts)
   const avgMonthlySpending = quick.total_months > 0 ? fs.total_spending / quick.total_months : 1
   const cushionRatio = avgMonthlySpending > 0
-    ? fs.average_monthly_surplus_deficit / avgMonthlySpending
-    : 0
+    ? fs.average_monthly_surplus_deficit / avgMonthlySpending : 0
   const cushionPts = Math.min(25, Math.max(0, Math.round(cushionRatio * 25)))
 
   // 4. Contribution Discipline (15 pts)
-  const hasContributions = (sc.accounts_count ?? 0) > 0
-  const contribPts = hasContributions ? 15 : 0
+  const contribPts = (sc.accounts_count ?? 0) > 0 ? 15 : 0
 
   const score = survivalPts + growthPts + cushionPts + contribPts
 
-  // Label + color
-  let label: string
-  let color: string
-  if (score >= 80) { label = 'Strong Plan';   color = '#22c55e' }
-  else if (score >= 60) { label = 'On Track';  color = '#eab308' }
-  else if (score >= 40) { label = 'Needs Work'; color = '#f97316' }
-  else                  { label = 'At Risk';    color = '#ef4444' }
+  let label: string, color: string
+  if (score >= 80)      { label = 'Strong Plan';  color = '#22c55e' }
+  else if (score >= 60) { label = 'On Track';     color = '#eab308' }
+  else if (score >= 40) { label = 'Needs Work';   color = '#f97316' }
+  else                  { label = 'At Risk';      color = '#ef4444' }
 
-  // Insight — flag the weakest component
   const breakdown = [
-    { label: 'Survival Rate',   pts: survivalPts,  max: 35 },
-    { label: 'Portfolio Growth', pts: growthPts,   max: 25 },
-    { label: 'Surplus Cushion', pts: cushionPts,   max: 25 },
-    { label: 'Contributions',   pts: contribPts,   max: 15 },
+    { label: 'Survival Rate',    pts: survivalPts,  max: 35 },
+    { label: 'Portfolio Growth', pts: growthPts,    max: 25 },
+    { label: 'Surplus Cushion',  pts: cushionPts,   max: 25 },
+    { label: 'Contributions',    pts: contribPts,   max: 15 },
   ]
   const weakest = breakdown.reduce((a, b) =>
-    (a.pts / a.max) < (b.pts / b.max) ? a : b
-  )
+    (a.pts / a.max) < (b.pts / b.max) ? a : b)
   const insightMap: Record<string, string> = {
-    'Survival Rate':    `${Math.round(survivalRate * 100)}% of months in surplus — aim for 95%+`,
-    'Portfolio Growth': `Portfolio ${growthRatio < 1 ? 'shrinks' : `grows ${growthRatio.toFixed(1)}x`} — target 2x+`,
+    'Survival Rate':    `${Math.round(survivalRate * 100)}% months in surplus`,
+    'Portfolio Growth': growthRatio < 1 ? 'Portfolio shrinks over time' : `Portfolio grows ${growthRatio.toFixed(1)}x`,
     'Surplus Cushion':  cushionRatio < 0 ? 'Monthly deficits detected' : 'Low monthly surplus buffer',
-    'Contributions':    'Add monthly contributions to boost long-term growth',
+    'Contributions':    'Add monthly contributions',
   }
   const insight = insightMap[weakest.label] ?? ''
 
-  return { score, label, color, insight, breakdown }
+  return { score, label, color, insight }
+}
+
+function Speedometer({ score, color }: { score: number; color: string }) {
+  // Semicircle speedometer: 180° arc from left to right
+  // 0 = far left, 100 = far right
+  const cx = 60, cy = 56, r = 44
+  const strokeW = 9
+
+  // Arc spans 180° (from 180° to 0° = left to right along top)
+  const toRad = (deg: number) => (deg * Math.PI) / 180
+  const arcStart = 180  // leftmost point
+  const arcEnd   = 0    // rightmost point
+
+  // Full semicircle path (background track)
+  const trackPath = `
+    M ${cx - r},${cy}
+    A ${r},${r} 0 0 1 ${cx + r},${cy}
+  `
+
+  // Colored fill arc based on score (0–100 maps to 180°–0°)
+  const fillAngle = 180 - (score / 100) * 180  // degrees from left
+  const fillRad   = toRad(fillAngle)
+  const fillX     = cx + r * Math.cos(fillRad)
+  const fillY     = cy - r * Math.sin(fillRad)
+  const largeArc  = fillAngle < 90 ? 1 : 0  // large arc flag
+
+  const fillPath = score <= 0 ? '' : score >= 100
+    ? trackPath
+    : `M ${cx - r},${cy} A ${r},${r} 0 ${largeArc} 1 ${fillX},${fillY}`
+
+  // Needle: points from center to arc edge at score angle
+  const needleAngle = 180 - (score / 100) * 180
+  const needleRad   = toRad(needleAngle)
+  const needleLen   = r - 6
+  const nx = cx + needleLen * Math.cos(needleRad)
+  const ny = cy - needleLen * Math.sin(needleRad)
+
+  // Zone colors for tick marks
+  const zones = [
+    { label: 'Risk',   start: 0,  end: 40,  color: '#ef4444' },
+    { label: 'Work',   start: 40, end: 60,  color: '#f97316' },
+    { label: 'Track',  start: 60, end: 80,  color: '#eab308' },
+    { label: 'Strong', start: 80, end: 100, color: '#22c55e' },
+  ]
+
+  return (
+    <svg width={120} height={68} viewBox="0 0 120 68">
+      {/* Zone arcs */}
+      {zones.map((zone) => {
+        const startAngle = 180 - (zone.start / 100) * 180
+        const endAngle   = 180 - (zone.end / 100) * 180
+        const sRad = toRad(startAngle)
+        const eRad = toRad(endAngle)
+        const sx = cx + r * Math.cos(sRad)
+        const sy = cy - r * Math.sin(sRad)
+        const ex = cx + r * Math.cos(eRad)
+        const ey = cy - r * Math.sin(eRad)
+        const la = (startAngle - endAngle) > 180 ? 1 : 0
+        return (
+          <path
+            key={zone.label}
+            d={`M ${sx},${sy} A ${r},${r} 0 ${la} 1 ${ex},${ey}`}
+            fill="none"
+            stroke={zone.color}
+            strokeWidth={strokeW}
+            opacity={0.25}
+            strokeLinecap="butt"
+          />
+        )
+      })}
+
+      {/* Active fill arc */}
+      {score > 0 && (
+        <path
+          d={fillPath}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeW}
+          strokeLinecap="round"
+          opacity={0.9}
+        />
+      )}
+
+      {/* Needle */}
+      <line
+        x1={cx} y1={cy}
+        x2={nx} y2={ny}
+        stroke="white"
+        strokeWidth={2}
+        strokeLinecap="round"
+      />
+      {/* Needle pivot */}
+      <circle cx={cx} cy={cy} r={4} fill="white" />
+      <circle cx={cx} cy={cy} r={2} fill="#0f172a" />
+
+      {/* Score number */}
+      <text
+        x={cx} y={cy - 14}
+        textAnchor="middle"
+        fill="white"
+        fontSize={13}
+        fontWeight="bold"
+        fontFamily="sans-serif"
+      >
+        {score}
+      </text>
+    </svg>
+  )
 }
 
 function PlanHealthScore({ quick, sc }: { quick: QuickProjectionResponse; sc: ScenarioListItem }) {
   const { score, label, color, insight } = calcHealthScore(quick, sc)
 
-  // Circular gauge math
-  const r   = 28
-  const cx  = 36
-  const cy  = 36
-  const circ = 2 * Math.PI * r
-  const arc  = circ * 0.75  // 270° arc
-  const dash = (score / 100) * arc
-  const gap  = arc - dash
-  // Rotate so arc starts at bottom-left (~225°)
-  const rotate = 135
-
   return (
     <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: 72, height: 72 }}>
-        <svg width="72" height="72" viewBox="0 0 72 72">
-          {/* track */}
-          <circle
-            cx={cx} cy={cy} r={r}
-            fill="none"
-            stroke="#1e293b"
-            strokeWidth="7"
-            strokeDasharray={`${arc} ${circ - arc}`}
-            strokeDashoffset={0}
-            strokeLinecap="round"
-            transform={`rotate(${rotate} ${cx} ${cy})`}
-          />
-          {/* fill */}
-          <circle
-            cx={cx} cy={cy} r={r}
-            fill="none"
-            stroke={color}
-            strokeWidth="7"
-            strokeDasharray={`${dash} ${gap + (circ - arc)}`}
-            strokeDashoffset={0}
-            strokeLinecap="round"
-            transform={`rotate(${rotate} ${cx} ${cy})`}
-            style={{ transition: 'stroke-dasharray 0.6s ease' }}
-          />
-        </svg>
-        {/* score number */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="font-sans font-bold text-white" style={{ fontSize: 18, lineHeight: 1 }}>
-            {score}
-          </span>
-        </div>
-      </div>
-      <p className="font-sans text-xs font-semibold mt-1" style={{ color }}>{label}</p>
+      <Speedometer score={score} color={color} />
+      <p className="font-sans text-xs font-semibold -mt-1" style={{ color }}>{label}</p>
       {insight && (
-        <p className="font-sans text-slate-400 text-center mt-0.5" style={{ fontSize: 10, lineHeight: 1.3, maxWidth: 90 }}>
+        <p className="font-sans text-slate-400 text-center mt-0.5" style={{ fontSize: 10, lineHeight: 1.3, maxWidth: 100 }}>
           {insight}
         </p>
       )}
@@ -255,7 +313,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
 
       {quick && (
         <>
-          {/* sparkline + health score side by side */}
+          {/* sparkline + speedometer side by side */}
           <div className="mt-3 pt-3 border-t border-slate-800 flex items-start justify-between gap-4">
             {quick.portfolio_series && quick.portfolio_series.length > 1 ? (
               <div>
