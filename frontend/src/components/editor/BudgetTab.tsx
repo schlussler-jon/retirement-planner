@@ -73,7 +73,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
 
       {/* Empty state */}
       {budget.categories.length === 0 && (
-        <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
+        <div className="text-center py-8 border border-dashed border-violet-800 rounded-xl mb-4">
           <p className="text-3xl mb-2">📊</p>
           <p className="font-sans text-slate-400 text-sm font-medium mb-1">No budget categories yet</p>
           <p className="font-sans text-slate-400 text-xs">Add your monthly expenses below — housing, food, transportation, etc.</p>
@@ -96,14 +96,14 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
         {/* ── MOBILE cards ── */}
         <div className="md:hidden space-y-3">
           {budget.categories.map((cat, idx) => (
-            <div key={idx} className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 overflow-hidden">
+            <div key={idx} className="bg-slate-800/50 border border-violet-800/50 rounded-xl p-4 overflow-hidden">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={cat.include}
                     onChange={e => updateCategory(idx, c => ({ ...c, include: e.target.checked }))}
-                    className="w-5 h-5 rounded border-slate-700 bg-slate-800 cursor-pointer accent-yellow-500 shrink-0"
+                    className="w-5 h-5 rounded border-violet-800 bg-slate-800 cursor-pointer accent-yellow-500 shrink-0"
                   />
                   <span className={`font-sans text-sm font-semibold ${cat.include ? 'text-white' : 'text-slate-400'}`}>
                     {cat.category_name || cat.main_category || 'New Category'}
@@ -121,7 +121,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                   <select
                     value={cat.main_category || 'Housing'}
                     onChange={e => updateCategory(idx, c => ({ ...c, main_category: e.target.value as BudgetCategory['main_category'] }))}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                    className="w-full bg-slate-800 border border-violet-800 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                   >
                     {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
@@ -131,7 +131,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                   <select
                     value={cat.category_type}
                     onChange={e => updateCategory(idx, c => ({ ...c, category_type: e.target.value as BudgetCategory['category_type'] }))}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                    className="w-full bg-slate-800 border border-violet-800 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                   >
                     {CATEGORY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
@@ -145,7 +145,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                   value={cat.category_name}
                   onChange={e => updateCategory(idx, c => ({ ...c, category_name: e.target.value }))}
                   placeholder="e.g. Mortgage Payment"
-                  className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
+                  className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
                 />
               </div>
 
@@ -163,7 +163,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                         const v = e.target.valueAsNumber
                         updateCategory(idx, c => ({ ...c, monthly_amount: isNaN(v) ? 0 : v }))
                       }}
-                      className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                      className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg pl-6 pr-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -173,7 +173,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                     type="month"
                     value={cat.end_month || ''}
                     onChange={e => updateCategory(idx, c => ({ ...c, end_month: e.target.value || null }))}
-                    className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                    className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                   />
                 </div>
               </div>
@@ -190,12 +190,12 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 checked={cat.include}
                 onChange={e => updateCategory(idx, c => ({ ...c, include: e.target.checked }))}
                 title={cat.include ? 'Click to exclude' : 'Click to include'}
-                className="w-4 h-4 rounded border-slate-700 bg-slate-800 cursor-pointer accent-yellow-500 shrink-0"
+                className="w-4 h-4 rounded border-violet-800 bg-slate-800 cursor-pointer accent-yellow-500 shrink-0"
               />
               <select
                 value={cat.main_category || 'Housing'}
                 onChange={e => updateCategory(idx, c => ({ ...c, main_category: e.target.value as BudgetCategory['main_category'] }))}
-                className={`w-44 shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none ${cat.include ? 'text-white' : 'text-slate-300'}`}
+                className={`w-44 shrink-0 bg-slate-800 border border-violet-800 rounded-lg px-2 py-1.5 font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none ${cat.include ? 'text-white' : 'text-slate-300'}`}
               >
                 {EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
@@ -204,12 +204,12 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 value={cat.category_name}
                 onChange={e => updateCategory(idx, c => ({ ...c, category_name: e.target.value }))}
                 placeholder="e.g. Mortgage Payment"
-                className={`flex-1 min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none ${cat.include ? 'text-white' : 'text-slate-300'}`}
+                className={`flex-1 min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-1.5 font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none ${cat.include ? 'text-white' : 'text-slate-300'}`}
               />
               <select
                 value={cat.category_type}
                 onChange={e => updateCategory(idx, c => ({ ...c, category_type: e.target.value as BudgetCategory['category_type'] }))}
-                className="w-24 shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
+                className="w-24 shrink-0 bg-slate-800 border border-violet-800 rounded-lg px-2 py-1.5 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
               >
                 {CATEGORY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
@@ -224,7 +224,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                     const v = e.target.valueAsNumber
                     updateCategory(idx, c => ({ ...c, monthly_amount: isNaN(v) ? 0 : v }))
                   }}
-                  className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg pl-6 pr-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                  className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg pl-6 pr-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                 />
               </div>
               <input
@@ -232,7 +232,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 value={cat.end_month || ''}
                 onChange={e => updateCategory(idx, c => ({ ...c, end_month: e.target.value || null }))}
                 title="Optional: when does this expense end?"
-                className="w-36 min-w-0 shrink-0 bg-slate-800 border border-slate-700 rounded-lg px-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                className="w-36 min-w-0 shrink-0 bg-slate-800 border border-violet-800 rounded-lg px-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
               />
               <button
                 onClick={() => removeCategory(idx)}
@@ -248,7 +248,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
       {/* Add button */}
       <button
         onClick={addCategory}
-        className="w-full border border-slate-700 border-dashed rounded-xl px-4 py-4 font-sans text-slate-400 hover:text-gold-400 hover:border-gold-600 text-sm transition-colors duration-150 flex items-center justify-center gap-2 mb-5"
+        className="w-full border border-violet-800 border-dashed rounded-xl px-4 py-4 font-sans text-slate-400 hover:text-gold-400 hover:border-gold-600 text-sm transition-colors duration-150 flex items-center justify-center gap-2 mb-5"
       >
         <span className="text-lg leading-none">+</span> Add Budget Category
       </button>

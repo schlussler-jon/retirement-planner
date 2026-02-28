@@ -47,7 +47,7 @@ function IncomeStreamCard({
   const owner = people.find(p => p.person_id === stream.owner_person_id)
 
   return (
-    <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 overflow-hidden">
+    <div className="bg-slate-800/50 border border-violet-800/50 rounded-xl p-4 overflow-hidden">
 
       {/* Card header */}
       <div className="flex items-center justify-between mb-4">
@@ -72,7 +72,7 @@ function IncomeStreamCard({
           <select
             value={stream.type}
             onChange={e => onUpdate(s => ({ ...s, type: e.target.value as IncomeStream['type'] }))}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
           >
             {INCOME_STREAM_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
           </select>
@@ -86,7 +86,7 @@ function IncomeStreamCard({
             value={stream.owner_person_id}
             disabled={people.length === 0}
             onChange={e => onUpdate(s => ({ ...s, owner_person_id: e.target.value }))}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer disabled:opacity-50 focus:border-gold-600 focus:outline-none"
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer disabled:opacity-50 focus:border-gold-600 focus:outline-none"
           >
             {people.length === 0 && <option value="">— add a person first —</option>}
             {people.map(p => <option key={p.person_id} value={p.person_id}>{p.name || p.person_id}</option>)}
@@ -108,7 +108,7 @@ function IncomeStreamCard({
                 const v = e.target.valueAsNumber
                 onUpdate(s => ({ ...s, monthly_amount_at_start: isNaN(v) ? 0 : v }))
               }}
-              className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
           <p className="font-sans text-slate-400 text-xs mt-1">Amount at start of income</p>
@@ -125,7 +125,7 @@ function IncomeStreamCard({
             type="month"
             value={stream.start_month}
             onChange={e => onUpdate(s => ({ ...s, start_month: e.target.value }))}
-            className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+            className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
           />
           <p className="font-sans text-slate-400 text-xs mt-1">When does this income begin?</p>
         </div>
@@ -144,7 +144,7 @@ function IncomeStreamCard({
                 const v = e.target.valueAsNumber
                 onUpdate(s => ({ ...s, cola_percent_annual: isNaN(v) ? 0 : toDecimal(v) }))
               }}
-              className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
           </div>
@@ -171,7 +171,7 @@ function IncomeStreamCard({
               type="month"
               value={stream.end_month || ''}
               onChange={e => onUpdate(s => ({ ...s, end_month: e.target.value || null }))}
-              className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
             <p className="font-sans text-slate-400 text-xs mt-1">Leave blank if income continues indefinitely</p>
           </div>
@@ -183,7 +183,7 @@ function IncomeStreamCard({
             <select
               value={stream.cola_month}
               onChange={e => onUpdate(s => ({ ...s, cola_month: Number(e.target.value) }))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
             >
               {MONTHS.map(m => <option key={m} value={m}>{MONTH_NAMES[m-1]}</option>)}
             </select>
@@ -240,7 +240,7 @@ export default function IncomeTab({ streams, people, onChange, autoAdd, onAutoAd
       )}
 
       {streams.length === 0 && (
-        <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
+        <div className="text-center py-8 border border-dashed border-violet-800 rounded-xl mb-4">
           <p className="text-3xl mb-2">💰</p>
           <p className="font-sans text-slate-400 text-sm font-medium mb-1">No income streams added yet</p>
           <p className="font-sans text-slate-400 text-xs">Add salary, pension, Social Security, or other income below</p>
@@ -263,7 +263,7 @@ export default function IncomeTab({ streams, people, onChange, autoAdd, onAutoAd
       <button
         onClick={addStream}
         disabled={people.length === 0}
-        className="w-full border border-slate-700 border-dashed rounded-xl px-4 py-4 font-sans text-slate-400 hover:text-gold-400 hover:border-gold-600 disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:border-slate-700 text-sm transition-colors duration-150 flex items-center justify-center gap-2"
+        className="w-full border border-violet-800 border-dashed rounded-xl px-4 py-4 font-sans text-slate-400 hover:text-gold-400 hover:border-gold-600 disabled:opacity-40 disabled:hover:text-slate-400 disabled:hover:border-violet-800 text-sm transition-colors duration-150 flex items-center justify-center gap-2"
       >
         <span className="text-lg leading-none">+</span> Add Income Stream
       </button>

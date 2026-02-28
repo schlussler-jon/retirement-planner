@@ -29,7 +29,7 @@ export default function TaxTab({ tax, onChange }: Props) {
         <select
           value={tax.filing_status}
           onChange={e => onChange({ ...tax, filing_status: e.target.value as TaxSettings['filing_status'] })}
-          className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
+          className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
         >
           {FILING_STATUSES.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
         </select>

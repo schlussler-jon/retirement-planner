@@ -74,7 +74,7 @@ function AccountCard({
             value={acct.name}
             onChange={e => onUpdate(a => ({ ...a, name: e.target.value }))}
             placeholder="e.g. Jon's 401k"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
           />
         </div>
 
@@ -85,7 +85,7 @@ function AccountCard({
           <select
             value={acct.tax_bucket}
             onChange={e => onUpdate(a => ({ ...a, tax_bucket: e.target.value as InvestmentAccount['tax_bucket'] }))}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
           >
             {TAX_BUCKETS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
           </select>
@@ -112,7 +112,7 @@ function AccountCard({
                 const v = e.target.valueAsNumber
                 onUpdate(a => ({ ...a, starting_balance: isNaN(v) ? 0 : v }))
               }}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
           <p className="font-sans text-slate-400 text-xs mt-1">Balance at the start of the projection</p>
@@ -132,7 +132,7 @@ function AccountCard({
                 const v = e.target.valueAsNumber
                 onUpdate(a => ({ ...a, annual_return_rate: isNaN(v) ? 0 : toDecimal(v) }))
               }}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
           </div>
@@ -157,7 +157,7 @@ function AccountCard({
                 const v = e.target.valueAsNumber
                 onUpdate(a => ({ ...a, monthly_contribution: isNaN(v) ? 0 : v }))
               }}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
           <p className="font-sans text-slate-400 text-xs mt-1">How much you add each month</p>
@@ -178,7 +178,7 @@ function AccountCard({
                 const v = e.target.valueAsNumber
                 onUpdate(a => ({ ...a, monthly_withdrawal: isNaN(v) ? 0 : v }))
               }}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg pl-7 pr-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
             />
           </div>
           <p className="font-sans text-slate-400 text-xs mt-1">How much you take out each month in retirement</p>
@@ -192,7 +192,7 @@ function AccountCard({
           id={`surplus-${idx}`}
           checked={acct.receives_surplus || false}
           onChange={e => onUpdate(a => ({ ...a, receives_surplus: e.target.checked }))}
-          className="w-4 h-4 mt-0.5 bg-slate-800 border-slate-700 rounded cursor-pointer accent-yellow-500"
+          className="w-4 h-4 mt-0.5 bg-slate-800 border-violet-800 rounded cursor-pointer accent-yellow-500"
         />
         <label htmlFor={`surplus-${idx}`} className="cursor-pointer">
           <span className="font-sans text-white text-sm font-medium">Receives monthly surplus / covers deficit</span>
@@ -221,7 +221,7 @@ function AccountCard({
             </label>
             <input type="month" value={acct.contribution_start_month || ''}
               onChange={e => onUpdate(a => ({ ...a, contribution_start_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
             <p className="font-sans text-slate-400 text-xs mt-1">When to start contributing</p>
           </div>
           <div>
@@ -230,7 +230,7 @@ function AccountCard({
             </label>
             <input type="month" value={acct.contribution_end_month || ''}
               onChange={e => onUpdate(a => ({ ...a, contribution_end_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
             <p className="font-sans text-slate-400 text-xs mt-1">When to stop contributing</p>
           </div>
           <div>
@@ -239,7 +239,7 @@ function AccountCard({
             </label>
             <input type="month" value={acct.withdrawal_start_month || ''}
               onChange={e => onUpdate(a => ({ ...a, withdrawal_start_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
             <p className="font-sans text-slate-400 text-xs mt-1">When to start withdrawing</p>
           </div>
           <div>
@@ -248,7 +248,7 @@ function AccountCard({
             </label>
             <input type="month" value={acct.withdrawal_end_month || ''}
               onChange={e => onUpdate(a => ({ ...a, withdrawal_end_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
             <p className="font-sans text-slate-400 text-xs mt-1">When to stop withdrawing</p>
           </div>
         </div>
@@ -297,7 +297,7 @@ export default function AccountsTab({ accounts, onChange, autoAdd, onAutoAddDone
       </p>
 
       {accounts.length === 0 && (
-        <div className="text-center py-8 border border-dashed border-slate-700 rounded-xl mb-4">
+        <div className="text-center py-8 border border-dashed border-violet-800 rounded-xl mb-4">
           <p className="text-3xl mb-2">🏦</p>
           <p className="font-sans text-slate-400 text-sm font-medium mb-1">No accounts added yet</p>
           <p className="font-sans text-slate-400 text-xs">Add your 401k, IRA, Roth, or other savings accounts below</p>
@@ -318,7 +318,7 @@ export default function AccountsTab({ accounts, onChange, autoAdd, onAutoAddDone
 
       <button
         onClick={addAccount}
-        className="w-full border border-slate-700 border-dashed rounded-xl px-4 py-4 font-sans text-slate-400 hover:text-gold-400 hover:border-gold-600 text-sm transition-colors duration-150 flex items-center justify-center gap-2"
+        className="w-full border border-violet-800 border-dashed rounded-xl px-4 py-4 font-sans text-slate-400 hover:text-gold-400 hover:border-gold-600 text-sm transition-colors duration-150 flex items-center justify-center gap-2"
       >
         <span className="text-lg leading-none">+</span> Add Account
       </button>

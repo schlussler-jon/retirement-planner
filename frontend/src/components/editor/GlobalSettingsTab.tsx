@@ -54,7 +54,7 @@ export default function GlobalSettingsTab({ settings, onChange, budget, onBudget
         <div>
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">Start Year</label>
           <select value={startYear} onChange={e => setStartYear(Number(e.target.value))}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none">
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none">
             {START_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
@@ -62,7 +62,7 @@ export default function GlobalSettingsTab({ settings, onChange, budget, onBudget
         <div>
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">Start Month</label>
           <select value={startMonth} onChange={e => setStartMonth(Number(e.target.value))}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none">
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none">
             {MONTHS.map(m => <option key={m} value={m}>{MONTH_NAMES[m-1]}</option>)}
           </select>
         </div>
@@ -70,7 +70,7 @@ export default function GlobalSettingsTab({ settings, onChange, budget, onBudget
         <div>
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">End Year</label>
           <select value={settings.projection_end_year} onChange={e => onChange({ ...settings, projection_end_year: Number(e.target.value) })}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none">
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none">
             {END_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
           </select>
         </div>
@@ -78,7 +78,7 @@ export default function GlobalSettingsTab({ settings, onChange, budget, onBudget
         <div className="sm:col-span-3 max-w-xs">
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">Residence State</label>
           <select value={settings.residence_state} onChange={e => onChange({ ...settings, residence_state: e.target.value })}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none">
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none">
             {US_STATES.filter(s => SUPPORTED_STATE_CODES.includes(s.code)).map(s =>
               <option key={s.code} value={s.code}>{s.name} ({s.code})</option>
             )}
@@ -88,7 +88,7 @@ export default function GlobalSettingsTab({ settings, onChange, budget, onBudget
       </div>
 
       {/* ── Inflation & Survivor Settings ── */}
-      <div className="border-t border-slate-800 pt-5">
+      <div className="border-t border-violet-900 pt-5">
         <p className="font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1">
           Inflation &amp; Survivor Settings
         </p>
@@ -111,7 +111,7 @@ export default function GlobalSettingsTab({ settings, onChange, budget, onBudget
                   const v = e.target.valueAsNumber
                   onBudgetChange({ ...budget, inflation_annual_percent: isNaN(v) ? 0 : toDecimal(v) })
                 }}
-                className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
             </div>
@@ -132,7 +132,7 @@ export default function GlobalSettingsTab({ settings, onChange, budget, onBudget
                   const v = e.target.valueAsNumber
                   onBudgetChange({ ...budget, survivor_flexible_reduction_percent: isNaN(v) ? 0 : toDecimal(v) })
                 }}
-                className="w-full min-w-0 bg-slate-800 border border-slate-700 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 pr-7 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
               />
               <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">%</span>
             </div>
@@ -146,7 +146,7 @@ export default function GlobalSettingsTab({ settings, onChange, budget, onBudget
             <select
               value={budget.survivor_reduction_mode}
               onChange={e => onBudgetChange({ ...budget, survivor_reduction_mode: e.target.value as BudgetSettings['survivor_reduction_mode'] })}
-              className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
+              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm cursor-pointer focus:border-gold-600 focus:outline-none"
             >
               <option value="flex_only">Flexible categories only</option>
               <option value="all">All categories</option>

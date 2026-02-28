@@ -161,7 +161,7 @@ function ProgressTracker({
   onTabClick: (tab: Tab) => void
 }) {
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-4">
+    <div className="bg-slate-900 border border-violet-900 rounded-xl p-4 mb-4">
       <div className="flex items-start justify-between gap-2 flex-wrap sm:flex-nowrap">
         {STEPS.map((step, i) => {
           const complete = step.isComplete(scenario)
@@ -183,7 +183,7 @@ function ProgressTracker({
                     ? 'bg-gold-500 text-slate-950 ring-2 ring-gold-400 ring-offset-2 ring-offset-slate-900'
                     : complete
                       ? 'bg-gold-600/30 text-gold-400 border border-gold-600'
-                      : 'bg-slate-800 text-slate-300 border border-slate-700 group-hover:border-slate-500'
+                      : 'bg-slate-800 text-slate-300 border border-violet-800 group-hover:border-slate-500'
                   }
                 `}>
                   {complete && !active ? '✓' : i + 1}
@@ -251,7 +251,7 @@ function WhatsNext({
   const requiredSteps = STEPS.filter(s => s.isRequired)
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-xl px-5 py-4 mb-4">
+    <div className="bg-slate-900 border border-violet-800 rounded-xl px-5 py-4 mb-4">
       <div className="flex items-start gap-3">
         <span className="text-xl mt-0.5">👋</span>
         <div className="flex-1 min-w-0">
@@ -316,12 +316,12 @@ function MoreMenu({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="font-sans text-slate-400 hover:text-slate-200 text-sm px-3 py-2 rounded-lg border border-slate-700 hover:border-slate-500 transition-colors"
+        className="font-sans text-slate-400 hover:text-slate-200 text-sm px-3 py-2 rounded-lg border border-violet-800 hover:border-slate-500 transition-colors"
       >
         ⋯ More
       </button>
       {open && (
-        <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-violet-800 rounded-lg shadow-xl z-50 overflow-hidden">
           <button onClick={() => { onDuplicate(); setOpen(false) }} disabled={dupLoading}
             className="w-full text-left px-4 py-2.5 font-sans text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors disabled:opacity-50">
             {dupLoading ? '⧉ Duplicating…' : '⧉ Duplicate'}
@@ -446,7 +446,7 @@ export default function ScenarioEditor() {
       </div>
 
       {/* name / description */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 mb-4">
+      <div className="bg-slate-900 border border-violet-900 rounded-xl p-5 mb-4">
         <div className="mb-4">
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
             Scenario Name <span className="text-red-400">*</span>
@@ -456,7 +456,7 @@ export default function ScenarioEditor() {
             value={scenario.scenario_name}
             onChange={e => setScenario(prev => ({ ...prev, scenario_name: e.target.value }))}
             placeholder="e.g. Ted & Veronica's Retirement"
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
           />
         </div>
         <div>
@@ -468,7 +468,7 @@ export default function ScenarioEditor() {
             onChange={e => setScenario(prev => ({ ...prev, description: e.target.value }))}
             placeholder="e.g. Base plan assuming both retire at 65…"
             rows={2}
-            className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 resize-none focus:border-gold-600 focus:outline-none"
+            className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 resize-none focus:border-gold-600 focus:outline-none"
           />
         </div>
       </div>
@@ -506,7 +506,7 @@ export default function ScenarioEditor() {
       />
 
       {/* tab content */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+      <div className="bg-slate-900 border border-violet-900 rounded-xl p-5">
         {activeTab === 'People' && (
           <PeopleTab
             people={scenario.people}
