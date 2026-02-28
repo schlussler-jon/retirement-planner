@@ -120,8 +120,20 @@ def generate_financial_analysis(
         years_in_retirement = life_exp_year - projection_start_year
         years_to_medicare = max(0, 65 - current_age)
         years_to_rmds = max(0, 73 - current_age)
+        status_label = {
+            "working_full_time": "Working Full-Time",
+            "working_part_time": "Working Part-Time",
+            "self_employed": "Self-Employed",
+            "retired": "Retired",
+            "not_working": "Not Working",
+        }.get(person.employment_status or "", "Unknown")
+        retirement_note = ""
+        if person.planned_retirement_date:
+            ret_year = int(person.planned_retirement_date.split("-")[0])
+            years_to_ret = max(0, ret_year - projection_start_year)
+            retirement_note = f", plans to retire in {years_to_ret} year(s) ({person.planned_retirement_date})"
         people_context.append(
-            f"- {person.name}: age {current_age} at start of projection, "
+            f"- {person.name}: age {current_age}, status: {status_label}{retirement_note}, "
             f"{'already past full retirement age (67)' if years_to_fra == 0 else f'{years_to_fra} years to full retirement age (67)'}, "
             f"{'already Medicare eligible' if years_to_medicare == 0 else f'{years_to_medicare} years to Medicare (65)'}, "
             f"{'RMDs already required' if years_to_rmds == 0 else f'{years_to_rmds} years to RMDs (73)'}, "

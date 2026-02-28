@@ -45,6 +45,22 @@ class Person(BaseModel):
         le=120,
         description="Life expectancy in years from birth (optional)"
     )
+    employment_status: Optional[str] = Field(
+        None,
+        description="Employment status: working_full_time, working_part_time, self_employed, retired, not_working"
+    )
+    planned_retirement_date: Optional[str] = Field(
+        None,
+        description="Planned retirement date in YYYY-MM format"
+    )
+    employment_status: Optional[str] = Field(
+        None,
+        description="Employment status: working_full_time, working_part_time, self_employed, retired, not_working"
+    )
+    planned_retirement_date: Optional[str] = Field(
+        None,
+        description="Planned retirement date in YYYY-MM format"
+    )
     
     @field_validator('birth_date')
     @classmethod

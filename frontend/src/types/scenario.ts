@@ -34,6 +34,8 @@ export interface Person {
   name: string
   birth_date: string               // YYYY-MM-DD
   life_expectancy_years?: number | null
+  employment_status?: string | null
+  planned_retirement_date?: string | null
   /** Computed by backend — read-only. */
   death_year_month?: string | null
 }

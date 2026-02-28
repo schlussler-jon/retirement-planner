@@ -20,6 +20,17 @@ function updateAt<T>(arr: T[], idx: number, fn: (item: T) => T): T[] {
   return arr.map((item, i) => (i === idx ? fn(item) : item))
 }
 
+const EMPLOYMENT_STATUS_OPTIONS = [
+  { value: 'working_full_time',  label: 'Working Full-Time' },
+  { value: 'working_part_time',  label: 'Working Part-Time' },
+  { value: 'self_employed',      label: 'Self-Employed' },
+  { value: 'retired',            label: 'Retired' },
+  { value: 'not_working',        label: 'Not Working' },
+]
+
+const isWorking = (status?: string | null) =>
+  status === 'working_full_time' || status === 'working_part_time' || status === 'self_employed'
+
 export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: Props) {
   const addPerson = () => {
     const nextNum = people.length + 1
@@ -28,6 +39,8 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
       name: '',
       birth_date: '1965-01-01',
       life_expectancy_years: 90,
+      employment_status: null,
+      planned_retirement_date: null,
     }])
   }
 
@@ -75,7 +88,8 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
               </button>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Row 1: Name, DOB, Life Expectancy */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                   Full Name <span className="text-red-400">*</span>
@@ -122,6 +136,50 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                 </div>
                 <p className="font-sans text-slate-400 text-xs mt-1">How long to run the projection</p>
               </div>
+            </div>
+
+            {/* Row 2: Employment Status + Planned Retirement Date */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-violet-900/50">
+              <div>
+                <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                  Employment Status
+                </label>
+                <select
+                  value={person.employment_status ?? ''}
+                  onChange={e => update(idx, p => ({
+                    ...p,
+                    employment_status: e.target.value || null,
+                    // Clear retirement date if they select retired or not working
+                    planned_retirement_date: isWorking(e.target.value) ? p.planned_retirement_date : null,
+                  }))}
+                  className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                >
+                  <option value="">Select status…</option>
+                  {EMPLOYMENT_STATUS_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                <p className="font-sans text-slate-400 text-xs mt-1">Used in AI analysis and scenario summary</p>
+              </div>
+
+              {/* Only show planned retirement date if actively working */}
+              {isWorking(person.employment_status) && (
+                <div>
+                  <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                    Planned Retirement Date
+                  </label>
+                  <input
+                    type="month"
+                    value={person.planned_retirement_date ?? ''}
+                    onChange={e => update(idx, p => ({
+                      ...p,
+                      planned_retirement_date: e.target.value || null,
+                    }))}
+                    className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                  />
+                  <p className="font-sans text-slate-400 text-xs mt-1">When do you plan to stop working?</p>
+                </div>
+              )}
             </div>
 
           </div>
