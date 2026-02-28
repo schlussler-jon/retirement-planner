@@ -110,7 +110,6 @@ export default function ExecutiveSummary() {
       }
     })
   } catch (e) {
-    console.warn("contributionsByAccount calculation failed:", e, "account sample:", scenario.accounts?.[0])
   }
     // Total contributions across all accounts
   const totalContributions = Object.values(contributionsByAccount).reduce((s, v) => s + v, 0)
@@ -118,7 +117,6 @@ export default function ExecutiveSummary() {
   // Reduce netSavings so the Sankey balances (contributions are a subset of savings)
   const sankeyNetSavings = Math.max(0, netSavings - totalContributions)
 
-  console.log("DEBUG Sankey contributions:", contributionsByAccount, "sankeyNetSavings:", sankeyNetSavings, "netSavings:", netSavings)
   const surplusAccountName = surplusAccount?.name || "Net Savings"
   console.log('DEBUG Executive Summary:', {
     hasScenario: !!scenario,
