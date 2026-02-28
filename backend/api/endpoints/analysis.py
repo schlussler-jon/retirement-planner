@@ -132,8 +132,13 @@ def generate_financial_analysis(
             ret_year = int(person.planned_retirement_date.split("-")[0])
             years_to_ret = max(0, ret_year - projection_start_year)
             retirement_note = f", plans to retire in {years_to_ret} year(s) ({person.planned_retirement_date})"
+        ss_note = ""
+        if person.social_security_start_date:
+            ss_year = int(person.social_security_start_date.split("-")[0])
+            ss_years = ss_year - projection_start_year
+            ss_note = f", already receiving Social Security" if ss_years <= 0 else f", starting Social Security in {ss_years} year(s) ({person.social_security_start_date})"
         people_context.append(
-            f"- {person.name}: age {current_age}, status: {status_label}{retirement_note}, "
+            f"- {person.name}: age {current_age}, status: {status_label}{retirement_note}{ss_note}, "
             f"{'already past full retirement age (67)' if years_to_fra == 0 else f'{years_to_fra} years to full retirement age (67)'}, "
             f"{'already Medicare eligible' if years_to_medicare == 0 else f'{years_to_medicare} years to Medicare (65)'}, "
             f"{'RMDs already required' if years_to_rmds == 0 else f'{years_to_rmds} years to RMDs (73)'}, "

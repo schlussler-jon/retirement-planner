@@ -21,15 +21,31 @@ function updateAt<T>(arr: T[], idx: number, fn: (item: T) => T): T[] {
 }
 
 const EMPLOYMENT_STATUS_OPTIONS = [
-  { value: 'working_full_time',  label: 'Working Full-Time' },
-  { value: 'working_part_time',  label: 'Working Part-Time' },
-  { value: 'self_employed',      label: 'Self-Employed' },
-  { value: 'retired',            label: 'Retired' },
-  { value: 'not_working',        label: 'Not Working' },
+  { value: 'working_full_time', label: 'Working Full-Time' },
+  { value: 'working_part_time', label: 'Working Part-Time' },
+  { value: 'self_employed',     label: 'Self-Employed' },
+  { value: 'retired',           label: 'Retired' },
+  { value: 'not_working',       label: 'Not Working' },
 ]
 
 const isWorking = (status?: string | null) =>
   status === 'working_full_time' || status === 'working_part_time' || status === 'self_employed'
+
+const isRetired = (status?: string | null) => status === 'retired'
+
+const ssStatusLabel = (date?: string | null): string => {
+  if (!date) return ''
+  const [year, month] = date.split('-').map(Number)
+  const now = new Date()
+  const ssDate = new Date(year, month - 1)
+  if (ssDate <= now) return 'Already receiving'
+  const months = (year - now.getFullYear()) * 12 + (month - 1 - now.getMonth())
+  const years = Math.floor(months / 12)
+  const rem   = months % 12
+  if (years === 0) return `Starting in ${rem} month${rem !== 1 ? 's' : ''}`
+  if (rem === 0)   return `Starting in ${years} year${years !== 1 ? 's' : ''}`
+  return `Starting in ${years}y ${rem}m`
+}
 
 export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: Props) {
   const addPerson = () => {
@@ -41,6 +57,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
       life_expectancy_years: 90,
       employment_status: null,
       planned_retirement_date: null,
+      social_security_start_date: null,
     }])
   }
 
@@ -149,7 +166,6 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                   onChange={e => update(idx, p => ({
                     ...p,
                     employment_status: e.target.value || null,
-                    // Clear retirement date if they select retired or not working
                     planned_retirement_date: isWorking(e.target.value) ? p.planned_retirement_date : null,
                   }))}
                   className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
@@ -162,7 +178,7 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                 <p className="font-sans text-slate-400 text-xs mt-1">Used in AI analysis and scenario summary</p>
               </div>
 
-              {/* Only show planned retirement date if actively working */}
+              {/* Planned retirement date — only for working people */}
               {isWorking(person.employment_status) && (
                 <div>
                   <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
@@ -181,6 +197,36 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                 </div>
               )}
             </div>
+
+            {/* Row 3: Social Security — show for retired or working with planned retirement */}
+            {(isRetired(person.employment_status) || (isWorking(person.employment_status) && person.planned_retirement_date)) && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 mt-4 border-t border-violet-900/50">
+                <div>
+                  <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+                    Social Security Start Date
+                  </label>
+                  <input
+                    type="month"
+                    value={person.social_security_start_date ?? ''}
+                    onChange={e => update(idx, p => ({
+                      ...p,
+                      social_security_start_date: e.target.value || null,
+                    }))}
+                    className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                  />
+                  {person.social_security_start_date && (
+                    <p className="font-sans text-gold-500 text-xs mt-1">
+                      {ssStatusLabel(person.social_security_start_date)}
+                    </p>
+                  )}
+                  {!person.social_security_start_date && (
+                    <p className="font-sans text-slate-400 text-xs mt-1">
+                      When did / will you start collecting?
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
           </div>
         ))}

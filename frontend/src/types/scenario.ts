@@ -36,6 +36,7 @@ export interface Person {
   life_expectancy_years?: number | null
   employment_status?: string | null
   planned_retirement_date?: string | null
+  social_security_start_date?: string | null
   /** Computed by backend — read-only. */
   death_year_month?: string | null
 }

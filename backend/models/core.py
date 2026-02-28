@@ -53,6 +53,14 @@ class Person(BaseModel):
         None,
         description="Planned retirement date in YYYY-MM format"
     )
+    social_security_start_date: Optional[str] = Field(
+        None,
+        description="Social Security start date in YYYY-MM format"
+    )
+    social_security_start_date: Optional[str] = Field(
+        None,
+        description="Social Security start date in YYYY-MM format"
+    )
     employment_status: Optional[str] = Field(
         None,
         description="Employment status: working_full_time, working_part_time, self_employed, retired, not_working"
@@ -60,6 +68,10 @@ class Person(BaseModel):
     planned_retirement_date: Optional[str] = Field(
         None,
         description="Planned retirement date in YYYY-MM format"
+    )
+    social_security_start_date: Optional[str] = Field(
+        None,
+        description="Social Security start date in YYYY-MM format"
     )
     
     @field_validator('birth_date')
