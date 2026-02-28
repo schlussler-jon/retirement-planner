@@ -295,7 +295,7 @@ export default function MonteCarloChart({ scenarioId }: Props) {
                   width={60}
                 />
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 8, fontFamily: 'sans-serif' }}
+                  contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #4c1d95', borderRadius: 8, fontFamily: 'sans-serif' }}
                   labelStyle={{ color: '#94a3b8', fontSize: 12 }}
                   itemStyle={{ fontSize: 12 }}
                   formatter={(value: number) => fmt(value)}

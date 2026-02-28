@@ -82,7 +82,7 @@ export default function ExpensePieChart({ categories }: Props) {
             formatter={(value: number) => formatCurrency(value)}
             contentStyle={{ 
               backgroundColor: '#1e293b', 
-              border: '1px solid #475569',
+              border: '1px solid #5b21b6',
               borderRadius: '8px',
               color: '#fff',
               fontSize: '11px'
