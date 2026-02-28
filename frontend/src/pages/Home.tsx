@@ -218,9 +218,6 @@ export default function Home() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
   // aggregate stats
-  const totalPeople   = scenarios.reduce((s, sc) => s + sc.people_count, 0)
-  const totalStreams   = scenarios.reduce((s, sc) => s + sc.income_streams_count, 0)
-  const totalAccounts = scenarios.reduce((s, sc) => s + sc.accounts_count, 0)
 
   return (
     <ErrorBoundary level="page" pageName="Dashboard">
@@ -248,25 +245,11 @@ export default function Home() {
           </Link>
         </div>
 
-        {/* stats row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          {[
-            { label: 'Scenarios',      value: scenarios.length },
-            { label: 'People',         value: totalPeople },
-            { label: 'Income Streams', value: totalStreams },
-            { label: 'Accounts',       value: totalAccounts },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-slate-900 border border-slate-800 rounded-xl p-5">
-              <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">{label}</p>
-              <p className="font-display text-2xl text-white font-semibold">{value}</p>
-            </div>
-          ))}
-        </div>
 
         {/* scenario cards */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-sans text-white text-sm font-semibold">Your Scenarios</h2>
+            <h2 className="font-sans text-white text-sm font-semibold">Your {scenarios.length} Scenario{scenarios.length !== 1 ? 's' : ''}</h2>
             {scenarios.length > 0 && (
               <Link to="/scenarios" className="font-sans text-gold-500 hover:text-gold-400 text-xs transition-colors">
                 View all →
