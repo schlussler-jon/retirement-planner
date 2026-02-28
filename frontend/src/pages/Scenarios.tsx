@@ -46,7 +46,7 @@ export default function Scenarios() {
 
       // pick a unique ID: id-copy, id-copy-2, id-copy-3 …
       const existingIds = new Set(scenarios.map(s => s.scenario_id))
-      const newId = crypto.randomUUID()  // replace the existingIds/while loop block
+      let newId = crypto.randomUUID()  // replace the existingIds/while loop block
       let n = 2
       while (existingIds.has(newId)) { newId = `${id}-copy-${n}`; n++ }
 
