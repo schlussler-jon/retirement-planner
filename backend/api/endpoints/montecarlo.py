@@ -112,7 +112,7 @@ def run_monte_carlo(scenario: Scenario) -> Dict:
     # Weighted mean annual return across all accounts by starting balance
     total_balance = starting_portfolio or 1.0
     weighted_mean_return = sum(
-        acc.starting_balance * (acc.expected_annual_return / 100.0)
+        acc.starting_balance * (acc.annual_return_rate)
         for acc in accounts
     ) / total_balance if total_balance > 0 else 0.07
 
