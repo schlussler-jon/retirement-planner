@@ -108,7 +108,7 @@ export default function ExecutiveSummary() {
       }
     })
   } catch (e) {
-    console.warn('contributionsByAccount calculation failed:', e)
+    console.warn("contributionsByAccount calculation failed:", e, "account sample:", scenario.accounts?.[0])
   }
     // Total contributions across all accounts
   const totalContributions = Object.values(contributionsByAccount).reduce((s, v) => s + v, 0)
