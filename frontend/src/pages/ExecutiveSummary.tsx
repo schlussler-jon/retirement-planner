@@ -90,6 +90,8 @@ export default function ExecutiveSummary() {
   const netSavings = summary.total_surplus_deficit || 0
   // Find surplus account name
   const surplusAccount = scenario.accounts.find(acc => acc.receives_surplus)
+  const projStart = scenario.global_settings?.projection_start_month ?? "2025-01"
+  const projEnd   = `${scenario.global_settings?.projection_end_year ?? 2055}-12`
   // Account contributions
   const contributionsByAccount: Record<string, number> = {}
   try {
