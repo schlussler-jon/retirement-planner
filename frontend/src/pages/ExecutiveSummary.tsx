@@ -88,6 +88,11 @@ export default function ExecutiveSummary() {
   })
 
   const netSavings = summary.total_surplus_deficit || 0
+  // Total contributions across all accounts
+  const totalContributions = Object.values(contributionsByAccount).reduce((s, v) => s + v, 0)
+
+  // Reduce netSavings so the Sankey balances (contributions are a subset of savings)
+  const sankeyNetSavings = Math.max(0, netSavings - totalContributions)
   // Find surplus account name
   const surplusAccount = scenario.accounts.find(acc => acc.receives_surplus)
   // Account contributions
@@ -275,7 +280,7 @@ export default function ExecutiveSummary() {
             expensesByCategory={expensesByCategory}
             federalTax={totalFederalTax}
             stateTax={totalStateTax}
-            savings={netSavings}
+            savings={sankeyNetSavings}
             surplusAccountName={surplusAccountName}
             contributionsByAccount={contributionsByAccount}
           />
