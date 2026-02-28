@@ -9,6 +9,7 @@ import { useProjection, useScenario, useAnalysis } from '@/api/hooks'
 import ExpensePieChart from '@/components/results/ExpensePieChart'
 import TaxBucketChart from '@/components/results/TaxBucketChart'
 import SankeyChart from '@/components/results/SankeyChart'
+import MonteCarloChart from '@/components/results/MonteCarloChart'
 import AccountPictorialChart from '@/components/results/AccountPictorialChart'
 
 const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
@@ -288,7 +289,12 @@ export default function ExecutiveSummary() {
           />
         </div>
 
-{/* Section 4: AI-Powered Analysis */}
+{/* Section 4: Monte Carlo */}
+        <div className="mb-6 max-w-6xl mx-auto">
+          <MonteCarloChart scenarioId={id!} />
+        </div>
+
+        {/* Section 5: AI-Powered Analysis */}
         <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
           <h2 className="font-sans text-xl font-semibold text-white mb-4">
             Financial Analysis
