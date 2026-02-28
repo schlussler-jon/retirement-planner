@@ -14,9 +14,10 @@ interface SankeyLink {
 }
 
 type IncomeStreamType = 'pension' | 'social_security' | 'salary' | 'self_employment' | 'other'
+
 interface Props {
   incomeBySource: Record<string, number>
-  incomeSourceTypes: Record<string, IncomeStreamType>  // NEW: map source name to type
+  incomeSourceTypes: Record<string, IncomeStreamType>
   expensesByCategory: Record<string, number>
   federalTax: number
   stateTax: number
@@ -25,9 +26,17 @@ interface Props {
   contributionsByAccount?: Record<string, number>
 }
 
+interface HoverInfo {
+  source?: string
+  target?: string
+  value: number
+  type: 'link' | 'node'
+  label: string
+}
+
 export default function SankeyChart({ incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings, surplusAccountName, contributionsByAccount }: Props) {
   const svgRef = useRef<SVGSVGElement>(null)
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; content: string } | null>(null)
+  const [hoverInfo, setHoverInfo] = useState<HoverInfo | null>(null)
 
   useEffect(() => {
     if (!svgRef.current) return
@@ -36,7 +45,6 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
     const height = 500
     const margin = { top: 10, right: 10, bottom: 10, left: 10 }
 
-    // Build nodes and links
     const nodes: SankeyNode[] = []
     const links: SankeyLink[] = []
     let nodeIndex = 0
@@ -52,108 +60,38 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       }
     })
 
-    // Destinations (right side)
-    const destinationStart = nodeIndex
+    const totalIncome = Object.values(incomeBySource).reduce((sum, v) => sum + v, 0)
 
-    // Federal Tax
-    if (federalTax > 0) {
-      const fedTaxIndex = nodeIndex
-      nodes.push({ name: 'Federal Tax', category: 'tax' })
+    const addDestination = (name: string, category: string, amount: number) => {
+      if (amount <= 0) return
+      const idx = nodeIndex
+      nodes.push({ name, category })
       nodeIndex++
-
-      // Link from each income source proportionally
-      const totalIncome = Object.values(incomeBySource).reduce((sum, v) => sum + v, 0)
-      Object.entries(incomeBySource).forEach(([source, amount]) => {
-        if (amount > 0) {
-          const proportion = amount / totalIncome
+      Object.entries(incomeBySource).forEach(([source, incomeAmount]) => {
+        if (incomeAmount > 0) {
           links.push({
             source: incomeNodes[source],
-            target: fedTaxIndex,
-            value: federalTax * proportion
+            target: idx,
+            value: amount * (incomeAmount / totalIncome)
           })
         }
       })
     }
 
-    // State Tax
-    if (stateTax > 0) {
-      const stateTaxIndex = nodeIndex
-      nodes.push({ name: 'State Tax', category: 'tax' })
-      nodeIndex++
+    if (federalTax > 0)  addDestination('Federal Tax', 'tax', federalTax)
+    if (stateTax > 0)    addDestination('State Tax', 'tax', stateTax)
 
-      const totalIncome = Object.values(incomeBySource).reduce((sum, v) => sum + v, 0)
-      Object.entries(incomeBySource).forEach(([source, amount]) => {
-        if (amount > 0) {
-          const proportion = amount / totalIncome
-          links.push({
-            source: incomeNodes[source],
-            target: stateTaxIndex,
-            value: stateTax * proportion
-          })
-        }
-      })
-    }
-
-    // Expenses by category
     Object.entries(expensesByCategory).forEach(([category, amount]) => {
-      if (amount > 0) {
-        const expenseIndex = nodeIndex
-        nodes.push({ name: category, category: 'expense' })
-        nodeIndex++
-
-        const totalIncome = Object.values(incomeBySource).reduce((sum, v) => sum + v, 0)
-        Object.entries(incomeBySource).forEach(([source, incomeAmount]) => {
-          if (incomeAmount > 0) {
-            const proportion = incomeAmount / totalIncome
-            links.push({
-              source: incomeNodes[source],
-              target: expenseIndex,
-              value: amount * proportion
-            })
-          }
-        })
-      }
+      addDestination(category, 'expense', amount)
     })
 
-    // Savings
-    if (savings > 0) {
-      const savingsIndex = nodeIndex
-     nodes.push({ name: surplusAccountName || 'Net Savings', category: 'savings' })
-     nodeIndex++
+    if (savings > 0) addDestination(surplusAccountName || 'Net Savings', 'savings', savings)
 
-      const totalIncome = Object.values(incomeBySource).reduce((sum, v) => sum + v, 0)
-      Object.entries(incomeBySource).forEach(([source, amount]) => {
-        if (amount > 0) {
-          const proportion = amount / totalIncome
-          links.push({
-            source: incomeNodes[source],
-            target: savingsIndex,
-            value: savings * proportion
-          })
-          }
-        })
-      }
-    // Account contributions
-      Object.entries(contributionsByAccount ?? {}).forEach(([accountName, amount]) => {
-        if (amount > 0) {
-          const contribIndex = nodeIndex
-          nodes.push({ name: accountName, category: 'contribution' })
-          nodeIndex++
+    Object.entries(contributionsByAccount ?? {}).forEach(([accountName, amount]) => {
+      addDestination(accountName, 'contribution', amount)
+    })
 
-          const totalIncome = Object.values(incomeBySource).reduce((sum, v) => sum + v, 0)
-          Object.entries(incomeBySource).forEach(([source, incomeAmount]) => {
-            if (incomeAmount > 0) {
-              const proportion = incomeAmount / totalIncome
-              links.push({
-                source: incomeNodes[source],
-                target: contribIndex,
-                value: amount * proportion
-              })
-            }
-          })
-        }
-      })
-    // Create sankey generator
+    // Sankey generator
     const sankeyGenerator = sankey<SankeyNode, SankeyLink>()
       .nodeWidth(15)
       .nodePadding(10)
@@ -164,7 +102,6 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       links: links.map(d => ({ ...d }))
     })
 
-    // Clear previous render
     select(svgRef.current).selectAll('*').remove()
 
     const svg = select(svgRef.current)
@@ -174,47 +111,50 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       .style('max-width', '100%')
       .style('height', 'auto')
 
-    // Color mapping
     const colorMap: Record<string, string> = {
-      pension: '#9370DB',           // Medium purple
-      social_security: '#4ECDC4',   // Teal
-      salary: '#FF69B4',            // Hot pink
-      self_employment: '#FFA500',   // Orange
-      other: '#FFFF00',             // Sky blue
-      tax: '#FF6B6B',               // Coral/Red
-      expense: '#FFD700',           // Gold
-      savings: '#32CD32',           // Green
-      contribution: '#60a5fa',      // Blue
+      pension:         '#9370DB',
+      social_security: '#4ECDC4',
+      salary:          '#FF69B4',
+      self_employment: '#FFA500',
+      other:           '#FFFF00',
+      tax:             '#FF6B6B',
+      expense:         '#FFD700',
+      savings:         '#32CD32',
+      contribution:    '#60a5fa',
     }
 
-// Draw links
+    const fmt = (v: number) => '$' + (v / 1000).toFixed(0) + 'K'
+
+    // Links
     svg.append('g')
       .selectAll('path')
       .data(sankeyLinks)
       .join('path')
       .attr('d', sankeyLinkHorizontal())
-      .attr('stroke', (d: any) => {
-        const sourceNode = sankeyNodes[d.source.index]
-        return colorMap[sourceNode.category || 'income'] || '#999'
-      })
+      .attr('stroke', (d: any) => colorMap[sankeyNodes[d.source.index].category || 'income'] || '#999')
       .attr('stroke-width', (d: any) => Math.max(1, d.width))
       .attr('fill', 'none')
       .attr('opacity', 0.3)
       .style('cursor', 'pointer')
-      .on('mouseenter', (event: any, d: any) => {
-        const sourceNode = sankeyNodes[d.source.index]
-        const targetNode = sankeyNodes[d.target.index]
-        const content = `${sourceNode.name} → ${targetNode.name}: $${(d.value / 1000).toFixed(0)}K`
-        setTooltip({ x: event.clientX, y: event.clientY, content })
+      .on('mouseenter', (_event: any, d: any) => {
+        const src = sankeyNodes[d.source.index]
+        const tgt = sankeyNodes[d.target.index]
+        setHoverInfo({
+          source: src.name,
+          target: tgt.name,
+          value: d.value,
+          type: 'link',
+          label: `${src.name}  →  ${tgt.name}:  ${fmt(d.value)}`
+        })
       })
-      .on('mousemove', (event: any) => {
-        setTooltip(prev => prev ? { ...prev, x: event.clientX, y: event.clientY } : null)
-      })
-      .on('mouseleave', () => {
-        setTooltip(null)
-      })
+      .on('mouseleave', () => setHoverInfo(null))
 
-// Draw nodes
+    // Nodes
+    const incomeCategories = ['pension', 'social_security', 'salary', 'self_employment', 'other']
+    const totalIncomeForPct = sankeyNodes
+      .filter((n: any) => incomeCategories.includes(n.category))
+      .reduce((sum: number, n: any) => sum + (n.value || 0), 0)
+
     svg.append('g')
       .selectAll('rect')
       .data(sankeyNodes)
@@ -226,22 +166,19 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       .attr('fill', (d: any) => colorMap[d.category || 'income'] || '#999')
       .attr('opacity', 0.8)
       .style('cursor', 'pointer')
-      .on('mouseenter', (event: any, d: any) => {
-        const totalIncome = sankeyNodes
-          .filter((n: any) => ['pension', 'social_security', 'salary', 'self_employment', 'other'].includes(n.category))
-          .reduce((sum: number, n: any) => sum + (n.value || 0), 0)
-        const percentage = totalIncome > 0 ? ((d.value / totalIncome) * 100).toFixed(0) : '0'
-        const content = `${d.name}: $${(d.value / 1000).toFixed(0)}K (${percentage}%)`
-        setTooltip({ x: event.clientX, y: event.clientY, content })
+      .on('mouseenter', (_event: any, d: any) => {
+        const pct = totalIncomeForPct > 0
+          ? ((d.value / totalIncomeForPct) * 100).toFixed(0)
+          : '0'
+        setHoverInfo({
+          value: d.value,
+          type: 'node',
+          label: `${d.name}:  ${fmt(d.value)}  (${pct}% of income)`
+        })
       })
-      .on('mousemove', (event: any) => {
-        setTooltip(prev => prev ? { ...prev, x: event.clientX, y: event.clientY } : null)
-      })
-      .on('mouseleave', () => {
-        setTooltip(null)
-      })
+      .on('mouseleave', () => setHoverInfo(null))
 
-    // Draw labels
+    // Labels
     svg.append('g')
       .selectAll('text')
       .data(sankeyNodes)
@@ -253,45 +190,35 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       .attr('font-size', '11px')
       .attr('fill', '#e2e8f0')
       .text((d: any) => {
-        const totalIncome = sankeyNodes
-          .filter((n: any) => ['pension', 'social_security', 'salary', 'self_employment', 'other'].includes(n.category))
-          .reduce((sum: number, n: any) => sum + (n.value || 0), 0)
-        const percentage = totalIncome > 0 ? ((d.value / totalIncome) * 100).toFixed(0) : '0'
-        return `${d.name} ($${(d.value / 1000).toFixed(0)}K, ${percentage}%)`
+        const pct = totalIncomeForPct > 0
+          ? ((d.value / totalIncomeForPct) * 100).toFixed(0)
+          : '0'
+        return `${d.name} (${fmt(d.value)}, ${pct}%)`
       })
+
   }, [incomeBySource, incomeSourceTypes, expensesByCategory, federalTax, stateTax, savings, surplusAccountName, contributionsByAccount])
-return (
-    <>
-      <div className="bg-slate-900 rounded-lg p-6">
-        <h3 className="font-sans text-lg font-semibold text-white mb-2">Cash Flow</h3>
-        <p className="font-sans text-slate-400 text-sm mb-4">Where your money comes from and where it goes</p>
-        <div className="overflow-x-auto">
-          <svg ref={svgRef}></svg>
-        </div>
+
+  return (
+    <div className="bg-slate-900 rounded-lg p-6">
+      <h3 className="font-sans text-lg font-semibold text-white mb-1">Cash Flow</h3>
+      <p className="font-sans text-slate-400 text-sm mb-3">Where your money comes from and where it goes</p>
+
+      {/* Info bar */}
+      <div className="h-8 mb-4 flex items-center px-3 rounded-lg bg-slate-800/60 border border-slate-700/50">
+        {hoverInfo ? (
+          <p className="font-sans text-sm text-white">
+            {hoverInfo.label}
+          </p>
+        ) : (
+          <p className="font-sans text-xs text-slate-500 italic">
+            Hover over a flow or node to see details
+          </p>
+        )}
       </div>
-      
-      {/* Tooltip */}
-      {tooltip && (
-        <div
-          style={{
-            position: 'fixed',
-            left: tooltip.x + 10,
-            top: tooltip.y + 10,
-            background: '#1e293b',
-            border: '1px solid #334155',
-            borderRadius: '8px',
-            padding: '8px 12px',
-            color: '#fff',
-            fontSize: '13px',
-            fontWeight: 600,
-            pointerEvents: 'none',
-            zIndex: 1000,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.5)'
-          }}
-        >
-          {tooltip.content}
-        </div>
-      )}
-    </>
+
+      <div className="overflow-x-auto">
+        <svg ref={svgRef}></svg>
+      </div>
+    </div>
   )
 }
