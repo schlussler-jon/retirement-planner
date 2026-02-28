@@ -2,9 +2,8 @@
  * Home (Dashboard)
  *
  * Authenticated landing page.
- *   • Greeting + primary CTA
- *   • Scenario cards grid — each card links directly to editor and results
- *   • Duplicate, Export, Delete actions on each card
+ *   • Greeting + Import + Compare + New Scenario
+ *   • Scenario cards grid with Edit, Results, Duplicate, Export, Delete
  *   • Onboarding empty state when no scenarios exist
  */
 
@@ -17,7 +16,7 @@ import client from '@/api/client'
 import type { ScenarioListItem } from '@/types/api'
 import type { Scenario } from '@/types/scenario'
 import ErrorBoundary from '@/components/ErrorBoundary'
-import { exportScenarioAsFile } from '@/utils/storage'
+import { exportScenarioAsFile, importScenarioFromFile } from '@/utils/storage'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -116,15 +115,12 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
-      {/* name */}
       <p className="font-sans text-white text-sm font-semibold">{sc.scenario_name}</p>
 
-      {/* description */}
       {sc.description && (
         <p className="font-sans text-slate-400 text-xs mt-1 leading-relaxed">{sc.description}</p>
       )}
 
-      {/* counts */}
       <p className="font-sans text-slate-300 text-xs mt-2">
         {pl(sc.people_count, 'person')}
         {' · '}
@@ -133,7 +129,6 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
         {pl(sc.accounts_count, 'account')}
       </p>
 
-      {/* income stream labels */}
       {sc.income_stream_labels && sc.income_stream_labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {sc.income_stream_labels.map((t, i) => (
@@ -144,7 +139,6 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
         </div>
       )}
 
-      {/* account names */}
       {sc.account_names && sc.account_names.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1">
           {sc.account_names.map((name, i) => (
@@ -155,7 +149,6 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
         </div>
       )}
 
-      {/* shimmer while loading */}
       {quickQuery.isLoading && (
         <div className="mt-3 pt-3 border-t border-slate-800 space-y-2">
           <div className="h-3 w-32 bg-slate-800 rounded animate-pulse" />
@@ -163,7 +156,6 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
         </div>
       )}
 
-      {/* sparkline + stats */}
       {quick && (
         <>
           {quick.portfolio_series && quick.portfolio_series.length > 1 && (
@@ -217,8 +209,8 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
           className="font-sans text-slate-400 hover:text-gold-400 text-xs transition-colors disabled:opacity-50"
         >
           {dupStatus === 'loading' ? 'Duplicating…'
-            : dupStatus === 'done'    ? '✓ Duplicated'
-            : dupStatus === 'error'   ? '✗ Failed'
+            : dupStatus === 'done'  ? '✓ Duplicated'
+            : dupStatus === 'error' ? '✗ Failed'
             : 'Duplicate'}
         </button>
         <button
@@ -247,7 +239,8 @@ export default function Home() {
   const qc             = useQueryClient()
   const scenarios      = scenariosQuery.data?.scenarios ?? []
 
-  const [dupStatus, setDupStatus] = useState<Record<string, 'loading' | 'done' | 'error'>>({})
+  const [dupStatus,    setDupStatus]    = useState<Record<string, 'loading' | 'done' | 'error'>>({})
+  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle')
 
   const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -284,6 +277,23 @@ export default function Home() {
     exportScenarioAsFile(scenario)
   }
 
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    try {
+      const scenario = await importScenarioFromFile(file)
+      const imported = { ...scenario, scenario_id: crypto.randomUUID() }
+      await client.post('/scenarios', imported)
+      await qc.invalidateQueries({ queryKey: qk.scenarios() })
+      setImportStatus('success')
+      setTimeout(() => setImportStatus('idle'), 3000)
+    } catch {
+      setImportStatus('error')
+      setTimeout(() => setImportStatus('idle'), 3000)
+    }
+    e.target.value = ''
+  }
+
   return (
     <ErrorBoundary level="page" pageName="Dashboard">
       <div className="animate-fade-in">
@@ -301,27 +311,39 @@ export default function Home() {
             </p>
           </div>
 
-          <Link
-            to="/scenarios/new"
-            className="inline-flex items-center gap-2 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150"
-          >
-            <span className="text-lg leading-none">+</span>
-            New Scenario
-          </Link>
+          <div className="flex items-center gap-3">
+            {/* Import */}
+            <label className="cursor-pointer font-sans text-slate-300 hover:text-gold-400 text-sm border border-slate-700 hover:border-gold-600 px-4 py-2 rounded-lg transition-colors duration-150">
+              {importStatus === 'success' ? '✓ Imported' : importStatus === 'error' ? '✗ Failed' : '↑ Import JSON'}
+              <input type="file" accept=".json" onChange={handleImport} className="hidden" />
+            </label>
+
+            {/* Compare */}
+            {scenarios.length > 1 && (
+              <Link
+                to="/scenarios/compare"
+                className="font-sans text-slate-300 hover:text-gold-400 text-sm border border-slate-700 hover:border-gold-600 px-4 py-2 rounded-lg transition-colors duration-150"
+              >
+                Compare →
+              </Link>
+            )}
+
+            {/* New Scenario */}
+            <Link
+              to="/scenarios/new"
+              className="inline-flex items-center gap-2 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150"
+            >
+              <span className="text-lg leading-none">+</span>
+              New Scenario
+            </Link>
+          </div>
         </div>
 
         {/* scenario cards */}
         <div>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-sans text-white text-sm font-semibold">
-              Your {scenarios.length} Scenario{scenarios.length !== 1 ? 's' : ''}
-            </h2>
-            {scenarios.length > 0 && (
-              <Link to="/scenarios" className="font-sans text-gold-500 hover:text-gold-400 text-xs transition-colors">
-                View all →
-              </Link>
-            )}
-          </div>
+          <h2 className="font-sans text-white text-sm font-semibold mb-3">
+            Your {scenarios.length} Scenario{scenarios.length !== 1 ? 's' : ''}
+          </h2>
 
           {scenarios.length === 0 ? (
             <div className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-16 text-center">
