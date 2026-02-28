@@ -14,6 +14,7 @@ import json
 from api.utils.encryption import decrypt_data
 from typing import Dict, Any, List
 from openai import OpenAI
+from datetime import date as date_type
 
 from models import Scenario, MonthlyProjection, TaxSummary
 from engine import ProjectionEngine
@@ -43,7 +44,7 @@ def get_current_user_id(request: Request) -> str:
     user = get_user_from_session(session_id)
     if not user:
         raise HTTPException(status_code=401, detail="Session expired")
-    return user.id  # matches how scenarios_db.py stores scenarios
+    return user.id
 
 
 def load_scenario(scenario_id: str, user_id: str, db: Session) -> Scenario:
@@ -107,6 +108,27 @@ def generate_financial_analysis(
     else:
         greeting = "your household"
 
+    # Build age context for each person
+    projection_start_year = int(scenario.global_settings.projection_start_month.split('-')[0])
+    people_context = []
+    for person in scenario.people:
+        current_age = projection_start_year - person.birth_date.year
+        fra = 67
+        years_to_fra = max(0, fra - current_age)
+        life_expectancy_age = person.life_expectancy_years or 85
+        life_exp_year = person.birth_date.year + life_expectancy_age
+        years_in_retirement = life_exp_year - projection_start_year
+        years_to_medicare = max(0, 65 - current_age)
+        years_to_rmds = max(0, 73 - current_age)
+        people_context.append(
+            f"- {person.name}: age {current_age} at start of projection, "
+            f"{'already past full retirement age (67)' if years_to_fra == 0 else f'{years_to_fra} years to full retirement age (67)'}, "
+            f"{'already Medicare eligible' if years_to_medicare == 0 else f'{years_to_medicare} years to Medicare (65)'}, "
+            f"{'RMDs already required' if years_to_rmds == 0 else f'{years_to_rmds} years to RMDs (73)'}, "
+            f"life expectancy to age {life_expectancy_age} ({years_in_retirement} years of retirement to fund)"
+        )
+    people_age_context = '\n'.join(people_context)
+
     pct = lambda n: (n / ending_portfolio * 100) if ending_portfolio else 0
 
     prompt = f"""You are a Certified Financial Planner analyzing a retirement scenario for {greeting}. Generate a professional analysis following this EXACT structure:
@@ -119,6 +141,9 @@ CLIENT SCENARIO:
 - Success rate: {success_rate:.0f}% months in surplus
 - Average monthly surplus: ${avg_monthly_surplus:,.0f}
 - Cumulative surplus: ${total_surplus:,.0f}
+
+HOUSEHOLD AGES & MILESTONES:
+{people_age_context}
 
 TAX ARCHITECTURE:
 - Tax-deferred: ${tax_deferred:,.0f} ({pct(tax_deferred):.1f}%)
@@ -137,7 +162,9 @@ REQUIREMENTS:
 
 3. **Optimization Checklist (3 actions)**: Specific recommendations with dollar amounts
 
-4. **Future State Visualization**: Life in 15 years if they follow vs don't follow advice
+4. **Age-Specific Guidance**: Reference each person's age and upcoming milestones specifically — years until Social Security full retirement age, Medicare eligibility at 65, RMDs at 73, and how those events affect cash flow
+
+5. **Future State Visualization**: Life in 15 years if they follow vs don't follow advice
 
 CONSTRAINTS:
 - Address the analysis directly to {greeting} (use "you" and "your")
@@ -145,7 +172,7 @@ CONSTRAINTS:
 - Explain concepts simply (e.g., "money in retirement accounts" instead of "tax-deferred vehicles")
 - Use everyday analogies and relatable comparisons
 - Be direct and actionable - focus on what they should DO
-- Maximum 400 words
+- Maximum 450 words
 - Format in clean markdown WITHOUT code fences (no ```markdown tags)
 
 Generate analysis:"""
@@ -158,7 +185,7 @@ Generate analysis:"""
                 {"role": "user", "content": prompt}
             ],
             temperature=0.7,
-            max_tokens=800
+            max_tokens=900
         )
         analysis = response.choices[0].message.content
         analysis = analysis.replace('```markdown', '').replace('```', '').strip()
