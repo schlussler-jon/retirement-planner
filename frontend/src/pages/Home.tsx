@@ -3,17 +3,21 @@
  *
  * Authenticated landing page.
  *   • Greeting + primary CTA
- *   • At-a-glance stats (4 metrics)
  *   • Scenario cards grid — each card links directly to editor and results
+ *   • Duplicate, Export, Delete actions on each card
  *   • Onboarding empty state when no scenarios exist
  */
 
-import { Link } from 'react-router-dom'
-import { useAuth } from '@/contexts/AuthContext'
-import { useScenarios, useQuickProjection } from '@/api/hooks'
-import type { ScenarioListItem } from '@/types/api'
-import ErrorBoundary from '@/components/ErrorBoundary'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/contexts/AuthContext'
+import { useScenarios, useDeleteScenario, useQuickProjection, qk } from '@/api/hooks'
+import client from '@/api/client'
+import type { ScenarioListItem } from '@/types/api'
+import type { Scenario } from '@/types/scenario'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import { exportScenarioAsFile } from '@/utils/storage'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -21,6 +25,7 @@ const pl  = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
 const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
 const humanizeType = (t: string) =>
   t.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+
 // ─── Sparkline ──────────────────────────────────────────────────────────────
 
 function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
@@ -54,7 +59,6 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
   const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     const mouseX = (e.clientX - rect.left) * (w / rect.width)
-    // Find closest point
     let closest = 0
     let minDist = Infinity
     pts.forEach((p, i) => {
@@ -76,14 +80,10 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
       >
         <path d={areaPath} fill={fillColor} />
         <polyline points={points} fill="none" stroke={strokeColor} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-
-        {/* hover dot */}
         {tooltip && (
           <circle cx={tooltip.x} cy={tooltip.y} r={3} fill={strokeColor} />
         )}
       </svg>
-
-      {/* tooltip bubble */}
       {tooltip && (
         <div
           className="absolute bottom-full mb-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs font-sans text-white whitespace-nowrap pointer-events-none z-10"
@@ -101,16 +101,24 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
 
 // ─── ScenarioCard ───────────────────────────────────────────────────────────
 
-function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
+interface CardProps {
+  sc: ScenarioListItem
+  onDuplicate: (id: string, name: string) => Promise<void>
+  onExport: (id: string) => void
+  onDelete: (id: string, name: string) => Promise<void>
+  dupStatus?: 'loading' | 'done' | 'error'
+}
+
+function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardProps) {
   const quickQuery = useQuickProjection(sc.scenario_id, true)
   const quick      = quickQuery.data
-
-  const positive = (quick?.portfolio_growth ?? 0) >= 0
+  const positive   = (quick?.portfolio_growth ?? 0) >= 0
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
       {/* name */}
       <p className="font-sans text-white text-sm font-semibold">{sc.scenario_name}</p>
+
       {/* description */}
       {sc.description && (
         <p className="font-sans text-slate-400 text-xs mt-1 leading-relaxed">{sc.description}</p>
@@ -125,7 +133,7 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
         {pl(sc.accounts_count, 'account')}
       </p>
 
-      {/* income stream types */}
+      {/* income stream labels */}
       {sc.income_stream_labels && sc.income_stream_labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {sc.income_stream_labels.map((t, i) => (
@@ -158,7 +166,6 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
       {/* sparkline + stats */}
       {quick && (
         <>
-          {/* sparkline */}
           {quick.portfolio_series && quick.portfolio_series.length > 1 && (
             <div className="mt-3 pt-3 border-t border-slate-800">
               <p className="font-sans text-slate-400 text-xs mb-1.5">Portfolio over time</p>
@@ -166,7 +173,6 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
             </div>
           )}
 
-          {/* stats */}
           <div className="flex items-end justify-between mt-3 pt-3 border-t border-slate-800">
             <div>
               <p className="font-sans text-slate-300 text-xs">Ending Portfolio</p>
@@ -187,7 +193,7 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
         </>
       )}
 
-      {/* action links */}
+      {/* primary actions */}
       <div className="flex items-center gap-3 mt-4 pt-3 border-t border-slate-800">
         <Link
           to={`/scenarios/${sc.scenario_id}`}
@@ -202,6 +208,32 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
           View Results →
         </Link>
       </div>
+
+      {/* secondary actions */}
+      <div className="flex items-center gap-4 mt-2">
+        <button
+          onClick={() => onDuplicate(sc.scenario_id, sc.scenario_name)}
+          disabled={dupStatus === 'loading'}
+          className="font-sans text-slate-400 hover:text-gold-400 text-xs transition-colors disabled:opacity-50"
+        >
+          {dupStatus === 'loading' ? 'Duplicating…'
+            : dupStatus === 'done'    ? '✓ Duplicated'
+            : dupStatus === 'error'   ? '✗ Failed'
+            : 'Duplicate'}
+        </button>
+        <button
+          onClick={() => onExport(sc.scenario_id)}
+          className="font-sans text-slate-400 hover:text-gold-400 text-xs transition-colors"
+        >
+          Export JSON
+        </button>
+        <button
+          onClick={() => onDelete(sc.scenario_id, sc.scenario_name)}
+          className="font-sans text-slate-400 hover:text-red-400 text-xs transition-colors"
+        >
+          Delete
+        </button>
+      </div>
     </div>
   )
 }
@@ -209,15 +241,48 @@ function ScenarioCard({ sc }: { sc: ScenarioListItem }) {
 // ─── Home ───────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  const { user } = useAuth()
+  const { user }       = useAuth()
   const scenariosQuery = useScenarios()
-  const scenarios = scenariosQuery.data?.scenarios ?? []
+  const deleteMut      = useDeleteScenario()
+  const qc             = useQueryClient()
+  const scenarios      = scenariosQuery.data?.scenarios ?? []
 
-  // greeting
+  const [dupStatus, setDupStatus] = useState<Record<string, 'loading' | 'done' | 'error'>>({})
+
   const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
-  // aggregate stats
+  const clearDup = (id: string, ms = 2500) =>
+    setTimeout(() => setDupStatus(prev => { const n = { ...prev }; delete n[id]; return n }), ms)
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!window.confirm(`Delete "${name}"? This cannot be undone.`)) return
+    await deleteMut.mutateAsync(id)
+  }
+
+  const handleDuplicate = async (id: string, name: string) => {
+    setDupStatus(prev => ({ ...prev, [id]: 'loading' }))
+    try {
+      const { data: original } = await client.get<Scenario>(`/scenarios/${id}`)
+      const newId = crypto.randomUUID()
+      await client.post('/scenarios', {
+        ...original,
+        scenario_id:   newId,
+        scenario_name: `${name} (copy)`,
+      })
+      await qc.invalidateQueries({ queryKey: qk.scenarios() })
+      setDupStatus(prev => ({ ...prev, [id]: 'done' }))
+      clearDup(id)
+    } catch {
+      setDupStatus(prev => ({ ...prev, [id]: 'error' }))
+      clearDup(id, 3000)
+    }
+  }
+
+  const handleExport = async (id: string) => {
+    const { data: scenario } = await client.get<Scenario>(`/scenarios/${id}`)
+    exportScenarioAsFile(scenario)
+  }
 
   return (
     <ErrorBoundary level="page" pageName="Dashboard">
@@ -245,11 +310,12 @@ export default function Home() {
           </Link>
         </div>
 
-
         {/* scenario cards */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-sans text-white text-sm font-semibold">Your {scenarios.length} Scenario{scenarios.length !== 1 ? 's' : ''}</h2>
+            <h2 className="font-sans text-white text-sm font-semibold">
+              Your {scenarios.length} Scenario{scenarios.length !== 1 ? 's' : ''}
+            </h2>
             {scenarios.length > 0 && (
               <Link to="/scenarios" className="font-sans text-gold-500 hover:text-gold-400 text-xs transition-colors">
                 View all →
@@ -278,7 +344,14 @@ export default function Home() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {scenarios.map((sc) => (
-                <ScenarioCard key={sc.scenario_id} sc={sc} />
+                <ScenarioCard
+                  key={sc.scenario_id}
+                  sc={sc}
+                  onDuplicate={handleDuplicate}
+                  onExport={handleExport}
+                  onDelete={handleDelete}
+                  dupStatus={dupStatus[sc.scenario_id]}
+                />
               ))}
             </div>
           )}
