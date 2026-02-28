@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 import logging
 import json
 import numpy as np
-from typing import List, Dict
+from typing import List, Dict, Optional
 from api.utils.encryption import decrypt_data
 
 from models import Scenario
@@ -50,19 +50,16 @@ def load_scenario(scenario_id: str, user_id: str, db: Session) -> Scenario:
 
 # ─── Monte Carlo simulation ───────────────────────────────────────────────
 
-SIMULATIONS      = 1000
-MARKET_STD_DEV   = 0.12   # Historical S&P 500 annual std deviation
-SEQUENCE_PENALTY = 0.03   # Extra volatility for sequence-of-returns risk
+SIMULATIONS    = 1000
+MARKET_STD_DEV = 0.12   # Historical S&P 500 annual std deviation
 
 def run_monte_carlo(scenario: Scenario) -> Dict:
     """
     Run Monte Carlo simulation.
 
-    Simplified model that focuses on portfolio growth with randomized returns.
-    Income, spending, and contributions are treated as deterministic (fixed).
+    Simplified model focusing on portfolio growth with randomized returns.
+    Income, spending, and contributions are treated as deterministic.
     Only investment returns are randomized.
-
-    Returns percentile bands, success rate, and median trajectory.
     """
     # Build timeline
     start_month = scenario.global_settings.projection_start_month
@@ -71,22 +68,23 @@ def run_monte_carlo(scenario: Scenario) -> Dict:
     total_months = (end_year - start_year) * 12 + (13 - start_m)
 
     # Starting portfolio
-    starting_portfolio = sum(acc.starting_balance for acc in scenario.accounts)
-
-    # Per-account mean annual returns and tax buckets
     accounts = scenario.accounts
+    starting_portfolio = sum(acc.starting_balance for acc in accounts)
 
-    # Monthly net cash flow (contributions - withdrawals) per account
-    # These are deterministic — only returns are randomized
+    # Weighted mean annual return across all accounts by starting balance
+    total_balance = starting_portfolio or 1.0
+    weighted_mean_return = (
+        sum(acc.starting_balance * acc.annual_return_rate for acc in accounts) / total_balance
+        if total_balance > 0 else 0.07
+    )
+
+    # Pre-compute deterministic monthly net cash flows (contributions - withdrawals)
     def monthly_net_cashflow(month_index: int) -> float:
-        """Net cash into/out of portfolio this month (contributions minus withdrawals)."""
-        year_month_year  = start_year + (start_m - 1 + month_index) // 12
-        year_month_month = (start_m - 1 + month_index) % 12 + 1
-        ym = f"{year_month_year}-{year_month_month:02d}"
-
-        net = 0.0
+        year  = start_year + (start_m - 1 + month_index) // 12
+        month = (start_m - 1 + month_index) % 12 + 1
+        ym    = f"{year}-{month:02d}"
+        net   = 0.0
         for acc in accounts:
-            # Contribution
             contrib_active = True
             if acc.contribution_start_month and ym < acc.contribution_start_month:
                 contrib_active = False
@@ -95,7 +93,6 @@ def run_monte_carlo(scenario: Scenario) -> Dict:
             if contrib_active:
                 net += acc.monthly_contribution
 
-            # Withdrawal
             withdraw_active = True
             if acc.withdrawal_start_month and ym < acc.withdrawal_start_month:
                 withdraw_active = False
@@ -103,88 +100,93 @@ def run_monte_carlo(scenario: Scenario) -> Dict:
                 withdraw_active = False
             if withdraw_active:
                 net -= acc.monthly_withdrawal
-
         return net
 
-    # Pre-compute deterministic monthly cash flows
     monthly_cashflows = [monthly_net_cashflow(i) for i in range(total_months)]
 
-    # Weighted mean annual return across all accounts by starting balance
-    total_balance = starting_portfolio or 1.0
-    weighted_mean_return = sum(
-        acc.starting_balance * (acc.annual_return_rate)
-        for acc in accounts
-    ) / total_balance if total_balance > 0 else 0.07
+    # Determine ruin age checkpoints from oldest person's birth year
+    ruin_ages = [65, 70, 75, 80, 85, 90]
+    oldest_birth_year = None
+    if scenario.people:
+        oldest_birth_year = min(p.birth_date.year for p in scenario.people)
+
+    # Map age -> month index in projection
+    age_to_month: Dict[int, int] = {}
+    if oldest_birth_year:
+        for age in ruin_ages:
+            age_year = oldest_birth_year + age
+            if start_year <= age_year <= end_year:
+                month_idx = (age_year - start_year) * 12
+                if month_idx < total_months:
+                    age_to_month[age] = month_idx
 
     # Run simulations
-    # Each simulation: draw random annual returns, apply month by month
-    all_trajectories = np.zeros((SIMULATIONS, total_months))
-
-    rng = np.random.default_rng(seed=42)
-
-    # Number of years in projection
     n_years = (total_months + 11) // 12
+    all_trajectories = np.zeros((SIMULATIONS, total_months))
+    ruin_count = {age: 0 for age in age_to_month}
+
+    rng = np.random.default_rng()  # fresh seed each call for true randomness
 
     for sim in range(SIMULATIONS):
-        # Draw one annual return per year
-        annual_returns = rng.normal(
-            loc=weighted_mean_return,
-            scale=MARKET_STD_DEV,
-            size=n_years
-        )
-        # Convert to monthly returns
+        annual_returns  = rng.normal(loc=weighted_mean_return, scale=MARKET_STD_DEV, size=n_years)
         monthly_returns = [(1 + r) ** (1/12) - 1 for r in annual_returns]
 
-        balance = starting_portfolio
+        balance  = starting_portfolio
+        went_zero = False
+
         for m in range(total_months):
             year_idx = m // 12
-            monthly_rate = monthly_returns[year_idx]
-
-            # Apply cash flow first, then growth
             balance += monthly_cashflows[m]
-            balance = max(0.0, balance)  # Can't go below zero
-            balance *= (1 + monthly_rate)
-
+            balance  = max(0.0, balance)
+            balance *= (1 + monthly_returns[year_idx])
             all_trajectories[sim, m] = balance
 
-    # Calculate percentile bands (annual snapshots — every 12th month)
-    annual_indices = list(range(11, total_months, 12))  # end of each year
+            if balance <= 0 and not went_zero:
+                went_zero = True
+
+            # Count ruin at each age checkpoint
+            if m in {v: k for k, v in age_to_month.items()}.values():
+                for age, midx in age_to_month.items():
+                    if m == midx and balance <= 0:
+                        ruin_count[age] += 1
+
+    # Percentile bands (annual snapshots)
+    annual_indices = list(range(11, total_months, 12))
     if not annual_indices:
         annual_indices = [total_months - 1]
 
-    years = [start_year + i + 1 for i in range(len(annual_indices))]
+    years           = [start_year + i + 1 for i in range(len(annual_indices))]
+    percentiles_10  = [float(np.percentile(all_trajectories[:, i], 10))  for i in annual_indices]
+    percentiles_25  = [float(np.percentile(all_trajectories[:, i], 25))  for i in annual_indices]
+    percentiles_50  = [float(np.percentile(all_trajectories[:, i], 50))  for i in annual_indices]
+    percentiles_75  = [float(np.percentile(all_trajectories[:, i], 75))  for i in annual_indices]
+    percentiles_90  = [float(np.percentile(all_trajectories[:, i], 90))  for i in annual_indices]
 
-    percentiles_10 = [float(np.percentile(all_trajectories[:, i], 10)) for i in annual_indices]
-    percentiles_25 = [float(np.percentile(all_trajectories[:, i], 25)) for i in annual_indices]
-    percentiles_50 = [float(np.percentile(all_trajectories[:, i], 50)) for i in annual_indices]
-    percentiles_75 = [float(np.percentile(all_trajectories[:, i], 75)) for i in annual_indices]
-    percentiles_90 = [float(np.percentile(all_trajectories[:, i], 90)) for i in annual_indices]
-
-    # Success rate: % of simulations where portfolio never hits zero
+    # Success rate
     final_balances = all_trajectories[:, -1]
-    success_count  = int(np.sum(final_balances > 0))
-    success_rate   = round(success_count / SIMULATIONS * 100, 1)
+    success_rate   = round(float(np.sum(final_balances > 0)) / SIMULATIONS * 100, 1)
 
-    # Median final balance
-    median_final = float(np.median(final_balances))
-
-    # Worst / best case final
-    worst_final = float(np.percentile(final_balances, 5))
-    best_final  = float(np.percentile(final_balances, 95))
+    # Ruin probability by age (% of simulations that hit $0 by that age)
+    ruin_by_age = {
+        age: round(count / SIMULATIONS * 100, 1)
+        for age, count in ruin_count.items()
+        if age in age_to_month
+    }
 
     return {
-        "years":          years,
-        "percentile_10":  percentiles_10,
-        "percentile_25":  percentiles_25,
-        "percentile_50":  percentiles_50,
-        "percentile_75":  percentiles_75,
-        "percentile_90":  percentiles_90,
-        "success_rate":   success_rate,
-        "simulations":    SIMULATIONS,
+        "years":              years,
+        "percentile_10":      percentiles_10,
+        "percentile_25":      percentiles_25,
+        "percentile_50":      percentiles_50,
+        "percentile_75":      percentiles_75,
+        "percentile_90":      percentiles_90,
+        "ruin_by_age":        ruin_by_age,
+        "success_rate":       success_rate,
+        "simulations":        SIMULATIONS,
         "starting_portfolio": starting_portfolio,
-        "median_final":   median_final,
-        "worst_final":    worst_final,
-        "best_final":     best_final,
+        "median_final":       float(np.median(final_balances)),
+        "worst_final":        float(np.percentile(final_balances, 5)),
+        "best_final":         float(np.percentile(final_balances, 95)),
         "weighted_mean_return": round(weighted_mean_return * 100, 2),
     }
 
@@ -200,6 +202,7 @@ class MonteCarloResponse(BaseModel):
     percentile_50:        List[float]
     percentile_75:        List[float]
     percentile_90:        List[float]
+    ruin_by_age:          Dict[int, float]
     success_rate:         float
     simulations:          int
     starting_portfolio:   float
