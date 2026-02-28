@@ -169,7 +169,7 @@ export default function ProjectionResults() {
       />
 
       {/* tab strip */}
-      <div className="flex gap-1 bg-slate-900 border border-slate-800 rounded-xl p-1 mb-4">
+      <div className="flex gap-1 bg-slate-900 border border-violet-900 rounded-xl p-1 mb-4">
         {TABS.map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)}
             className={`
@@ -190,29 +190,29 @@ export default function ProjectionResults() {
         <div className="space-y-4">
 
           {/* Portfolio – full width */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div className="bg-slate-900 border border-violet-900 rounded-xl p-5">
             <PortfolioChart data={monthly} accounts={scenario?.accounts || []} />
           </div>
 
           {/* Cash Flow + Income Composition – side by side on lg */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <div className="bg-slate-900 border border-violet-900 rounded-xl p-5">
               <CashFlowChart data={results.net_income_projections ?? []} />
             </div>
-            <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+            <div className="bg-slate-900 border border-violet-900 rounded-xl p-5">
               <IncomeCompositionChart data={monthly} scenario={scenario ?? null} />
             </div>
           </div>
 
           {/* Tax Burden – full width */}
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+          <div className="bg-slate-900 border border-violet-900 rounded-xl p-5">
             <TaxChart data={results.tax_summaries ?? []} />
           </div>
         </div>
 
       ) : (
         /* ── Table tabs: single shared card ──────────────────────────────── */
-        <div className="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+        <div className="bg-slate-900 border border-violet-900 rounded-xl overflow-hidden">
           {activeTab === 'Net Income'     && <NetIncomeTable     data={results.net_income_projections ?? []} />}
           {activeTab === 'Annual'         && <AnnualTable        annuals={results.annual_summaries ?? []}  taxes={results.tax_summaries ?? []} />}
           {activeTab === 'Tax'            && <TaxTable           data={results.tax_summaries ?? []} />}

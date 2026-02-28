@@ -145,7 +145,7 @@ export default function ExecutiveSummary() {
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       {/* Header */}
-      <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-slate-700 px-8 py-6">
+      <div className="bg-gradient-to-r from-slate-900 to-slate-800 border-b border-violet-800 px-8 py-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div>
@@ -169,7 +169,7 @@ export default function ExecutiveSummary() {
       <div className="max-w-7xl mx-auto px-8 py-8">
         
         {/* Section 1: Profile & Goal Calibration */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 mb-6">
+        <div className="bg-slate-900 border border-violet-900 rounded-xl p-6 mb-6">
           <h2 className="font-sans text-xl font-semibold text-white mb-4">
             Household Profile
           </h2>
@@ -220,7 +220,7 @@ export default function ExecutiveSummary() {
 
         {/* Section 2: Key Metrics Dashboard */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div className="bg-slate-900 border border-violet-900 rounded-xl p-4">
             <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
               Ending Portfolio
             </p>
@@ -238,7 +238,7 @@ export default function ExecutiveSummary() {
             </p>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div className="bg-slate-900 border border-violet-900 rounded-xl p-4">
             <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
               Avg Monthly Surplus
             </p>
@@ -247,7 +247,7 @@ export default function ExecutiveSummary() {
             </p>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div className="bg-slate-900 border border-violet-900 rounded-xl p-4">
             <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
               Success Rate
             </p>
@@ -295,7 +295,7 @@ export default function ExecutiveSummary() {
         </div>
 
         {/* Section 5: AI-Powered Analysis */}
-        <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+        <div className="bg-slate-900 border border-violet-900 rounded-xl p-6">
           <h2 className="font-sans text-xl font-semibold text-white mb-4">
             Financial Analysis
           </h2>

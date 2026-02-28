@@ -247,7 +247,7 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
       </svg>
       {tooltip && (
         <div
-          className="absolute bottom-full mb-1 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs font-sans text-white whitespace-nowrap pointer-events-none z-10"
+          className="absolute bottom-full mb-1 bg-slate-800 border border-violet-800 rounded px-2 py-1 text-xs font-sans text-white whitespace-nowrap pointer-events-none z-10"
           style={{ left: tooltip.x, transform: tooltip.index > values.length / 2 ? 'translateX(-100%)' : 'translateX(-50%)' }}
         >
           <span className="text-slate-400">{startYear + tooltip.index}:</span> ${Math.round(tooltip.value).toLocaleString()}
@@ -273,7 +273,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
   const positive   = (quick?.portfolio_growth ?? 0) >= 0
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
+    <div className="bg-slate-900 border border-violet-900 rounded-xl p-5 hover:border-violet-800 transition-colors">
       <p className="font-sans text-white text-sm font-semibold">{sc.scenario_name}</p>
 
       {sc.description && (
@@ -297,7 +297,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
       {sc.account_names && sc.account_names.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1">
           {sc.account_names.map((name, i) => (
-            <span key={i} className="font-sans text-xs bg-slate-800/60 text-slate-400 rounded px-1.5 py-0.5 border border-slate-700/50">
+            <span key={i} className="font-sans text-xs bg-slate-800/60 text-slate-400 rounded px-1.5 py-0.5 border border-violet-800/50">
               {name}
             </span>
           ))}
@@ -305,7 +305,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
       )}
 
       {quickQuery.isLoading && (
-        <div className="mt-3 pt-3 border-t border-slate-800 space-y-2">
+        <div className="mt-3 pt-3 border-t border-violet-900 space-y-2">
           <div className="h-3 w-32 bg-slate-800 rounded animate-pulse" />
           <div className="h-10 w-40 bg-slate-800 rounded animate-pulse" />
         </div>
@@ -314,7 +314,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
       {quick && (
         <>
           {/* sparkline + speedometer side by side */}
-          <div className="mt-3 pt-3 border-t border-slate-800 flex items-start justify-between gap-4">
+          <div className="mt-3 pt-3 border-t border-violet-900 flex items-start justify-between gap-4">
             {quick.portfolio_series && quick.portfolio_series.length > 1 ? (
               <div>
                 <p className="font-sans text-slate-400 text-xs mb-1.5">Portfolio over time</p>
@@ -324,7 +324,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
             <PlanHealthScore quick={quick} sc={sc} />
           </div>
 
-          <div className="flex items-end justify-between mt-3 pt-3 border-t border-slate-800">
+          <div className="flex items-end justify-between mt-3 pt-3 border-t border-violet-900">
             <div>
               <p className="font-sans text-slate-300 text-xs">Ending Portfolio</p>
               <p className="font-sans text-white text-sm font-semibold mt-0.5">{fmt(quick.ending_portfolio)}</p>
@@ -341,10 +341,10 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
       )}
 
       {/* primary actions */}
-      <div className="flex items-center gap-3 mt-4 pt-3 border-t border-slate-800">
+      <div className="flex items-center gap-3 mt-4 pt-3 border-t border-violet-900">
         <Link
           to={`/scenarios/${sc.scenario_id}`}
-          className="font-sans text-slate-300 hover:text-white text-xs border border-slate-700 hover:border-slate-500 px-3 py-1.5 rounded-lg transition-colors"
+          className="font-sans text-slate-300 hover:text-white text-xs border border-violet-800 hover:border-violet-600 px-3 py-1.5 rounded-lg transition-colors"
         >
           Edit →
         </Link>
@@ -453,13 +453,13 @@ export default function Home() {
           </div>
 
           <div className="flex items-center gap-3">
-            <label className="cursor-pointer font-sans text-slate-300 hover:text-gold-400 text-sm border border-slate-700 hover:border-gold-600 px-4 py-2 rounded-lg transition-colors duration-150">
+            <label className="cursor-pointer font-sans text-slate-300 hover:text-gold-400 text-sm border border-violet-800 hover:border-gold-600 px-4 py-2 rounded-lg transition-colors duration-150">
               {importStatus === 'success' ? '✓ Imported' : importStatus === 'error' ? '✗ Failed' : '↑ Import JSON'}
               <input type="file" accept=".json" onChange={handleImport} className="hidden" />
             </label>
 
             {scenarios.length > 1 && (
-              <Link to="/scenarios/compare" className="font-sans text-slate-300 hover:text-gold-400 text-sm border border-slate-700 hover:border-gold-600 px-4 py-2 rounded-lg transition-colors duration-150">
+              <Link to="/scenarios/compare" className="font-sans text-slate-300 hover:text-gold-400 text-sm border border-violet-800 hover:border-gold-600 px-4 py-2 rounded-lg transition-colors duration-150">
                 Compare →
               </Link>
             )}
@@ -481,7 +481,7 @@ export default function Home() {
           </h2>
 
           {scenarios.length === 0 ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-xl px-6 py-16 text-center">
+            <div className="bg-slate-900 border border-violet-900 rounded-xl px-6 py-16 text-center">
               <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center mx-auto mb-4">
                 <span className="text-gold-500 text-xl">📈</span>
               </div>
