@@ -116,7 +116,8 @@ export default function ExecutiveSummary() {
   // Reduce netSavings so the Sankey balances (contributions are a subset of savings)
   const sankeyNetSavings = Math.max(0, netSavings - totalContributions)
 
-  const surplusAccountName = surplusAccount?.name || 'Net Savings'
+  console.log("DEBUG Sankey contributions:", contributionsByAccount, "sankeyNetSavings:", sankeyNetSavings, "netSavings:", netSavings)
+  const surplusAccountName = surplusAccount?.name || "Net Savings"
   console.log('DEBUG Executive Summary:', {
     hasScenario: !!scenario,
     hasProjection: !!projection,
