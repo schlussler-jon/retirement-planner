@@ -14,7 +14,7 @@ from fastapi.responses import JSONResponse
 from typing import Dict, Any
 import logging
 
-from .endpoints import projections, health, auth, drive, analysis
+from .endpoints import projections, health, auth, drive, analysis, montecarlo
 from .endpoints import scenarios_db as scenarios  # PostgreSQL-backed scenarios
 from auth.oauth import configure_oauth
 from auth.config import get_oauth_settings
@@ -72,6 +72,7 @@ app.include_router(scenarios.router, prefix="/api", tags=["Scenarios"])  # DB-ba
 app.include_router(projections.router, prefix="/api", tags=["Projections"])
 app.include_router(drive.router, prefix="/api/drive", tags=["Google Drive"])
 app.include_router(analysis.router, prefix="/api", tags=["Analysis"])
+app.include_router(montecarlo.router, prefix="/api", tags=["Monte Carlo"])
 
 
 @app.on_event("startup")

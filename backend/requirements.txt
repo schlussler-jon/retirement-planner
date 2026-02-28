@@ -40,3 +40,4 @@ openai
 python-dotenv
 python-multipart
 cryptography
+numpy>=1.26.0
