@@ -204,7 +204,7 @@ export default function SankeyChart({ incomeBySource, incomeSourceTypes, expense
       <p className="font-sans text-slate-400 text-sm mb-3">Where your money comes from and where it goes</p>
 
       {/* Info bar */}
-      <div className="h-8 mb-4 flex items-center px-3 rounded-lg bg-slate-800/60 border border-slate-700/50">
+      <div className="h-8 mb-4 flex items-center px-3 rounded-lg bg-slate-800/60 border border-violet-800/50">
         {hoverInfo ? (
           <p className="font-sans text-sm text-white">
             {hoverInfo.label}

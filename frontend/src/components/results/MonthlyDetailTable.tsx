@@ -60,7 +60,7 @@ export default function MonthlyDetailTable({ data, scenario }: Props) {
   return (
     <div>
       {/* ── sub-view toggle ───────────────────────────────────────────── */}
-      <div className="flex gap-1 p-3 border-b border-slate-800">
+      <div className="flex gap-1 p-3 border-b border-violet-900">
         {(['Income', 'Accounts'] as SubView[]).map(v => (
           <button
             key={v}
@@ -95,7 +95,7 @@ export default function MonthlyDetailTable({ data, scenario }: Props) {
                       {streamNames.get(key) ?? key}
                     </th>
                   ))}
-                  <th className={`${TH} text-right border-l border-slate-700`}>Total Income</th>
+                  <th className={`${TH} text-right border-l border-violet-800`}>Total Income</th>
                 </>
               ) : (
                 <>
@@ -107,8 +107,8 @@ export default function MonthlyDetailTable({ data, scenario }: Props) {
                       </th>
                     )
                   })}
-                  <th className={`${TH} text-right border-l border-slate-700`}>Withdrawals</th>
-                  <th className={`${TH} text-right border-l border-slate-700`}>Portfolio</th>
+                  <th className={`${TH} text-right border-l border-violet-800`}>Withdrawals</th>
+                  <th className={`${TH} text-right border-l border-violet-800`}>Portfolio</th>
                 </>
               )}
             </tr>
@@ -120,7 +120,7 @@ export default function MonthlyDetailTable({ data, scenario }: Props) {
               const totalWithdrawals = Object.values(row.withdrawals_by_account).reduce((a, b) => a + b, 0)
 
               return (
-                <tr key={row.month} className="border-b border-slate-800/40 hover:bg-slate-800/40 transition-colors">
+                <tr key={row.month} className="border-b border-violet-900/40 hover:bg-slate-800/40 transition-colors">
                   {/* sticky month */}
                   <td className={`${TD} text-slate-300 font-mono sticky left-0 bg-slate-900`}>{row.month}</td>
 
@@ -131,7 +131,7 @@ export default function MonthlyDetailTable({ data, scenario }: Props) {
                           {row.income_by_stream[key] ? fmt(row.income_by_stream[key]) : '—'}
                         </td>
                       ))}
-                      <td className={`${TD} text-white font-semibold text-right border-l border-slate-800`}>
+                      <td className={`${TD} text-white font-semibold text-right border-l border-violet-900`}>
                         {fmt(totalIncome)}
                       </td>
                     </>
@@ -142,10 +142,10 @@ export default function MonthlyDetailTable({ data, scenario }: Props) {
                           {row.balances_by_account[key] ? fmt(row.balances_by_account[key]) : '—'}
                         </td>
                       ))}
-                      <td className={`${TD} text-slate-400 font-semibold text-right border-l border-slate-800`}>
+                      <td className={`${TD} text-slate-400 font-semibold text-right border-l border-violet-900`}>
                         {totalWithdrawals ? fmt(totalWithdrawals) : '—'}
                       </td>
-                      <td className={`${TD} text-white font-semibold text-right border-l border-slate-800`}>
+                      <td className={`${TD} text-white font-semibold text-right border-l border-violet-900`}>
                         {fmt(row.total_investments)}
                       </td>
                     </>
@@ -158,7 +158,7 @@ export default function MonthlyDetailTable({ data, scenario }: Props) {
       </div>
 
       {/* footer */}
-      <p className="font-sans text-slate-600 text-xs px-4 py-2 border-t border-slate-800">
+      <p className="font-sans text-slate-600 text-xs px-4 py-2 border-t border-violet-900">
         {data.length} months · {subView === 'Income'
           ? 'income by stream'
           : 'per-account balances, total monthly withdrawals, and portfolio total'}

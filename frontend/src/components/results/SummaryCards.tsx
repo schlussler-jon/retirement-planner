@@ -26,7 +26,7 @@ export default function SummaryCards({ summary, startingPortfolio, endingPortfol
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
 
       {/* 1 – Ending Portfolio */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-4">
+      <div className="bg-slate-900 border border-violet-900 rounded-xl px-4 py-4">
         <Tooltip content={
           <>
             <strong>Ending Portfolio</strong> is your total account balance at the end of the projection.
@@ -72,7 +72,7 @@ export default function SummaryCards({ summary, startingPortfolio, endingPortfol
       </div>
 
       {/* 3 – Avg Monthly Surplus / Deficit */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-4">
+      <div className="bg-slate-900 border border-violet-900 rounded-xl px-4 py-4">
         <Tooltip content={
           <>
             <strong>Average Monthly Surplus</strong> is your average cash flow per month.
@@ -93,7 +93,7 @@ export default function SummaryCards({ summary, startingPortfolio, endingPortfol
       </div>
 
       {/* 4 – Months in Surplus vs Deficit */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-4">
+      <div className="bg-slate-900 border border-violet-900 rounded-xl px-4 py-4">
         <Tooltip content={
           <>
             <strong>Months Overview</strong> shows how many months you had positive vs. negative cash flow.

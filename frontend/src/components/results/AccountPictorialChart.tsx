@@ -123,7 +123,7 @@ export default function AccountPictorialChart({ accounts, balances }: Props) {
                 
                 {/* Tooltip */}
                 {isHovered && (
-                  <div className="absolute left-full ml-2 top-0 bg-slate-800 border border-slate-700 rounded px-3 py-2 text-xs whitespace-nowrap z-50 shadow-lg">
+                  <div className="absolute left-full ml-2 top-0 bg-slate-800 border border-violet-800 rounded px-3 py-2 text-xs whitespace-nowrap z-50 shadow-lg">
                     <div className="text-white font-semibold">Coin #{i + 1}</div>
                     <div className="text-slate-400">${(coinValue / 1000).toFixed(0)}K</div>
                   </div>
@@ -135,7 +135,7 @@ export default function AccountPictorialChart({ accounts, balances }: Props) {
           {/* Show +X more if too many coins */}
           {numCoins > 30 && (
             <div 
-              className="absolute left-0 bg-slate-800 border border-slate-700 rounded px-2 py-1 text-xs text-white"
+              className="absolute left-0 bg-slate-800 border border-violet-800 rounded px-2 py-1 text-xs text-white"
               style={{ bottom: `${30 * coinHeight}px` }}
             >
               +{numCoins - 30} more
@@ -160,7 +160,7 @@ export default function AccountPictorialChart({ accounts, balances }: Props) {
   }
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-xl p-6">
+    <div className="bg-slate-900 border border-violet-900 rounded-xl p-6">
       {/* Header */}
       <div className="text-center mb-6">
         <h3 className="font-sans text-xl font-semibold text-white mb-2">
@@ -169,7 +169,7 @@ export default function AccountPictorialChart({ accounts, balances }: Props) {
         <p className="font-sans text-slate-400 text-sm mb-4">
           Total: <span className="text-white font-semibold text-lg">${(totalPortfolio / 1000).toFixed(0)}K</span>
         </p>
-        <div className="inline-block bg-slate-800 border border-slate-700 rounded px-3 py-1 text-xs text-slate-400">
+        <div className="inline-block bg-slate-800 border border-violet-800 rounded px-3 py-1 text-xs text-slate-400">
           Each coin = ${(coinValue / 1000).toFixed(0)}K
         </div>
       </div>
@@ -187,7 +187,7 @@ export default function AccountPictorialChart({ accounts, balances }: Props) {
       </div>
 
       {/* Legend */}
-      <div className="mt-8 pt-6 border-t border-slate-800">
+      <div className="mt-8 pt-6 border-t border-violet-900">
         <div className="flex flex-wrap gap-6 justify-center text-xs">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 border border-amber-400" />

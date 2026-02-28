@@ -50,7 +50,7 @@ export default function AnnualTable({ annuals, taxes }: Props) {
             {annuals.map((row) => {
               const tax = taxByYear.get(row.year)
               return (
-                <tr key={row.year} className="border-b border-slate-800/40 hover:bg-slate-800/40 transition-colors">
+                <tr key={row.year} className="border-b border-violet-900/40 hover:bg-slate-800/40 transition-colors">
                   <td className={`${TD} text-slate-300 font-mono sticky left-0 bg-slate-900`}>{row.year}</td>
                   <td className={`${TD} text-white text-right`}>{fmt(row.total_income_year)}</td>
                   <td className={`${TD} text-slate-400 text-right`}>{tax ? fmt(tax.total_tax) : '—'}</td>
@@ -63,7 +63,7 @@ export default function AnnualTable({ annuals, taxes }: Props) {
         </table>
       </div>
 
-      <p className="font-sans text-slate-600 text-xs px-4 py-2 border-t border-slate-800">
+      <p className="font-sans text-slate-600 text-xs px-4 py-2 border-t border-violet-900">
         {annuals.length} years
       </p>
     </div>

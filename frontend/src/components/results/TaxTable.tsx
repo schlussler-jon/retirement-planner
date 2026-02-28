@@ -50,7 +50,7 @@ export default function TaxTable({ data }: Props) {
 
           <tbody>
             {data.map((row) => (
-              <tr key={row.year} className="border-b border-slate-800/40 hover:bg-slate-800/40 transition-colors">
+              <tr key={row.year} className="border-b border-violet-900/40 hover:bg-slate-800/40 transition-colors">
                 <td className={`${TD} text-slate-300 font-mono sticky left-0 bg-slate-900`}>{row.year}</td>
 
                 {/* SSA block */}
@@ -74,7 +74,7 @@ export default function TaxTable({ data }: Props) {
         </table>
       </div>
 
-      <p className="font-sans text-slate-600 text-xs px-4 py-2 border-t border-slate-800">
+      <p className="font-sans text-slate-600 text-xs px-4 py-2 border-t border-violet-900">
         {data.length} years · SSA taxation uses the IRS provisional-income method
       </p>
     </div>

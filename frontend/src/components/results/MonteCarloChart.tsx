@@ -261,7 +261,7 @@ export default function MonteCarloChart({ scenarioId }: Props) {
 
       {/* Chart or CTA */}
       {!ran ? (
-        <div className="flex flex-col items-center justify-center py-16 border border-dashed border-slate-700 rounded-xl">
+        <div className="flex flex-col items-center justify-center py-16 border border-dashed border-violet-800 rounded-xl">
           <p className="font-sans text-slate-300 text-sm mb-1 text-center max-w-sm">
             See how your plan holds up across 1,000 different market scenarios — from crashes to bull markets.
           </p>
