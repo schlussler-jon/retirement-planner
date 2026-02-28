@@ -90,6 +90,7 @@ export default function ExecutiveSummary() {
   const netSavings = summary.total_surplus_deficit || 0
   // Find surplus account name
   const surplusAccount = scenario.accounts.find(acc => acc.receives_surplus)
+  console.log('DEBUG Sankey contributions:', contributionsByAccount, 'sankeyNetSavings:', sankeyNetSavings, 'netSavings:', netSavings)
   // Account contributions
   const contributionsByAccount: Record<string, number> = {}
   try {
