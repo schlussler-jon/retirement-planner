@@ -194,7 +194,7 @@ function Speedometer({ score, color }: { score: number; color: string }) {
   const fillPath   = score <= 0 ? '' : `M ${cx - r},${cy} A ${r},${r} 0 ${largeArc} 1 ${fillX},${fillY}`
 
   return (
-    <svg width={120} height={68} viewBox="0 -6 120 74">
+    <svg width={120} height={68} viewBox="0 0 120 68">
       {zones.map(zone => (
         <path key={zone.label} d={arcPath(zone.start, zone.end)}
           fill="none" stroke={zone.color} strokeWidth={strokeW} opacity={0.25} strokeLinecap="butt" />
@@ -213,15 +213,93 @@ function Speedometer({ score, color }: { score: number; color: string }) {
 }
 
 function PlanHealthScore({ quick, sc }: { quick: QuickProjectionResponse; sc: ScenarioListItem }) {
-  const { score, label, color, insight } = calcHealthScore(quick, sc)
+  const { score, label, color, insight, breakdown } = calcHealthScore(quick, sc)
+  const [hovered, setHovered] = useState(false)
+
   return (
-    <div className="flex flex-col items-center">
-      <Speedometer score={score} color={color} />
+    <div className="relative flex flex-col items-center"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <div className="cursor-pointer transition-transform duration-200" style={{ transform: hovered ? 'scale(1.08)' : 'scale(1)' }}>
+        <Speedometer score={score} color={color} />
+      </div>
       <p className="font-sans text-xs font-semibold -mt-1" style={{ color }}>{label}</p>
       {insight && (
         <p className="font-sans text-slate-400 text-center mt-0.5" style={{ fontSize: 10, lineHeight: 1.3, maxWidth: 100 }}>
           {insight}
         </p>
+      )}
+
+      {/* Hover popover */}
+      {hovered && (
+        <div className="absolute bottom-full mb-2 right-0 z-50 w-64 bg-slate-900 border border-violet-800 rounded-xl p-4 shadow-2xl pointer-events-none"
+          style={{ filter: 'drop-shadow(0 8px 24px rgba(109,40,217,0.3))' }}>
+
+          {/* Large speedometer */}
+          <div className="flex justify-center mb-3">
+            <svg width={180} height={100} viewBox="0 -6 120 74">
+              {[
+                { label: 'Risk',   start: 0,  end: 40,  color: '#ef4444' },
+                { label: 'Work',   start: 40, end: 60,  color: '#f97316' },
+                { label: 'Track',  start: 60, end: 80,  color: '#eab308' },
+                { label: 'Strong', start: 80, end: 100, color: '#22c55e' },
+              ].map(zone => {
+                const toRad = (d: number) => d * Math.PI / 180
+                const cx = 60, cy = 56, r = 44, strokeW = 9
+                const sa = 180 - (zone.start / 100) * 180
+                const ea = 180 - (zone.end   / 100) * 180
+                const sx = cx + r * Math.cos(toRad(sa)), sy = cy - r * Math.sin(toRad(sa))
+                const ex = cx + r * Math.cos(toRad(ea)), ey = cy - r * Math.sin(toRad(ea))
+                return <path key={zone.label} d={`M ${sx},${sy} A ${r},${r} 0 ${(sa-ea)>180?1:0} 1 ${ex},${ey}`}
+                  fill="none" stroke={zone.color} strokeWidth={strokeW} opacity={0.3} strokeLinecap="butt" />
+              })}
+              {(() => {
+                const toRad = (d: number) => d * Math.PI / 180
+                const cx = 60, cy = 56, r = 44, strokeW = 9
+                const fa = 180 - (score / 100) * 180
+                const fx = cx + r * Math.cos(toRad(fa)), fy = cy - r * Math.sin(toRad(fa))
+                const la = fa < 90 ? 1 : 0
+                const fp = score <= 0 ? '' : `M ${cx - r},${cy} A ${r},${r} 0 ${la} 1 ${fx},${fy}`
+                const na = toRad(fa), nl = r - 6
+                const nx = cx + nl * Math.cos(na), ny = cy - nl * Math.sin(na)
+                return <>
+                  {score > 0 && <path d={fp} fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round" opacity={0.9} />}
+                  <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="white" strokeWidth={2.5} strokeLinecap="round" />
+                  <circle cx={cx} cy={cy} r={5} fill="white" />
+                  <circle cx={cx} cy={cy} r={2.5} fill="#0f172a" />
+                  <text x={cx} y={cy - 16} textAnchor="middle" fill="white" fontSize={15} fontWeight="bold" fontFamily="sans-serif">{score}</text>
+                </>
+              })()}
+            </svg>
+          </div>
+
+          <p className="font-sans text-center font-semibold text-sm mb-3" style={{ color }}>
+            {label}
+          </p>
+
+          {/* Score breakdown bars */}
+          <div className="space-y-2">
+            {breakdown.map(item => {
+              const pct = item.max > 0 ? item.pts / item.max : 0
+              const barColor = pct >= 0.8 ? '#22c55e' : pct >= 0.6 ? '#eab308' : pct >= 0.4 ? '#f97316' : '#ef4444'
+              return (
+                <div key={item.label}>
+                  <div className="flex justify-between mb-0.5">
+                    <span className="font-sans text-slate-400 text-xs">{item.label}</span>
+                    <span className="font-sans text-white text-xs font-semibold">{item.pts}/{item.max}</span>
+                  </div>
+                  <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct * 100}%`, backgroundColor: barColor }} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
+          <p className="font-sans text-slate-500 text-xs mt-3 text-center">Hover to see breakdown</p>
+        </div>
       )}
     </div>
   )
