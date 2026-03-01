@@ -104,8 +104,7 @@ def list_scenarios(request: Request, db: Session = Depends(get_db)):
                 "income_streams_count": len(data.get("income_streams", [])),
                 "accounts_count":       len(data.get("accounts", [])),
                 "income_stream_labels":  [
-                    s.get("type", "").replace("_", " ").title() + " · " +
-                    next((p.get("name", "") for p in data.get("people", []) if p.get("person_id") == s.get("owner_person_id")), "")
+                    s.get("name") or (s.get("type", "").replace("_", " ").title() + " · " + next((p.get("name", "") for p in data.get("people", []) if p.get("person_id") == s.get("owner_person_id")), ""))
                     for s in data.get("income_streams", [])
                 ],
                 "account_names": [a.get("name", "") for a in data.get("accounts", [])],

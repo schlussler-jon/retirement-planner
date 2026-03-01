@@ -119,6 +119,7 @@ class IncomeStream(BaseModel):
     - Format: YYYY-MM (e.g., "2045-12" for December 2045)
     """
     stream_id: str = Field(..., description="Unique identifier for this income stream")
+    name: str = Field(..., min_length=1, description="Display name for this income stream")
     type: IncomeStreamType = Field(..., description="Type of income stream")
     owner_person_id: str = Field(..., description="ID of person who receives this income")
     start_month: str = Field(

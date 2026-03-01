@@ -51,7 +51,7 @@ export default function ExecutiveSummary() {
   scenario.income_streams?.forEach(stream => {
     const typeName = stream.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
     const ownerName = personMap.get(stream.owner_person_id) || 'Unknown'
-    incomeStreamMap.set(stream.stream_id, `${typeName} (${ownerName})`)
+    incomeStreamMap.set(stream.stream_id, stream.name || `${typeName} (${ownerName})`)
   })
 
   // Create income source name to type mapping for Sankey coloring
@@ -59,7 +59,7 @@ export default function ExecutiveSummary() {
   scenario.income_streams?.forEach(stream => {
     const typeName = stream.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())
     const ownerName = personMap.get(stream.owner_person_id) || 'Unknown'
-    const sourceName = `${typeName} (${ownerName})`
+    const sourceName = stream.name || `${typeName} (${ownerName})`
     incomeSourceTypes[sourceName] = stream.type
   })
 

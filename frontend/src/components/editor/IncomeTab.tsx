@@ -44,7 +44,6 @@ function IncomeStreamCard({
   onRemove: () => void
 }) {
   const [showAdvanced, setShowAdvanced] = useState(false)
-  const owner = people.find(p => p.person_id === stream.owner_person_id)
 
   return (
     <div className="bg-slate-800/50 border border-violet-800/50 rounded-xl p-4 overflow-hidden">
@@ -52,8 +51,7 @@ function IncomeStreamCard({
       {/* Card header */}
       <div className="flex items-center justify-between mb-4">
         <span className="font-sans text-white text-sm font-semibold">
-          {INCOME_STREAM_TYPES.find(t => t.value === stream.type)?.label ?? stream.type}
-          {owner && <span className="text-slate-300 font-normal ml-2">— {owner.name}</span>}
+          {stream.name || <span className="text-slate-400 italic">Unnamed stream</span>}
         </span>
         <button
           onClick={onRemove}
@@ -61,6 +59,21 @@ function IncomeStreamCard({
         >
           Remove
         </button>
+      </div>
+
+      {/* Row 0: Name (full width) */}
+      <div className="mb-4">
+        <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
+          Stream Name <span className="text-red-400">*</span>
+        </label>
+        <input
+          type="text"
+          value={stream.name || ''}
+          onChange={e => onUpdate(s => ({ ...s, name: e.target.value }))}
+          placeholder="e.g. CalPERS Pension, Social Security #1, Part-time Salary"
+          className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm placeholder-slate-600 focus:border-gold-600 focus:outline-none"
+        />
+        <p className="font-sans text-slate-400 text-xs mt-1">A descriptive name that appears on charts and reports</p>
       </div>
 
       {/* Row 1: type · owner · amount */}
@@ -199,6 +212,7 @@ export default function IncomeTab({ streams, people, onChange, autoAdd, onAutoAd
   const addStream = () => {
     onChange([...streams, {
       stream_id: `stream_${streams.length + 1}`,
+      name: '',
       type: 'salary',
       owner_person_id: people.length > 0 ? people[0].person_id : '',
       start_month: '2026-01',
