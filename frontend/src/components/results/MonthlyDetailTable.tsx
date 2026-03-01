@@ -39,7 +39,7 @@ function buildStreamLabels(scenario: Scenario | null): Map<string, string> {
     scenario.income_streams.map(s => {
       const typeName = INCOME_STREAM_TYPES.find(t => t.value === s.type)?.label ?? s.type
       const owner    = personName.get(s.owner_person_id) ?? s.owner_person_id
-      return [s.stream_id, `${typeName} – ${owner}`]
+      return [s.stream_id, s.name || `${typeName} – ${owner}`]
     })
   )
 }
