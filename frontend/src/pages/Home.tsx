@@ -16,7 +16,8 @@ import { useScenarios, useDeleteScenario, useQuickProjection, qk } from '@/api/h
 import client from '@/api/client'
 import type { ScenarioListItem, QuickProjectionResponse } from '@/types/api'
 import type { Scenario } from '@/types/scenario'
-import ErrorBoundary from '@/components/ErrorBoundary'
+import ErrorBoundary    from '@/components/ErrorBoundary'
+import WhatsNewBanner from '@/components/ui/WhatsNewBanner'
 import { exportScenarioAsFile, importScenarioFromFile } from '@/utils/storage'
 
 // ─── helpers ────────────────────────────────────────────────────────────────
@@ -520,6 +521,7 @@ export default function Home() {
   return (
     <ErrorBoundary level="page" pageName="Dashboard">
       <div className="animate-fade-in">
+        <WhatsNewBanner />
 
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>

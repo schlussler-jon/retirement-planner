@@ -18,7 +18,8 @@ import Home                             from '@/pages/Home'
 import Scenarios                        from '@/pages/Scenarios'
 import ScenarioEditor                   from '@/pages/ScenarioEditor'
 import ProjectionResults                from '@/pages/ProjectionResults'
-import Help from '@/pages/Help'
+import Help     from '@/pages/Help'
+import WhatsNew from '@/pages/WhatsNew'
 import ExecutiveSummary                from '@/pages/ExecutiveSummary'
 import Compare                          from '@/pages/Compare'
 
@@ -52,6 +53,7 @@ export default function App() {
             element={<ProtectedRoute><Layout><ExecutiveSummary /></Layout></ProtectedRoute>} />
 
           {/* ── 404 ── */}
+          <Route path="/updates" element={<ProtectedRoute><Layout><WhatsNew /></Layout></ProtectedRoute>} />
           <Route path="/help" element={<ProtectedRoute><Layout><Help /></Layout></ProtectedRoute>} />
           <Route path="*"
             element={
