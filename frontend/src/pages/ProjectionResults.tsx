@@ -19,6 +19,7 @@ import SummaryCards        from '@/components/results/SummaryCards'
 import NetIncomeTable      from '@/components/results/NetIncomeTable'
 import AnnualTable         from '@/components/results/AnnualTable'
 import TaxTable            from '@/components/results/TaxTable'
+import RothStrategyTab     from '@/components/results/RothStrategyTab'
 import MonthlyDetailTable  from '@/components/results/MonthlyDetailTable'
 
 // ── charts (Phase 10) ─────────────────────────────────────────────────────
@@ -29,7 +30,7 @@ import TaxChart                from '@/components/results/TaxChart'
 
 // ─── tabs ─────────────────────────────────────────────────────────────────
 
-const TABS = ['Charts', 'Net Income', 'Annual', 'Tax', 'Monthly Detail'] as const
+const TABS = ['Charts', 'Net Income', 'Annual', 'Tax', 'Monthly Detail', 'Roth Strategy'] as const
 type Tab = typeof TABS[number]
 
 // ─── CSV export ────────────────────────────────────────────────────────────
@@ -217,6 +218,7 @@ export default function ProjectionResults() {
           {activeTab === 'Annual'         && <AnnualTable        annuals={results.annual_summaries ?? []}  taxes={results.tax_summaries ?? []} />}
           {activeTab === 'Tax'            && <TaxTable           data={results.tax_summaries ?? []} />}
           {activeTab === 'Monthly Detail' && <MonthlyDetailTable data={monthly} scenario={scenario ?? null} />}
+          {activeTab === 'Roth Strategy' && <RothStrategyTab scenarioId={id!} />}
         </div>
       )}
     </div>
