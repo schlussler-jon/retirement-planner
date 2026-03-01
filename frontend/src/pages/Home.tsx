@@ -413,7 +413,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
                 <Sparkline values={quick.portfolio_series} positive={positive} />
               </div>
             ) : <div />}
-            <PlanHealthScore quick={quick} sc={sc} />
+            <div className="shrink-0"><PlanHealthScore quick={quick} sc={sc} /></div>
           </div>
 
           <div className="flex items-end justify-between mt-3 pt-3 border-t border-violet-900">
