@@ -239,7 +239,7 @@ function PlanHealthScore({ quick, sc }: { quick: QuickProjectionResponse; sc: Sc
 
           {/* Large speedometer */}
           <div className="flex justify-center mb-3">
-            <svg width={180} height={100} viewBox="0 -6 120 74">
+            <svg width={180} height={100} viewBox="-8 -6 136 74">
               {[
                 { label: 'Risk',   start: 0,  end: 40,  color: '#ef4444' },
                 { label: 'Work',   start: 40, end: 60,  color: '#f97316' },
