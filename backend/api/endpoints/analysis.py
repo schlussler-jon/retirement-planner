@@ -169,6 +169,11 @@ TAX ARCHITECTURE:
 - Effective tax rate: {effective_tax_rate:.1f}%
 - Total taxes paid: ${total_taxes:,.0f}
 
+RETIREMENT CONTRIBUTION RULES (follow strictly):
+- If a person is retired or not working, do NOT suggest increasing tax-deferred contributions (401k, IRA) — earned income is required
+- Instead suggest: Roth conversions (especially in low-income years before RMDs), QCDs if age 70.5+, or tax-efficient withdrawal sequencing
+- Only suggest new contributions for people who are actively working (working_full_time, working_part_time, self_employed)
+
 REQUIREMENTS:
 1. **Executive Summary (2 sentences)**: State if on track and identify primary financial lever
 
