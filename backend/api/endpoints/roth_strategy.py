@@ -278,7 +278,7 @@ async def roth_strategy(
     annual_income = 0.0
     for stream in scenario.income_streams:
         if stream.type.value in ('social_security', 'pension', 'annuity'):
-            annual_income += (stream.monthly_amount or 0) * 12
+            annual_income += (stream.monthly_amount_at_start or 0) * 12
 
     # ── Determine conversion window ───────────────────────────────────────
     retirement_year = start_year  # default: already retired
