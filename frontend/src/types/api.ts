@@ -40,6 +40,9 @@ export interface ScenarioListItem {
   accounts_count: number
   income_stream_labels: string[]
   account_names: string[]
+  tax_bucket_balances: Record<string, number>
+  total_monthly_contributions: number
+  has_working_people: boolean
 }
 
 export interface ScenarioListResponse {

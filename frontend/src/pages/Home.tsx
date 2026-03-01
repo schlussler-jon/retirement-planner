@@ -26,6 +26,13 @@ const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
 const humanizeType = (t: string) =>
   t.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 
+// IRS 2025 annual contribution limits (monthly = /12)
+const IRS_LIMITS = {
+  monthly_401k:     23500 / 12,
+  monthly_ira:      7000  / 12,
+  monthly_catchup:  7500  / 12,  // 401k catch-up if 50+
+}
+
 // ─── Plan Health Score ───────────────────────────────────────────────────────
 
 function calcHealthScore(quick: QuickProjectionResponse, sc: ScenarioListItem): {
@@ -33,90 +40,124 @@ function calcHealthScore(quick: QuickProjectionResponse, sc: ScenarioListItem): 
   label: string
   color: string
   insight: string
+  breakdown: { label: string; pts: number; max: number }[]
 } {
   const fs = quick.financial_summary
 
-  // 1. Survival Rate (35 pts)
+  // ── 1. Survival Rate (30 pts) ──────────────────────────────────────────
   const survivalRate = quick.total_months > 0 ? fs.months_in_surplus / quick.total_months : 0
-  const survivalPts  = Math.round(survivalRate * 35)
+  const survivalPts  = Math.round(survivalRate * 30)
 
-  // 2. Portfolio Growth (25 pts) — full points at 2x
+  // ── 2. Portfolio Growth (20 pts) — full points at 2x ──────────────────
   const growthRatio = quick.starting_portfolio > 0
     ? quick.ending_portfolio / quick.starting_portfolio : 1
-  const growthPts = Math.min(25, Math.round((growthRatio / 2) * 25))
+  const growthPts = Math.min(20, Math.round((growthRatio / 2) * 20))
 
-  // 3. Surplus Cushion (25 pts)
+  // ── 3. Surplus Cushion (20 pts) ────────────────────────────────────────
   const avgMonthlySpending = quick.total_months > 0 ? fs.total_spending / quick.total_months : 1
   const cushionRatio = avgMonthlySpending > 0
     ? fs.average_monthly_surplus_deficit / avgMonthlySpending : 0
-  const cushionPts = Math.min(25, Math.max(0, Math.round(cushionRatio * 25)))
+  const cushionPts = Math.min(20, Math.max(0, Math.round(cushionRatio * 20)))
 
-  // 4. Contribution Discipline (15 pts)
-  const contribPts = (sc.accounts_count ?? 0) > 0 ? 15 : 0
+  // ── 4. Contribution Utilization (15 pts) ──────────────────────────────
+  // Only penalize if people are working — retired users get full points
+  let contribPts = 15
+  let contribInsight = ''
+  if (sc.has_working_people) {
+    // Rough IRS max: 401k + IRA per working person (assume 1 working person minimum)
+    // Use a reasonable target of $2,541/mo (401k max) as baseline
+    const targetMonthly = IRS_LIMITS.monthly_401k + IRS_LIMITS.monthly_ira  // ~$2,541/mo
+    const actual = sc.total_monthly_contributions ?? 0
+    const utilization = targetMonthly > 0 ? Math.min(1, actual / targetMonthly) : 0
+    contribPts = Math.round(utilization * 15)
+    if (utilization < 0.5) {
+      const gap = Math.round((targetMonthly - actual) * 12)
+      contribInsight = `Contributing $${Math.round(actual * 12).toLocaleString()}/yr — room to add $${gap.toLocaleString()}/yr`
+    } else if (utilization < 0.9) {
+      contribInsight = `${Math.round(utilization * 100)}% of max contribution used`
+    }
+  }
 
-  const score = survivalPts + growthPts + cushionPts + contribPts
+  // ── 5. Tax Diversification (15 pts) ───────────────────────────────────
+  const buckets = sc.tax_bucket_balances ?? {}
+  const totalBalance = Object.values(buckets).reduce((a, b) => a + b, 0)
+  let taxPts = 0
+  let taxInsight = ''
 
+  if (totalBalance > 0) {
+    const deferredPct = (buckets['tax_deferred'] ?? 0) / totalBalance
+    const rothPct     = (buckets['roth']         ?? 0) / totalBalance
+    const taxablePct  = (buckets['taxable']       ?? 0) / totalBalance
+
+    // Ideal: no bucket > 60%, penalize heavy concentration
+    // Perfect score = all three buckets between 20–50%
+    const maxConcentration = Math.max(deferredPct, rothPct, taxablePct)
+    const minPresent = [deferredPct, rothPct, taxablePct].filter(p => p > 0.05).length
+
+    if (maxConcentration > 0.90) {
+      taxPts = 2  // extremely concentrated
+    } else if (maxConcentration > 0.75) {
+      taxPts = 6
+    } else if (maxConcentration > 0.60) {
+      taxPts = 10
+    } else {
+      taxPts = 15  // well diversified
+    }
+
+    // Insight for worst case
+    if (deferredPct > 0.75) {
+      taxInsight = `${Math.round(deferredPct * 100)}% tax-deferred — Roth conversions recommended`
+    } else if (rothPct > 0.75) {
+      taxInsight = `${Math.round(rothPct * 100)}% Roth — consider tax-deferred balance`
+    } else if (maxConcentration > 0.60) {
+      taxInsight = 'Tax buckets imbalanced — diversify across account types'
+    }
+  } else {
+    taxPts = 0
+    taxInsight = 'No investment accounts found'
+  }
+
+  const score = survivalPts + growthPts + cushionPts + contribPts + taxPts
+
+  // Label + color
   let label: string, color: string
   if (score >= 80)      { label = 'Strong Plan';  color = '#22c55e' }
   else if (score >= 60) { label = 'On Track';     color = '#eab308' }
   else if (score >= 40) { label = 'Needs Work';   color = '#f97316' }
   else                  { label = 'At Risk';      color = '#ef4444' }
 
+  // Pick most actionable insight
   const breakdown = [
-    { label: 'Survival Rate',    pts: survivalPts,  max: 35 },
-    { label: 'Portfolio Growth', pts: growthPts,    max: 25 },
-    { label: 'Surplus Cushion',  pts: cushionPts,   max: 25 },
-    { label: 'Contributions',    pts: contribPts,   max: 15 },
+    { label: 'Survival Rate',          pts: survivalPts,  max: 30 },
+    { label: 'Portfolio Growth',        pts: growthPts,    max: 20 },
+    { label: 'Surplus Cushion',         pts: cushionPts,   max: 20 },
+    { label: 'Contribution Utilization',pts: contribPts,   max: 15 },
+    { label: 'Tax Diversification',     pts: taxPts,       max: 15 },
   ]
+
   const weakest = breakdown.reduce((a, b) =>
     (a.pts / a.max) < (b.pts / b.max) ? a : b)
-  const insightMap: Record<string, string> = {
-    'Survival Rate':    `${Math.round(survivalRate * 100)}% months in surplus`,
-    'Portfolio Growth': growthRatio < 1 ? 'Portfolio shrinks over time' : `Portfolio grows ${growthRatio.toFixed(1)}x`,
-    'Surplus Cushion':  cushionRatio < 0 ? 'Monthly deficits detected' : 'Low monthly surplus buffer',
-    'Contributions':    'Add monthly contributions',
-  }
-  const insight = insightMap[weakest.label] ?? ''
 
-  return { score, label, color, insight }
+  const defaultInsights: Record<string, string> = {
+    'Survival Rate':           `${Math.round(survivalRate * 100)}% months in surplus`,
+    'Portfolio Growth':         growthRatio < 1 ? 'Portfolio shrinks over time' : `Portfolio grows ${growthRatio.toFixed(1)}x`,
+    'Surplus Cushion':          cushionRatio < 0 ? 'Monthly deficits detected' : 'Low monthly surplus buffer',
+    'Contribution Utilization': contribInsight || 'Increase monthly contributions',
+    'Tax Diversification':      taxInsight || 'Diversify across tax buckets',
+  }
+
+  const insight = defaultInsights[weakest.label] ?? ''
+
+  return { score, label, color, insight, breakdown }
 }
 
+// ─── Speedometer ─────────────────────────────────────────────────────────────
+
 function Speedometer({ score, color }: { score: number; color: string }) {
-  // Semicircle speedometer: 180° arc from left to right
-  // 0 = far left, 100 = far right
   const cx = 60, cy = 56, r = 44
   const strokeW = 9
-
-  // Arc spans 180° (from 180° to 0° = left to right along top)
   const toRad = (deg: number) => (deg * Math.PI) / 180
-  const arcStart = 180  // leftmost point
-  const arcEnd   = 0    // rightmost point
 
-  // Full semicircle path (background track)
-  const trackPath = `
-    M ${cx - r},${cy}
-    A ${r},${r} 0 0 1 ${cx + r},${cy}
-  `
-
-  // Colored fill arc based on score (0–100 maps to 180°–0°)
-  const fillAngle = 180 - (score / 100) * 180  // degrees from left
-  const fillRad   = toRad(fillAngle)
-  const fillX     = cx + r * Math.cos(fillRad)
-  const fillY     = cy - r * Math.sin(fillRad)
-  const largeArc  = fillAngle < 90 ? 1 : 0  // large arc flag
-
-  const fillPath = score <= 0 ? '' : score >= 100
-    ? trackPath
-    : `M ${cx - r},${cy} A ${r},${r} 0 ${largeArc} 1 ${fillX},${fillY}`
-
-  // Needle: points from center to arc edge at score angle
-  const needleAngle = 180 - (score / 100) * 180
-  const needleRad   = toRad(needleAngle)
-  const needleLen   = r - 6
-  const nx = cx + needleLen * Math.cos(needleRad)
-  const ny = cy - needleLen * Math.sin(needleRad)
-
-  // Zone colors for tick marks
   const zones = [
     { label: 'Risk',   start: 0,  end: 40,  color: '#ef4444' },
     { label: 'Work',   start: 40, end: 60,  color: '#f97316' },
@@ -124,65 +165,47 @@ function Speedometer({ score, color }: { score: number; color: string }) {
     { label: 'Strong', start: 80, end: 100, color: '#22c55e' },
   ]
 
+  const arcPath = (startPct: number, endPct: number) => {
+    const startAngle = 180 - (startPct / 100) * 180
+    const endAngle   = 180 - (endPct   / 100) * 180
+    const sRad = toRad(startAngle)
+    const eRad = toRad(endAngle)
+    const sx = cx + r * Math.cos(sRad)
+    const sy = cy - r * Math.sin(sRad)
+    const ex = cx + r * Math.cos(eRad)
+    const ey = cy - r * Math.sin(eRad)
+    const la = (startAngle - endAngle) > 180 ? 1 : 0
+    return `M ${sx},${sy} A ${r},${r} 0 ${la} 1 ${ex},${ey}`
+  }
+
+  // Needle
+  const needleAngle = 180 - (score / 100) * 180
+  const needleRad   = toRad(needleAngle)
+  const needleLen   = r - 6
+  const nx = cx + needleLen * Math.cos(needleRad)
+  const ny = cy - needleLen * Math.sin(needleRad)
+
+  // Active fill
+  const fillAngle  = 180 - (score / 100) * 180
+  const fillRad    = toRad(fillAngle)
+  const fillX      = cx + r * Math.cos(fillRad)
+  const fillY      = cy - r * Math.sin(fillRad)
+  const largeArc   = fillAngle < 90 ? 1 : 0
+  const fillPath   = score <= 0 ? '' : `M ${cx - r},${cy} A ${r},${r} 0 ${largeArc} 1 ${fillX},${fillY}`
+
   return (
     <svg width={120} height={68} viewBox="0 0 120 68">
-      {/* Zone arcs */}
-      {zones.map((zone) => {
-        const startAngle = 180 - (zone.start / 100) * 180
-        const endAngle   = 180 - (zone.end / 100) * 180
-        const sRad = toRad(startAngle)
-        const eRad = toRad(endAngle)
-        const sx = cx + r * Math.cos(sRad)
-        const sy = cy - r * Math.sin(sRad)
-        const ex = cx + r * Math.cos(eRad)
-        const ey = cy - r * Math.sin(eRad)
-        const la = (startAngle - endAngle) > 180 ? 1 : 0
-        return (
-          <path
-            key={zone.label}
-            d={`M ${sx},${sy} A ${r},${r} 0 ${la} 1 ${ex},${ey}`}
-            fill="none"
-            stroke={zone.color}
-            strokeWidth={strokeW}
-            opacity={0.25}
-            strokeLinecap="butt"
-          />
-        )
-      })}
-
-      {/* Active fill arc */}
+      {zones.map(zone => (
+        <path key={zone.label} d={arcPath(zone.start, zone.end)}
+          fill="none" stroke={zone.color} strokeWidth={strokeW} opacity={0.25} strokeLinecap="butt" />
+      ))}
       {score > 0 && (
-        <path
-          d={fillPath}
-          fill="none"
-          stroke={color}
-          strokeWidth={strokeW}
-          strokeLinecap="round"
-          opacity={0.9}
-        />
+        <path d={fillPath} fill="none" stroke={color} strokeWidth={strokeW} strokeLinecap="round" opacity={0.9} />
       )}
-
-      {/* Needle */}
-      <line
-        x1={cx} y1={cy}
-        x2={nx} y2={ny}
-        stroke="white"
-        strokeWidth={2}
-        strokeLinecap="round"
-      />
-      {/* Needle pivot */}
+      <line x1={cx} y1={cy} x2={nx} y2={ny} stroke="white" strokeWidth={2} strokeLinecap="round" />
       <circle cx={cx} cy={cy} r={4} fill="white" />
       <circle cx={cx} cy={cy} r={2} fill="#0f172a" />
-
-      {/* Score number */}
-      <text
-        x={cx} y={cy - 14}
-        textAnchor="middle"
-        fill="white"
-        fontSize={13}
-        fontWeight="bold"
-        fontFamily="sans-serif"
-      >
+      <text x={cx} y={cy - 14} textAnchor="middle" fill="white" fontSize={13} fontWeight="bold" fontFamily="sans-serif">
         {score}
       </text>
     </svg>
@@ -191,7 +214,6 @@ function Speedometer({ score, color }: { score: number; color: string }) {
 
 function PlanHealthScore({ quick, sc }: { quick: QuickProjectionResponse; sc: ScenarioListItem }) {
   const { score, label, color, insight } = calcHealthScore(quick, sc)
-
   return (
     <div className="flex flex-col items-center">
       <Speedometer score={score} color={color} />
@@ -209,11 +231,9 @@ function PlanHealthScore({ quick, sc }: { quick: QuickProjectionResponse; sc: Sc
 
 function Sparkline({ values, positive }: { values: number[]; positive: boolean }) {
   if (values.length < 2) return null
-
   const [tooltip, setTooltip] = useState<{ x: number; y: number; value: number; index: number } | null>(null)
 
-  const min = Math.min(...values)
-  const max = Math.max(...values)
+  const min = Math.min(...values), max = Math.max(...values)
   const range = max - min || 1
   const w = 160, h = 40, pad = 2
 
@@ -246,10 +266,8 @@ function Sparkline({ values, positive }: { values: number[]; positive: boolean }
         {tooltip && <circle cx={tooltip.x} cy={tooltip.y} r={3} fill={strokeColor} />}
       </svg>
       {tooltip && (
-        <div
-          className="absolute bottom-full mb-1 bg-slate-800 border border-violet-800 rounded px-2 py-1 text-xs font-sans text-white whitespace-nowrap pointer-events-none z-10"
-          style={{ left: tooltip.x, transform: tooltip.index > values.length / 2 ? 'translateX(-100%)' : 'translateX(-50%)' }}
-        >
+        <div className="absolute bottom-full mb-1 bg-slate-800 border border-violet-800 rounded px-2 py-1 text-xs font-sans text-white whitespace-nowrap pointer-events-none z-10"
+          style={{ left: tooltip.x, transform: tooltip.index > values.length / 2 ? 'translateX(-100%)' : 'translateX(-50%)' }}>
           <span className="text-slate-400">{startYear + tooltip.index}:</span> ${Math.round(tooltip.value).toLocaleString()}
         </div>
       )}
@@ -273,12 +291,8 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
   const positive   = (quick?.portfolio_growth ?? 0) >= 0
 
   return (
-    <div className="bg-slate-900 border border-violet-900 rounded-xl p-5 hover:border-violet-800 transition-colors">
+    <div className="bg-slate-900 border border-violet-900 rounded-xl p-5 hover:border-violet-700 transition-colors">
       <p className="font-sans text-white text-sm font-semibold">{sc.scenario_name}</p>
-
-      {sc.description && (
-        <p className="font-sans text-slate-400 text-xs mt-1 leading-relaxed">{sc.description}</p>
-      )}
 
       <p className="font-sans text-slate-300 text-xs mt-2">
         {pl(sc.people_count, 'person')} · {pl(sc.income_streams_count, 'income stream')} · {pl(sc.accounts_count, 'account')}
@@ -297,7 +311,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
       {sc.account_names && sc.account_names.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1">
           {sc.account_names.map((name, i) => (
-            <span key={i} className="font-sans text-xs bg-slate-800/60 text-slate-400 rounded px-1.5 py-0.5 border border-violet-800/50">
+            <span key={i} className="font-sans text-xs bg-slate-800/60 text-slate-400 rounded px-1.5 py-0.5 border border-violet-900/50">
               {name}
             </span>
           ))}
@@ -313,7 +327,6 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
 
       {quick && (
         <>
-          {/* sparkline + speedometer side by side */}
           <div className="mt-3 pt-3 border-t border-violet-900 flex items-start justify-between gap-4">
             {quick.portfolio_series && quick.portfolio_series.length > 1 ? (
               <div>
@@ -340,29 +353,20 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
         </>
       )}
 
-      {/* primary actions */}
       <div className="flex items-center gap-3 mt-4 pt-3 border-t border-violet-900">
-        <Link
-          to={`/scenarios/${sc.scenario_id}`}
-          className="font-sans text-slate-300 hover:text-white text-xs border border-violet-800 hover:border-violet-600 px-3 py-1.5 rounded-lg transition-colors"
-        >
+        <Link to={`/scenarios/${sc.scenario_id}`}
+          className="font-sans text-slate-300 hover:text-white text-xs border border-violet-800 hover:border-violet-600 px-3 py-1.5 rounded-lg transition-colors">
           Edit →
         </Link>
-        <Link
-          to={`/scenarios/${sc.scenario_id}/results`}
-          className="font-sans bg-gold-600 hover:bg-gold-500 text-slate-950 font-semibold text-xs px-4 py-1.5 rounded-lg transition-colors"
-        >
+        <Link to={`/scenarios/${sc.scenario_id}/results`}
+          className="font-sans bg-gold-600 hover:bg-gold-500 text-slate-950 font-semibold text-xs px-4 py-1.5 rounded-lg transition-colors">
           View Results →
         </Link>
       </div>
 
-      {/* secondary actions */}
       <div className="flex items-center gap-4 mt-2">
-        <button
-          onClick={() => onDuplicate(sc.scenario_id, sc.scenario_name)}
-          disabled={dupStatus === 'loading'}
-          className="font-sans text-slate-400 hover:text-gold-400 text-xs transition-colors disabled:opacity-50"
-        >
+        <button onClick={() => onDuplicate(sc.scenario_id, sc.scenario_name)} disabled={dupStatus === 'loading'}
+          className="font-sans text-slate-400 hover:text-gold-400 text-xs transition-colors disabled:opacity-50">
           {dupStatus === 'loading' ? 'Duplicating…' : dupStatus === 'done' ? '✓ Duplicated' : dupStatus === 'error' ? '✗ Failed' : 'Duplicate'}
         </button>
         <button onClick={() => onExport(sc.scenario_id)} className="font-sans text-slate-400 hover:text-gold-400 text-xs transition-colors">
@@ -439,7 +443,6 @@ export default function Home() {
     <ErrorBoundary level="page" pageName="Dashboard">
       <div className="animate-fade-in">
 
-        {/* header */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-3xl text-white">
@@ -464,17 +467,14 @@ export default function Home() {
               </Link>
             )}
 
-            <Link
-              to="/scenarios/new"
-              className="inline-flex items-center gap-2 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150"
-            >
+            <Link to="/scenarios/new"
+              className="inline-flex items-center gap-2 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150">
               <span className="text-lg leading-none">+</span>
               New Scenario
             </Link>
           </div>
         </div>
 
-        {/* scenario cards */}
         <div>
           <h2 className="font-sans text-white text-sm font-semibold mb-3">
             Your {scenarios.length} Scenario{scenarios.length !== 1 ? 's' : ''}
@@ -490,10 +490,8 @@ export default function Home() {
                 A scenario models your retirement cash flow — income streams, investment accounts,
                 taxes, and spending — projected month by month over your timeline.
               </p>
-              <Link
-                to="/scenarios/new"
-                className="inline-flex items-center gap-2 mt-5 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150"
-              >
+              <Link to="/scenarios/new"
+                className="inline-flex items-center gap-2 mt-5 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150">
                 <span className="text-lg leading-none">+</span>
                 Create Your First Scenario
               </Link>

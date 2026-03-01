@@ -71,6 +71,9 @@ class ScenarioListItem(BaseModel):
     accounts_count: int
     income_stream_types: list[str]
     account_names: list[str]
+    tax_bucket_balances: dict[str, float]
+    total_monthly_contributions: float
+    has_working_people: bool
 
 
 class ScenarioListResponse(BaseModel):
@@ -309,6 +312,9 @@ async def list_scenarios(
             accounts_count=len(scenario.accounts),
             income_stream_types=[s.type.value for s in scenario.income_streams],
             account_names=[a.name for a in scenario.accounts],
+            tax_bucket_balances={b: sum(a.starting_balance for a in scenario.accounts if a.tax_bucket.value == b) for b in ["tax_deferred", "roth", "taxable"]},
+            total_monthly_contributions=sum(a.monthly_contribution for a in scenario.accounts),
+            has_working_people=any(getattr(p, "employment_status", None) in ["working_full_time", "working_part_time", "self_employed"] for p in scenario.people),
         ))
     
     return ScenarioListResponse(
