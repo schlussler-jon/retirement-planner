@@ -239,7 +239,7 @@ function PlanHealthScore({ quick, sc }: { quick: QuickProjectionResponse; sc: Sc
 
           {/* Large speedometer */}
           <div className="flex justify-center mb-3">
-            <svg width={180} height={100} viewBox="-8 -6 136 74">
+            <svg width={180} height={100} viewBox="-8 -6 144 74">
               {[
                 { label: 'Risk',   start: 0,  end: 40,  color: '#ef4444' },
                 { label: 'Work',   start: 40, end: 60,  color: '#f97316' },
@@ -406,7 +406,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
 
       {quick && (
         <>
-          <div className="mt-3 pt-3 border-t border-violet-900 flex items-start justify-between gap-4">
+          <div className="mt-3 pt-3 border-t border-violet-900 flex items-center justify-between gap-4">
             {quick.portfolio_series && quick.portfolio_series.length > 1 ? (
               <div>
                 <p className="font-sans text-slate-400 text-xs mb-1.5">Portfolio over time</p>
