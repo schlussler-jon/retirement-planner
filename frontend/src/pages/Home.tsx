@@ -194,7 +194,7 @@ function Speedometer({ score, color }: { score: number; color: string }) {
   const fillPath   = score <= 0 ? '' : `M ${cx - r},${cy} A ${r},${r} 0 ${largeArc} 1 ${fillX},${fillY}`
 
   return (
-    <svg width={120} height={68} viewBox="0 0 120 68">
+    <svg width={120} height={68} viewBox="0 -6 120 74">
       {zones.map(zone => (
         <path key={zone.label} d={arcPath(zone.start, zone.end)}
           fill="none" stroke={zone.color} strokeWidth={strokeW} opacity={0.25} strokeLinecap="butt" />

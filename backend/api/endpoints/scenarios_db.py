@@ -108,7 +108,10 @@ def list_scenarios(request: Request, db: Session = Depends(get_db)):
                     next((p.get("name", "") for p in data.get("people", []) if p.get("person_id") == s.get("owner_person_id")), "")
                     for s in data.get("income_streams", [])
                 ],
-                "account_names":         [a.get("name", "") for a in data.get("accounts", [])],
+                "account_names": [a.get("name", "") for a in data.get("accounts", [])],
+                "tax_bucket_balances": {b: sum(a.get("starting_balance", 0) for a in data.get("accounts", []) if a.get("tax_bucket") == b) for b in ["tax_deferred", "roth", "taxable"]},
+                "total_monthly_contributions": sum(a.get("monthly_contribution", 0) for a in data.get("accounts", [])),
+                "has_working_people": any(p.get("employment_status") in ["working_full_time", "working_part_time", "self_employed"] for p in data.get("people", [])),
             })
         except Exception:
             continue
