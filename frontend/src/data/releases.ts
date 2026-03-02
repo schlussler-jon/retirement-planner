@@ -18,6 +18,22 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '1.7.0',
+    date:    '2026-03-01',
+    title:   'Financial Intelligence Feed',
+    summary: 'New: Personalized AI-powered financial insights update every time you log in',
+    tag:     'major',
+    features: [
+      'Financial Intelligence Feed on the dashboard — 6 personalized insight cards refreshed daily via AI web search',
+      'Categories: Income Opportunity, Investment Strategy, Tax Strategy, Retirement Planning, Economic Context, Medicare & Benefits',
+      'Each card includes current rates and data points, a specific action to take, and a recency indicator',
+      'Insights are personalized to your age, portfolio size, tax bracket, state, and employment status',
+      'Cards are expandable — click to reveal full insight, action item, and source',
+      'Cached for 24 hours with one-click manual refresh',
+      'Required name field on income streams for clearer identification across charts and reports',
+    ],
+  },
+  {
     version: '1.6.0',
     date:    '2026-02-28',
     title:   'Roth Strategy & Tax Optimizer',

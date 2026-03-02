@@ -91,6 +91,7 @@ export default function Help() {
             <li>Fill out the tabs: Settings, People, Income, Accounts, Budget</li>
             <li>Click <strong className="text-white">Save & View Results</strong></li>
             <li>Explore Charts, Executive Summary, Monte Carlo, and Roth Strategy tabs</li>
+            <li>Check the Financial Intelligence Feed on the dashboard for personalized daily insights</li>
           </ol>
         </div>
 
@@ -326,6 +327,45 @@ export default function Help() {
         <Tip>
           The optimal conversion window is typically between retirement and age 72 — after earned income stops but before RMDs begin. This is often the lowest-tax period of your retirement.
         </Tip>
+      </Section>
+
+      {/* Financial Intelligence Feed */}
+      <Section title="Financial Intelligence Feed" icon="🧠">
+        <p>
+          The Financial Intelligence Feed appears on your dashboard and provides 6 personalized insight cards
+          refreshed daily using AI-powered web search. Each card reflects current market conditions,
+          rates, and strategies relevant to your specific situation.
+        </p>
+
+        <div>
+          <p className="font-sans text-white font-semibold mb-2">Card categories:</p>
+          <ul className="list-disc list-inside space-y-1.5">
+            <li><strong className="text-white">💰 Income Opportunity</strong> — current CD rates, HYSA yields, I-bond rates, gig economy ideas, passive income strategies</li>
+            <li><strong className="text-white">📈 Investment Strategy</strong> — current market conditions, sector opportunities, dividend yields, bond rates</li>
+            <li><strong className="text-white">🏦 Tax Strategy</strong> — current year contribution limits, tax law changes, QCD opportunities, HSA strategies</li>
+            <li><strong className="text-white">🎯 Retirement Planning</strong> — Social Security COLA updates, RMD rule changes, SECURE Act news</li>
+            <li><strong className="text-white">🌐 Economic Context</strong> — current Fed rate, inflation data, what it means for your portfolio</li>
+            <li><strong className="text-white">🏥 Medicare & Benefits</strong> — current premiums, IRMAA thresholds, open enrollment windows</li>
+          </ul>
+        </div>
+
+        <div>
+          <p className="font-sans text-white font-semibold mb-2">How it works:</p>
+          <ul className="list-disc list-inside space-y-1.5">
+            <li>Insights are personalized to your age, portfolio size, tax bracket, state, and employment status</li>
+            <li>Click any card to expand and see the full insight, a specific action to take, and source recency</li>
+            <li>Results are cached for 24 hours — click Refresh to get new insights immediately</li>
+            <li>The feed loads after your scenarios so it never delays your dashboard</li>
+          </ul>
+        </div>
+
+        <Tip>
+          The more complete your scenario data (employment status, SS date, account types), the more personalized and relevant your insights will be.
+        </Tip>
+
+        <Warning>
+          Financial Intelligence cards are for educational purposes only. Always consult a licensed financial advisor before making investment or tax decisions.
+        </Warning>
       </Section>
 
       {/* Executive Summary / Sankey */}
