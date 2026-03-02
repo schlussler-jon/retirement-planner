@@ -17,6 +17,7 @@ import client from '@/api/client'
 import type { ScenarioListItem, QuickProjectionResponse } from '@/types/api'
 import type { Scenario } from '@/types/scenario'
 import ErrorBoundary    from '@/components/ErrorBoundary'
+import FinancialFeed   from '@/components/ui/FinancialFeed'
 import WhatsNewBanner from '@/components/ui/WhatsNewBanner'
 import { exportScenarioAsFile, importScenarioFromFile } from '@/utils/storage'
 
@@ -591,6 +592,7 @@ export default function Home() {
             </div>
           )}
         </div>
+        <FinancialFeed />
 
       </div>
     </ErrorBoundary>
