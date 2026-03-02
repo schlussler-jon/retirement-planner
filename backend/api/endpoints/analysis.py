@@ -163,7 +163,9 @@ def generate_financial_analysis(
         elif is_working:
             years_to_retirement = min(years_to_retirement, max(0, 65 - age))
     if years_to_retirement == 999:
-        years_to_retirement = 0  # already retired
+        # No employment status set — estimate from youngest person's age
+        youngest_age = min(projection_start_year - p.birth_date.year for p in scenario.people)
+        years_to_retirement = max(0, 65 - youngest_age) if youngest_age < 60 else 0
 
     # Roth strategy guidance
     all_retired = all(
@@ -200,11 +202,20 @@ def generate_financial_analysis(
             "are also worth mentioning if they're charitably inclined."
         )
     else:
-        roth_guidance = (
-            "ROTH GUIDANCE: This person is recently retired or retiring soon. "
-            "The period between retirement and age 73 is the optimal Roth conversion window — "
-            "income is lower, RMDs haven't started yet. Suggest strategic conversions to fill lower brackets."
-        )
+        youngest_age = min(projection_start_year - p.birth_date.year for p in scenario.people)
+        if youngest_age < 50:
+            roth_guidance = (
+                "ROTH GUIDANCE: This person is young and likely decades from retirement. "
+                "Roth CONVERSIONS are NOT appropriate. Focus on maximizing Roth CONTRIBUTIONS "
+                "(Roth IRA up to $7,000/yr, Roth 401k) to build decades of tax-free growth. "
+                "Do NOT mention conversions."
+            )
+        else:
+            roth_guidance = (
+                "ROTH GUIDANCE: This person is recently retired or retiring soon. "
+                "The period between retirement and age 73 is the optimal Roth conversion window — "
+                "income is lower, RMDs haven't started yet. Suggest strategic conversions to fill lower brackets."
+            )
 
     # Plan health / shortfall guidance
     if success_rate < 70:
