@@ -148,7 +148,143 @@ def generate_financial_analysis(
 
     pct = lambda n: (n / ending_portfolio * 100) if ending_portfolio else 0
 
-    prompt = f"""You are a Certified Financial Planner analyzing a retirement scenario for {greeting}. Generate a professional analysis following this EXACT structure:
+    # ── Situational flags (computed before prompt so GPT gets clear directives) ──
+
+    # Years to retirement (youngest working person)
+    years_to_retirement = 999
+    for person in scenario.people:
+        age = projection_start_year - person.birth_date.year
+        is_working = getattr(person, 'employment_status', '') in [
+            'working_full_time', 'working_part_time', 'self_employed'
+        ]
+        if is_working and person.planned_retirement_date:
+            ret_yr = int(person.planned_retirement_date.split('-')[0])
+            years_to_retirement = min(years_to_retirement, max(0, ret_yr - projection_start_year))
+        elif is_working:
+            years_to_retirement = min(years_to_retirement, max(0, 65 - age))
+    if years_to_retirement == 999:
+        years_to_retirement = 0  # already retired
+
+    # Roth strategy guidance
+    all_retired = all(
+        getattr(p, 'employment_status', '') in ['retired', 'not_working']
+        for p in scenario.people
+    )
+    far_from_retirement = years_to_retirement > 10
+    near_retirement     = 3 <= years_to_retirement <= 10
+    rmd_imminent        = any(
+        (projection_start_year - p.birth_date.year) >= 70
+        for p in scenario.people
+    )
+
+    if far_from_retirement:
+        roth_guidance = (
+            "ROTH GUIDANCE: This person is more than 10 years from retirement. "
+            "Roth CONVERSIONS are NOT recommended — they're better off maximizing Roth CONTRIBUTIONS "
+            "(Roth IRA, Roth 401k) to build tax-free assets over time. "
+            "Do NOT suggest conversions. DO suggest Roth contribution strategies."
+        )
+    elif near_retirement:
+        roth_guidance = (
+            "ROTH GUIDANCE: This person is 3-10 years from retirement — a key window. "
+            "If they have significant tax-deferred assets, moderate Roth conversions may make sense "
+            "now while still working, but only if it won't push them into a higher bracket. "
+            "Roth contributions are also still valuable."
+        )
+    elif all_retired and rmd_imminent:
+        roth_guidance = (
+            "ROTH GUIDANCE: This person is retired and approaching or past RMD age (73). "
+            "Roth CONVERSIONS are highly relevant — converting in low-income years before RMDs begin "
+            "reduces future forced withdrawals and lifetime taxes. "
+            "Prioritize conversion window analysis. QCDs (Qualified Charitable Distributions) "
+            "are also worth mentioning if they're charitably inclined."
+        )
+    else:
+        roth_guidance = (
+            "ROTH GUIDANCE: This person is recently retired or retiring soon. "
+            "The period between retirement and age 73 is the optimal Roth conversion window — "
+            "income is lower, RMDs haven't started yet. Suggest strategic conversions to fill lower brackets."
+        )
+
+    # Plan health / shortfall guidance
+    if success_rate < 70:
+        plan_health = (
+            f"PLAN HEALTH - CRITICAL: This plan has only a {success_rate:.0f}% success rate — "
+            "the portfolio is likely to run out before end of life. "
+            "This is the most important issue. Lead with specific, actionable recommendations: "
+            "1) Reduce discretionary spending, 2) Delay Social Security if not yet claimed, "
+            "3) Consider part-time work in early retirement, 4) Evaluate downsizing home equity, "
+            "5) Delay retirement if still working. Be direct but compassionate."
+        )
+    elif success_rate < 85:
+        plan_health = (
+            f"PLAN HEALTH - MODERATE RISK: Success rate is {success_rate:.0f}%. "
+            "The plan has meaningful risk of shortfall. Suggest specific adjustments: "
+            "modest spending reductions, optimizing Social Security timing, or modest additional contributions. "
+            "Be clear this needs attention but is fixable."
+        )
+    else:
+        plan_health = (
+            f"PLAN HEALTH - STRONG: Success rate is {success_rate:.0f}%. "
+            "The plan is on solid footing. Focus on optimization: tax efficiency, "
+            "legacy planning, and maximizing the ending portfolio for heirs."
+        )
+
+    # Legacy / wealth transfer guidance
+    total_portfolio = tax_deferred + roth + taxable
+    large_estate = ending_portfolio > 1_000_000
+    has_roth = roth > 50_000
+    heavy_deferred = tax_deferred > 0 and (tax_deferred / total_portfolio > 0.6) if total_portfolio > 0 else False
+
+    if large_estate:
+        legacy_guidance = (
+            f"LEGACY PLANNING: Ending portfolio is ${ending_portfolio:,.0f} — significant wealth to transfer. "
+            "Include specific legacy recommendations: "
+            "1) Revocable living trust to avoid probate and control distribution, "
+            "2) Beneficiary designations on all accounts (supersede wills), "
+            "3) Roth accounts are ideal inheritance — heirs get tax-free growth with 10-year withdrawal window, "
+            "4) Tax-deferred accounts passed to heirs create taxable income — consider converting to Roth now, "
+            "5) Annual gifting strategy ($18,000/person/year in 2025 tax-free), "
+            "6) If charitably inclined: Donor Advised Fund or Charitable Remainder Trust. "
+            "Recommend consulting an estate planning attorney."
+        )
+    elif ending_portfolio > 250_000:
+        legacy_guidance = (
+            "LEGACY PLANNING: Include a brief note about basic estate planning: "
+            "ensure beneficiary designations are current on all accounts, "
+            "consider a simple revocable trust if they have property or complex wishes, "
+            "and note that Roth accounts are the most tax-efficient assets to pass to heirs."
+        )
+    else:
+        legacy_guidance = (
+            "LEGACY PLANNING: Focus is on building wealth first. "
+            "Mention that ensuring beneficiary designations are current is a simple but important step."
+        )
+
+    # Income stream optimization
+    has_ss = any(s.type.value == 'social_security' for s in scenario.income_streams)
+    ss_started = any(
+        s.type.value == 'social_security' and s.start_month <= f"{projection_start_year}-01"
+        for s in scenario.income_streams
+    )
+    any_working = any(
+        getattr(p, 'employment_status', '') in ['working_full_time', 'working_part_time', 'self_employed']
+        for p in scenario.people
+    )
+
+    ss_guidance = ""
+    if has_ss and not ss_started and any_working:
+        ss_guidance = (
+            "SOCIAL SECURITY: They have Social Security modeled but haven't started it yet. "
+            "If they can afford to delay, emphasize the 8%/year increase from delaying past full retirement age to 70."
+        )
+    elif not has_ss:
+        ss_guidance = (
+            "SOCIAL SECURITY: No Social Security income is modeled. "
+            "If they're eligible, remind them to factor this in — it could significantly improve their plan."
+        )
+
+    prompt = f"""You are a Certified Financial Planner analyzing a retirement scenario for {greeting}. Generate a professional, personalized analysis following this EXACT structure.
 
 CLIENT SCENARIO:
 - Planning horizon: {total_years} years
@@ -158,6 +294,7 @@ CLIENT SCENARIO:
 - Success rate: {success_rate:.0f}% months in surplus
 - Average monthly surplus: ${avg_monthly_surplus:,.0f}
 - Cumulative surplus: ${total_surplus:,.0f}
+- Years to retirement: {years_to_retirement if years_to_retirement > 0 else 'Already retired'}
 
 HOUSEHOLD AGES & MILESTONES:
 {people_age_context}
@@ -169,33 +306,43 @@ TAX ARCHITECTURE:
 - Effective tax rate: {effective_tax_rate:.1f}%
 - Total taxes paid: ${total_taxes:,.0f}
 
-RETIREMENT CONTRIBUTION RULES (follow strictly):
-- If a person is retired or not working, do NOT suggest increasing tax-deferred contributions (401k, IRA) — earned income is required
-- Instead suggest: Roth conversions (especially in low-income years before RMDs), QCDs if age 70.5+, or tax-efficient withdrawal sequencing
-- Only suggest new contributions for people who are actively working (working_full_time, working_part_time, self_employed)
+SITUATIONAL DIRECTIVES (follow precisely — these override general advice):
+
+{plan_health}
+
+{roth_guidance}
+
+{legacy_guidance}
+
+{ss_guidance if ss_guidance else ''}
+
+RETIREMENT CONTRIBUTION RULES:
+- Retired or not working → do NOT suggest new 401k/IRA contributions (earned income required)
+- Working → suggest maxing contributions appropriate to their age and bracket
+- Pre-tax contributions reduce taxable income now; Roth contributions build tax-free wealth
 
 REQUIREMENTS:
-1. **Executive Summary (2 sentences)**: State if on track and identify primary financial lever
+1. **Executive Summary (2 sentences)**: State plan health directly. Name the single most important lever.
 
 2. **Strategic Observations (3 bullets)**:
-   - Efficiency Gap: Analyze savings rate vs goals
-   - Tax Architecture: Comment on tax bucket balance
-   - Risk Reality: Interpret success rate
+   - Plan Viability: interpret success rate honestly — if at risk, say so clearly
+   - Tax Architecture: comment on bucket balance and what it means for retirement flexibility
+   - Roth Strategy: give age-appropriate Roth advice per the directive above
 
-3. **Optimization Checklist (3 actions)**: Specific recommendations with dollar amounts
+3. **Optimization Checklist (3-4 actions)**: Specific, dollar-amount actions ranked by impact. If plan is at risk, lead with deficit-reduction actions.
 
-4. **Age-Specific Guidance**: Reference each person's age and upcoming milestones specifically — years until Social Security full retirement age, Medicare eligibility at 65, RMDs at 73, and how those events affect cash flow
+4. **Age-Specific Guidance**: Reference each person by name. Call out upcoming milestones — Social Security timing, Medicare at 65, RMDs at 73.
 
-5. **Future State Visualization**: Life in 15 years if they follow vs don't follow advice
+5. **Legacy & Wealth Transfer**: Based on ending portfolio size, give appropriate estate planning guidance — trusts, beneficiary designations, Roth inheritance advantages, gifting strategies.
+
+6. **Future State**: 2-3 sentences — what life looks like in 15 years if they follow vs ignore this advice.
 
 CONSTRAINTS:
-- Address the analysis directly to {greeting} (use "you" and "your")
-- Write in plain, conversational language - avoid technical jargon
-- Explain concepts simply (e.g., "money in retirement accounts" instead of "tax-deferred vehicles")
-- Use everyday analogies and relatable comparisons
-- Be direct and actionable - focus on what they should DO
-- Maximum 450 words
-- Format in clean markdown WITHOUT code fences (no ```markdown tags)
+- Address {greeting} directly using "you" and "your"
+- Plain conversational language — no jargon
+- Be direct about risks — don't sugarcoat a failing plan
+- Maximum 500 words
+- Clean markdown, no code fences
 
 Generate analysis:"""
 
