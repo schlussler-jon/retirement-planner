@@ -242,35 +242,45 @@ def generate_financial_analysis(
         )
 
     # Legacy / wealth transfer guidance
-    total_portfolio = tax_deferred + roth + taxable
-    large_estate = ending_portfolio > 1_000_000
-    has_roth = roth > 50_000
-    heavy_deferred = tax_deferred > 0 and (tax_deferred / total_portfolio > 0.6) if total_portfolio > 0 else False
+total_portfolio = tax_deferred + roth + taxable
+large_estate = ending_portfolio > 1_000_000
+has_roth = roth > 50_000
+heavy_deferred = tax_deferred > 0 and (tax_deferred / total_portfolio > 0.6) if total_portfolio > 0 else False
+oldest_age = max(projection_start_year - p.birth_date.year for p in scenario.people)
+trust_eligible = oldest_age >= 45
 
-    if large_estate:
-        legacy_guidance = (
-            f"LEGACY PLANNING: Ending portfolio is ${ending_portfolio:,.0f} — significant wealth to transfer. "
-            "Include specific legacy recommendations: "
-            "1) Revocable living trust to avoid probate and control distribution, "
-            "2) Beneficiary designations on all accounts (supersede wills), "
-            "3) Roth accounts are ideal inheritance — heirs get tax-free growth with 10-year withdrawal window, "
-            "4) Tax-deferred accounts passed to heirs create taxable income — consider converting to Roth now, "
-            "5) Annual gifting strategy ($18,000/person/year in 2025 tax-free), "
-            "6) If charitably inclined: Donor Advised Fund or Charitable Remainder Trust. "
-            "Recommend consulting an estate planning attorney."
+if large_estate and trust_eligible:
+    legacy_guidance = (
+        f"LEGACY PLANNING: Ending portfolio is ${ending_portfolio:,.0f} — significant wealth to transfer. "
+        "Include specific legacy recommendations: "
+        "1) Revocable living trust to avoid probate, maintain privacy, and ensure seamless asset management if incapacitated, "
+        "2) Beneficiary designations on all accounts (supersede wills), "
+        "3) Roth accounts are ideal inheritance — heirs get tax-free growth with 10-year withdrawal window, "
+        "4) Tax-deferred accounts passed to heirs create taxable income — consider converting to Roth now, "
+        "5) Annual gifting strategy ($18,000/person/year in 2025 tax-free), "
+        "6) If charitably inclined: Donor Advised Fund or Charitable Remainder Trust. "
+        "Recommend consulting an estate planning attorney."
+    )
+elif large_estate and not trust_eligible:
+    legacy_guidance = (
+        f"LEGACY PLANNING: Ending portfolio is ${ending_portfolio:,.0f}. "
+        "Ensure beneficiary designations are current on all accounts. "
+        "Note that Roth accounts are the most tax-efficient assets to pass to heirs. "
+        "As assets grow, estate planning will become increasingly important."
+    )
+elif ending_portfolio > 500_000 and trust_eligible:
+    legacy_guidance = (
+        "LEGACY PLANNING: Include a note about basic estate planning: "
+        "a revocable living trust is worth considering — it avoids probate on property, "
+        "ensures assets transfer smoothly if incapacitated, and keeps finances private. "
+        "Ensure beneficiary designations are current on all accounts, "
+        "and note that Roth accounts are the most tax-efficient assets to pass to heirs."
         )
-    elif ending_portfolio > 250_000:
-        legacy_guidance = (
-            "LEGACY PLANNING: Include a brief note about basic estate planning: "
-            "ensure beneficiary designations are current on all accounts, "
-            "consider a simple revocable trust if they have property or complex wishes, "
-            "and note that Roth accounts are the most tax-efficient assets to pass to heirs."
-        )
-    else:
-        legacy_guidance = (
-            "LEGACY PLANNING: Focus is on building wealth first. "
-            "Mention that ensuring beneficiary designations are current is a simple but important step."
-        )
+else:
+    legacy_guidance = (
+        "LEGACY PLANNING: Focus is on building wealth first. "
+        "Mention that keeping beneficiary designations current on all accounts is a simple but important step."
+    )
 
     # Income stream optimization
     has_ss = any(s.type.value == 'social_security' for s in scenario.income_streams)
