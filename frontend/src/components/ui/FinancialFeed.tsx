@@ -159,7 +159,10 @@ export default function FinancialFeed() {
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => {
+    const t = setTimeout(() => load(), 1000)
+    return () => clearTimeout(t)
+  }, [])
 
   const updatedAt = data ? new Date(data.updated_at * 1000) : null
   const timeStr   = updatedAt?.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
