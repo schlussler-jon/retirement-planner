@@ -12,6 +12,7 @@ import time
 import logging
 import hashlib
 from typing import List, Optional
+from xmlrpc import client
 from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
@@ -78,6 +79,10 @@ def build_user_context(db: Session, user_id: str) -> str:
 
         # Use first/most recent scenario for context
         data = json.loads(decrypt_data(db_scenarios[0].data))
+        # Add default names for streams missing them
+        for s in data.get("income_streams", []):
+            if not s.get("name"):
+                s["name"] = s.get("type", "income").replace("_", " ").title()
         scenario = Scenario(**data)
 
         people = scenario.people
@@ -197,12 +202,16 @@ Respond ONLY with a valid JSON array of exactly 6 objects. No markdown, no pream
 
         # Use web search via responses API if available, otherwise standard
         try:
-            response = client.responses.create(
+            response = client.chat.completions.create(
                 model="gpt-4o",
-                tools=[{"type": "web_search_preview"}],
-                input=prompt,
+                messages=[
+                    {"role": "system", "content": "You are a financial intelligence system. Always respond with valid JSON only. Include specific current rates and data points."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=2000,
             )
-            raw = response.output_text
+            raw = response.choices[0].message.content
         except Exception:
             # Fallback to standard chat completions
             response = client.chat.completions.create(
