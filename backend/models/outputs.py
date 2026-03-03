@@ -35,6 +35,10 @@ class MonthlyProjection(BaseModel):
         default_factory=dict,
         description="Total withdrawals grouped by tax bucket"
     )
+    contributions_by_tax_bucket: Dict[str, float] = Field(
+        default_factory=dict,
+        description="Monthly contributions grouped by tax bucket"
+    )
     balances_by_account: Dict[str, float] = Field(
         default_factory=dict,
         description="End-of-month balances by account_id"

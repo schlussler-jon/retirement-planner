@@ -96,7 +96,7 @@ class ProjectionEngine:
             
             # Process accounts (contributions, withdrawals, surplus deposit, growth)
             # Prior month's surplus is deposited BEFORE growth is applied
-            withdrawals_by_account, balances_by_account = (
+            withdrawals_by_account, balances_by_account, contributions_by_account = (
                 self.account_processor.process_month(year_month, prior_month_surplus)
             )
             
@@ -114,13 +114,19 @@ class ProjectionEngine:
                     withdrawals_by_account
                 )
             )
-            
+            contributions_by_tax_bucket = (
+                self.account_processor.get_contributions_by_tax_bucket(
+                    contributions_by_account
+                )
+            )
+
             # Create monthly projection
             projection = MonthlyProjection(
                 month=year_month,
                 income_by_stream=income_by_stream,
                 withdrawals_by_account=withdrawals_by_account,
                 withdrawals_by_tax_bucket=withdrawals_by_tax_bucket,
+                contributions_by_tax_bucket=contributions_by_tax_bucket,
                 balances_by_account=balances_by_account,
                 balances_by_tax_bucket=balances_by_tax_bucket,
                 total_investments=total_investments,

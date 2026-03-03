@@ -211,12 +211,17 @@ class AccountProcessor:
         """
         withdrawals: Dict[str, float] = {}
         balances: Dict[str, float] = {}
-        
+        contributions: Dict[str, float] = {}
+
         # Step 1: Contributions (check date range)
         for account in self.accounts:
             state = self.states[account.account_id]
             state.apply_contribution(year_month)
-        
+            if state.should_contribute(year_month):
+                contributions[account.account_id] = account.monthly_contribution
+            else:
+                contributions[account.account_id] = 0.0
+
         # Step 2: Withdrawals (check date range - these become income!)
         for account in self.accounts:
             state = self.states[account.account_id]
@@ -233,8 +238,8 @@ class AccountProcessor:
             state.apply_growth()
             balances[account.account_id] = state.get_balance()
         
-        return withdrawals, balances
-    
+        return withdrawals, balances, contributions
+       
     def get_total_balance(self) -> float:
         """
         Get total balance across all accounts.
@@ -290,6 +295,18 @@ class AccountProcessor:
             else:
                 by_bucket[bucket] = withdrawal
         
+        return by_bucket
+    
+    def get_contributions_by_tax_bucket(
+        self,
+        contributions_by_account: Dict[str, float]
+    ) -> Dict[str, float]:
+        """Get contributions grouped by tax bucket."""
+        by_bucket: Dict[str, float] = {}
+        for account in self.accounts:
+            bucket = account.tax_bucket.value
+            contrib = contributions_by_account.get(account.account_id, 0.0)
+            by_bucket[bucket] = by_bucket.get(bucket, 0.0) + contrib
         return by_bucket
     
     def get_taxable_withdrawals(

@@ -169,7 +169,12 @@ class TaxCalculator:
                 taxable_withdrawals  = projection.withdrawals_by_tax_bucket.get('taxable', 0)
                 # Roth withdrawals intentionally excluded — tax-free
                 annual_other_income += deferred_withdrawals + taxable_withdrawals
+                # Pre-tax (tax-deferred) contributions reduce taxable income
+                # Roth contributions are post-tax — no deduction
+                pretax_contributions = projection.contributions_by_tax_bucket.get('tax_deferred', 0)
+                annual_other_income -= pretax_contributions
 
+            annual_other_income = max(0.0, annual_other_income)           
             # Use filing status from last month of the year (handles death events)
             last_month = year_projections[-1]
             if last_month.filing_status:
