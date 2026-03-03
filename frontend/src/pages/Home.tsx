@@ -533,11 +533,9 @@ export default function Home() {
             <h1 className="font-display text-3xl text-white">
               {greeting}, <span className="text-gold-500">{user?.name?.split(' ')[0] ?? 'there'}</span>
             </h1>
-            <p className="font-sans text-slate-300 text-sm mt-1">
-              {scenarios.length === 0
-                ? 'Create your first scenario to get started.'
-                : `You have ${scenarios.length} scenario${scenarios.length !== 1 ? 's' : ''} saved.`}
-            </p>
+            {scenarios.length === 0 && (
+              <p className="font-sans text-slate-300 text-sm mt-1">Create your first scenario to get started.</p>
+            )}
           </div>
 
           <div className="flex items-center gap-3">
