@@ -66,7 +66,7 @@ const COLOR_STYLES: Record<string, { border: string; badge: string; action: stri
 // ─── Single Card ──────────────────────────────────────────────────────────
 
 function InsightCardView({ card }: { card: InsightCard }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const styles = COLOR_STYLES[card.color] ?? COLOR_STYLES.slate
 
   return (
