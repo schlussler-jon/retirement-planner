@@ -374,14 +374,18 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
     <div className="bg-slate-900 border border-violet-900 rounded-xl p-5 hover:border-violet-700 transition-colors">
       <p className="font-sans text-white text-sm font-semibold">{sc.scenario_name}</p>
 
-      <p className="font-sans text-slate-300 text-xs mt-2">
-        {pl(sc.people_count, 'person')} · {pl(sc.income_streams_count, 'income stream')} · {pl(sc.accounts_count, 'account')}
+      <p className="font-sans text-xs mt-2">
+        <span className="text-slate-300">{pl(sc.people_count, 'person')}</span>
+        <span className="text-slate-500"> · </span>
+        <span className="text-green-400">{pl(sc.income_streams_count, 'income stream')}</span>
+        <span className="text-slate-500"> · </span>
+        <span className="text-blue-400">{pl(sc.accounts_count, 'account')}</span>
       </p>
 
       {sc.income_stream_labels && sc.income_stream_labels.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {sc.income_stream_labels.map((t, i) => (
-            <span key={i} className="font-sans text-xs bg-slate-800 text-slate-300 rounded px-1.5 py-0.5">
+            <span key={i} className="font-sans text-xs bg-green-900/20 text-green-300 rounded px-1.5 py-0.5 border border-green-700/50">
               {humanizeType(t)}
             </span>
           ))}
@@ -391,7 +395,7 @@ function ScenarioCard({ sc, onDuplicate, onExport, onDelete, dupStatus }: CardPr
       {sc.account_names && sc.account_names.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-1">
           {sc.account_names.map((name, i) => (
-            <span key={i} className="font-sans text-xs bg-slate-800/60 text-slate-400 rounded px-1.5 py-0.5 border border-violet-900/50">
+            <span key={i} className="font-sans text-xs bg-blue-900/20 text-blue-300 rounded px-1.5 py-0.5 border border-blue-700/50">
               {name}
             </span>
           ))}
