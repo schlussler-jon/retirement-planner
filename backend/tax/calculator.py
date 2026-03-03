@@ -164,7 +164,11 @@ class TaxCalculator:
                 for stream_id, amount in projection.income_by_stream.items():
                     if stream_id not in ssa_stream_ids:
                         annual_other_income += amount
-                annual_other_income += sum(projection.withdrawals_by_account.values())
+                # Tax-deferred = fully taxable; Roth = tax-free; Taxable = taxable
+                deferred_withdrawals = projection.withdrawals_by_tax_bucket.get('tax_deferred', 0)
+                taxable_withdrawals  = projection.withdrawals_by_tax_bucket.get('taxable', 0)
+                # Roth withdrawals intentionally excluded — tax-free
+                annual_other_income += deferred_withdrawals + taxable_withdrawals
 
             # Use filing status from last month of the year (handles death events)
             last_month = year_projections[-1]
