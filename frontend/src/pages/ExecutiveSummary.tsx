@@ -12,7 +12,7 @@ import SankeyChart from '@/components/results/SankeyChart'
 import MonteCarloChart from '@/components/results/MonteCarloChart'
 import AccountPictorialChart from '@/components/results/AccountPictorialChart'
 
-const fmt = (n: number) => '$' + Math.round(Math.abs(n)).toLocaleString()
+const fmt = (n: number) => (n < 0 ? '-$' : '$') + Math.round(Math.abs(n)).toLocaleString()
 
 export default function ExecutiveSummary() {
   const { id = '' } = useParams()
@@ -231,18 +231,18 @@ export default function ExecutiveSummary() {
 
           <div className="bg-slate-900 border border-success/25 rounded-xl p-4">
             <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
-              Cumulative Surplus
+              {summary.total_surplus_deficit >= 0 ? 'Cumulative Surplus' : 'Cumulative Deficit'}
             </p>
-            <p className="font-sans text-success text-2xl font-semibold">
+            <p className={"font-sans text-2xl font-semibold " + (summary.total_surplus_deficit >= 0 ? 'text-success' : 'text-red-400')}>
               {fmt(summary.total_surplus_deficit)}
             </p>
           </div>
 
           <div className="bg-slate-900 border border-violet-900 rounded-xl p-4">
             <p className="font-sans text-slate-300 text-xs uppercase tracking-wider mb-1">
-              Avg Monthly Surplus
+              {summary.average_monthly_surplus_deficit >= 0 ? 'Avg Monthly Surplus' : 'Avg Monthly Deficit'}
             </p>
-            <p className="font-sans text-success text-2xl font-semibold">
+            <p className={"font-sans text-2xl font-semibold " + (summary.average_monthly_surplus_deficit >= 0 ? 'text-success' : 'text-red-400')}>
               {fmt(summary.average_monthly_surplus_deficit)}
             </p>
           </div>
