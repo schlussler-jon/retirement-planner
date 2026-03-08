@@ -125,7 +125,7 @@ function AccountCard({
           <div className="relative">
             <input
               type="number"
-              value={toDisplay(acct.annual_return_rate)}
+              value={acct.annual_return_rate === 0 ? "" : toDisplay(acct.annual_return_rate)}
               min={-50} max={50} step={0.5}
               onFocus={handleFocus}
               onChange={e => {
