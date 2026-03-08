@@ -105,7 +105,7 @@ function AccountCard({
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
-              value={acct.starting_balance}
+              value={acct.starting_balance || ""}
               min={0} step={1000}
               onFocus={handleFocus}
               onChange={e => {
@@ -150,7 +150,7 @@ function AccountCard({
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
-              value={acct.monthly_contribution}
+              value={acct.monthly_contribution || ""}
               min={0} step={100}
               onFocus={handleFocus}
               onChange={e => {
@@ -171,7 +171,7 @@ function AccountCard({
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
-              value={acct.monthly_withdrawal}
+              value={acct.monthly_withdrawal || ""}
               min={0} step={100}
               onFocus={handleFocus}
               onChange={e => {

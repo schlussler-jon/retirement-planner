@@ -156,7 +156,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
                     <input
                       type="number"
-                      value={cat.monthly_amount}
+                      value={cat.monthly_amount || ""}
                       min={0} step={50}
                       onFocus={handleFocus}
                       onChange={e => {
@@ -217,7 +217,7 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
                 <input
                   type="number"
-                  value={cat.monthly_amount}
+                  value={cat.monthly_amount || ""}
                   min={0} step={50}
                   onFocus={handleFocus}
                   onChange={e => {

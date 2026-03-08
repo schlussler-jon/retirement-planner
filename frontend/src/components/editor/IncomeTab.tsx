@@ -114,7 +114,7 @@ function IncomeStreamCard({
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300 font-sans text-sm">$</span>
             <input
               type="number"
-              value={stream.monthly_amount_at_start}
+              value={stream.monthly_amount_at_start || ""}
               min={0} step={100}
               onFocus={handleFocus}
               onChange={e => {
