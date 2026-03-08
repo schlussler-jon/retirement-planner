@@ -54,7 +54,7 @@ export default function MonthYearPicker({
 
   // Parse current value
   const selectedYear  = value ? parseInt(value.split('-')[0]) : ''
-  const selectedMonth = value ? parseInt(value.split('-')[1]) : ''
+  const selectedMonth = value ? value.split('-')[1] : ''
 
   const handleYear = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const yr = e.target.value
