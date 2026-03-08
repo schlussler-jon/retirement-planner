@@ -184,14 +184,9 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                   <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                     Planned Retirement Date
                   </label>
-                  <input
-                    type="month"
-                    value={person.planned_retirement_date ?? ''}
-                    onChange={e => update(idx, p => ({
-                      ...p,
-                      planned_retirement_date: e.target.value || null,
-                    }))}
-                    className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                  <MonthYearPicker
+                    value={person.planned_retirement_date}
+                    onChange={v => update(idx, p => ({ ...p, planned_retirement_date: v }))}
                   />
                   <p className="font-sans text-slate-400 text-xs mt-1">When do you plan to stop working?</p>
                 </div>
@@ -205,14 +200,9 @@ export default function PeopleTab({ people, onChange, autoAdd, onAutoAddDone }: 
                   <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
                     Social Security Start Date
                   </label>
-                  <input
-                    type="month"
-                    value={person.social_security_start_date ?? ''}
-                    onChange={e => update(idx, p => ({
-                      ...p,
-                      social_security_start_date: e.target.value || null,
-                    }))}
-                    className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+                  <MonthYearPicker
+                    value={person.social_security_start_date}
+                    onChange={v => update(idx, p => ({ ...p, social_security_start_date: v }))}
                   />
                   {person.social_security_start_date && (
                     <p className="font-sans text-gold-500 text-xs mt-1">

@@ -134,11 +134,10 @@ function IncomeStreamCard({
           <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
             Start Date <span className="text-red-400">*</span>
           </label>
-          <input
-            type="month"
+          <MonthYearPicker
             value={stream.start_month}
-            onChange={e => onUpdate(s => ({ ...s, start_month: e.target.value }))}
-            className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+            onChange={v => onUpdate(s => ({ ...s, start_month: v || '' }))}
+            clearable={false}
           />
           <p className="font-sans text-slate-400 text-xs mt-1">When does this income begin?</p>
         </div>
@@ -180,11 +179,9 @@ function IncomeStreamCard({
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
               End Date
             </label>
-            <input
-              type="month"
-              value={stream.end_month || ''}
-              onChange={e => onUpdate(s => ({ ...s, end_month: e.target.value || null }))}
-              className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+            <MonthYearPicker
+              value={stream.end_month}
+              onChange={v => onUpdate(s => ({ ...s, end_month: v }))}
             />
             <p className="font-sans text-slate-400 text-xs mt-1">Leave blank if income continues indefinitely</p>
           </div>

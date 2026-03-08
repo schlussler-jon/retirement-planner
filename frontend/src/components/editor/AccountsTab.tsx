@@ -219,36 +219,40 @@ function AccountCard({
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
               Contribution Start
             </label>
-            <input type="month" value={acct.contribution_start_month || ''}
-              onChange={e => onUpdate(a => ({ ...a, contribution_start_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
+            <MonthYearPicker
+              value={acct.contribution_start_month}
+              onChange={v => onUpdate(a => ({ ...a, contribution_start_month: v }))}
+            />
             <p className="font-sans text-slate-400 text-xs mt-1">When to start contributing</p>
           </div>
           <div>
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
               Contribution End
             </label>
-            <input type="month" value={acct.contribution_end_month || ''}
-              onChange={e => onUpdate(a => ({ ...a, contribution_end_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
+            <MonthYearPicker
+              value={acct.contribution_end_month}
+              onChange={v => onUpdate(a => ({ ...a, contribution_end_month: v }))}
+            />
             <p className="font-sans text-slate-400 text-xs mt-1">When to stop contributing</p>
           </div>
           <div>
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
               Withdrawal Start
             </label>
-            <input type="month" value={acct.withdrawal_start_month || ''}
-              onChange={e => onUpdate(a => ({ ...a, withdrawal_start_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
+            <MonthYearPicker
+              value={acct.withdrawal_start_month}
+              onChange={v => onUpdate(a => ({ ...a, withdrawal_start_month: v }))}
+            />
             <p className="font-sans text-slate-400 text-xs mt-1">When to start withdrawing</p>
           </div>
           <div>
             <label className="block font-sans text-slate-400 text-xs font-semibold uppercase tracking-wider mb-1.5">
               Withdrawal End
             </label>
-            <input type="month" value={acct.withdrawal_end_month || ''}
-              onChange={e => onUpdate(a => ({ ...a, withdrawal_end_month: e.target.value || null }))}
-              className="w-full bg-slate-800 border border-violet-800 rounded-lg px-3 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none" />
+            <MonthYearPicker
+              value={acct.withdrawal_end_month}
+              onChange={v => onUpdate(a => ({ ...a, withdrawal_end_month: v }))}
+            />
             <p className="font-sans text-slate-400 text-xs mt-1">When to stop withdrawing</p>
           </div>
         </div>

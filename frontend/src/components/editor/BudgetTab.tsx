@@ -169,12 +169,10 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                 </div>
                 <div>
                   <label className="block font-sans text-slate-400 text-xs uppercase tracking-wider mb-1">End Date</label>
-                  <input
-                    type="month"
-                    value={cat.end_month || ''}
-                    onChange={e => updateCategory(idx, c => ({ ...c, end_month: e.target.value || null }))}
-                    className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg px-2 py-2 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
-                  />
+                  <MonthYearPicker
+                value={cat.end_month}
+                onChange={v => updateCategory(idx, c => ({ ...c, end_month: v }))}
+              />
                 </div>
               </div>
             </div>
@@ -227,12 +225,9 @@ export default function BudgetTab({ budget, onChange, autoAdd, onAutoAddDone }: 
                   className="w-full min-w-0 bg-slate-800 border border-violet-800 rounded-lg pl-6 pr-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
                 />
               </div>
-              <input
-                type="month"
-                value={cat.end_month || ''}
-                onChange={e => updateCategory(idx, c => ({ ...c, end_month: e.target.value || null }))}
-                title="Optional: when does this expense end?"
-                className="w-36 min-w-0 shrink-0 bg-slate-800 border border-violet-800 rounded-lg px-2 py-1.5 text-white font-sans text-sm focus:border-gold-600 focus:outline-none"
+              <MonthYearPicker
+                value={cat.end_month}
+                onChange={v => updateCategory(idx, c => ({ ...c, end_month: v }))}
               />
               <button
                 onClick={() => removeCategory(idx)}
