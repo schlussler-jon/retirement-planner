@@ -10,7 +10,7 @@
  * net_income_after_tax and the spending fields, so it works regardless.
  */
 
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts'
 import type { NetIncomeProjection } from '@/types/api'
 
 // ─── constants ────────────────────────────────────────────────────────────
@@ -65,13 +65,23 @@ export default function CashFlowChart({ data }: Props) {
     'Spending':   d.survivor_spending_applied ?? d.inflation_adjusted_spending,
   }))
 
+  // Find the first month where spending exceeds net income
+  const firstDeficitMonth = chartData.find(d => d['Spending'] > d['Net Income'])?.month ?? null
+
   const ticks = data.filter(d => d.month.endsWith('-01')).map(d => d.month)
 
   return (
     <div>
       <div className="mb-4">
         <p className="font-sans text-slate-200 text-sm font-semibold">Monthly Cash Flow</p>
-        <p className="font-sans text-slate-600 text-xs mt-0.5">Net income after tax vs monthly spending</p>
+        <p className="font-sans text-slate-600 text-xs mt-0.5">
+          Net income after tax vs monthly spending
+          {firstDeficitMonth && (
+            <span className="ml-2 text-amber-500">
+              · Spending first exceeds income in {firstDeficitMonth.slice(0, 4)}
+            </span>
+          )}
+        </p>
       </div>
       <ResponsiveContainer width="100%" height={240}>
         <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
@@ -101,6 +111,25 @@ export default function CashFlowChart({ data }: Props) {
             width={72}
           />
           <Tooltip content={<DarkTooltip />} cursor={{ stroke: '#334155', strokeWidth: 1 }} />
+
+          {/* First deficit marker */}
+          {firstDeficitMonth && (
+            <ReferenceLine
+              x={firstDeficitMonth}
+              stroke="#f59e0b"
+              strokeWidth={1.5}
+              strokeDasharray="4 3"
+              label={{
+                value: `⚠ ${firstDeficitMonth.slice(0, 4)}`,
+                position: 'insideTopRight',
+                fill: '#f59e0b',
+                fontSize: 11,
+                fontFamily: 'ui-monospace, monospace',
+                dy: -4,
+              }}
+            />
+          )}
+
           <Area type="monotone" dataKey="Net Income" stroke={GOLD}  strokeWidth={2} fill="url(#netIncFill)"  dot={false} activeDot={{ r: 3, fill: GOLD,  stroke: '#1e293b', strokeWidth: 2 }} />
           <Area type="monotone" dataKey="Spending"   stroke={SLATE} strokeWidth={2} fill="url(#spendFill)"  dot={false} activeDot={{ r: 3, fill: SLATE, stroke: '#1e293b', strokeWidth: 2 }} />
         </AreaChart>
