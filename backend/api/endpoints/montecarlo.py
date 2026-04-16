@@ -13,6 +13,8 @@ import json
 import numpy as np
 from typing import List, Dict, Optional
 from api.utils.encryption import decrypt_data
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from models import Scenario
 from db.models import get_db, ScenarioModel
@@ -21,6 +23,9 @@ from auth.config import get_oauth_settings
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Rate limiter — Monte Carlo runs 1,000 simulations and is CPU-intensive
+limiter = Limiter(key_func=get_remote_address)
 
 # ─── Auth + DB helpers ────────────────────────────────────────────────────
 
@@ -215,6 +220,7 @@ class MonteCarloResponse(BaseModel):
 # ─── Endpoint ─────────────────────────────────────────────────────────────
 
 @router.post("/scenarios/{scenario_id}/montecarlo", response_model=MonteCarloResponse)
+@limiter.limit("15/hour")  # CPU-intensive: 1,000 simulations per call
 async def run_monte_carlo_simulation(
     scenario_id: str,
     request: Request,
@@ -241,5 +247,5 @@ async def run_monte_carlo_simulation(
         logger.error(f"Monte Carlo error: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Monte Carlo simulation failed: {str(e)}",
+            detail="Monte Carlo simulation failed. Please try again.",
         )

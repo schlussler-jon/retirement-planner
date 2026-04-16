@@ -22,6 +22,12 @@ settings = get_oauth_settings()
 # Token store for one-time exchange tokens
 _token_store = {}
 
+# One-time token lifetime: 60 seconds.
+# The token lives in the browser URL bar, browser history, and can appear in
+# HTTP Referer headers sent to third-party resources on the page.  Keeping
+# the window short limits the exposure if any of those channels leak it.
+_TOKEN_TTL_SECONDS = 60
+
 
 @router.get("/login")
 async def login(request: Request):
@@ -74,13 +80,14 @@ async def auth_callback(request: Request):
         # Generate one-time token for frontend exchange
         exchange_token = secrets.token_urlsafe(32)
 
-        # Store token temporarily (5 min expiry)
+        # Store token temporarily (60-second expiry — short window reduces URL
+        # exposure via browser history and Referer headers)
         _token_store[exchange_token] = {
             'session_id': session_id,
-            'expires': time.time() + 300  # 5 minutes
+            'expires': time.time() + _TOKEN_TTL_SECONDS,
         }
 
-        # Clean up expired tokens
+        # Clean up expired tokens opportunistically on each callback
         current_time = time.time()
         expired_tokens = [t for t, data in _token_store.items() if data['expires'] < current_time]
         for t in expired_tokens:
@@ -94,8 +101,10 @@ async def auth_callback(request: Request):
         return RedirectResponse(url=redirect_url)
 
     except Exception as e:
-        logger.error(f"OAuth callback error: {str(e)}")
-        raise HTTPException(status_code=400, detail=f"Authentication failed: {str(e)}")
+        # Log the real error internally but return a generic message to the
+        # client — OAuth exceptions can contain sensitive token fragments.
+        logger.error(f"OAuth callback error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Authentication failed. Please try again.")
 
 
 @router.post("/exchange")
@@ -124,7 +133,7 @@ async def exchange_token(request: Request, response: Response):
     # Get session ID
     session_id = token_data['session_id']
 
-    # Delete token (one-time use)
+    # Delete token immediately — strictly one-time use
     del _token_store[token]
 
     # Set session cookie

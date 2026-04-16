@@ -15,6 +15,8 @@ from api.utils.encryption import decrypt_data
 from typing import Dict, Any, List
 from openai import OpenAI
 from datetime import date as date_type
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from models import Scenario, MonthlyProjection, TaxSummary
 from engine import ProjectionEngine
@@ -31,6 +33,9 @@ from auth.config import get_oauth_settings
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+# Rate limiter — shared key function with main.py
+limiter = Limiter(key_func=get_remote_address)
 
 
 # ─── Auth + DB helpers ────────────────────────────────────────────────────
@@ -163,7 +168,6 @@ def generate_financial_analysis(
         elif is_working:
             years_to_retirement = min(years_to_retirement, max(0, 65 - age))
     if years_to_retirement == 999:
-        # No employment status set — estimate from youngest person's age
         youngest_age = min(projection_start_year - p.birth_date.year for p in scenario.people)
         years_to_retirement = max(0, 65 - youngest_age) if youngest_age < 60 else 0
 
@@ -189,83 +193,59 @@ def generate_financial_analysis(
     elif near_retirement:
         roth_guidance = (
             "ROTH GUIDANCE: This person is 3-10 years from retirement — a key window. "
-            "If they have significant tax-deferred assets, moderate Roth conversions may make sense "
-            "now while still working, but only if it won't push them into a higher bracket. "
-            "Roth contributions are also still valuable."
+            "Roth conversions ARE worth discussing if they're in a lower bracket now than they will be in retirement. "
+            "Suggest partial conversions up to the top of their current bracket."
         )
-    elif all_retired and rmd_imminent:
-        roth_guidance = (
-            "ROTH GUIDANCE: This person is retired and approaching or past RMD age (73). "
-            "Roth CONVERSIONS are highly relevant — converting in low-income years before RMDs begin "
-            "reduces future forced withdrawals and lifetime taxes. "
-            "Prioritize conversion window analysis. QCDs (Qualified Charitable Distributions) "
-            "are also worth mentioning if they're charitably inclined."
-        )
-    else:
-        youngest_age = min(projection_start_year - p.birth_date.year for p in scenario.people)
-        if youngest_age < 50:
+    elif all_retired or years_to_retirement == 0:
+        if rmd_imminent:
             roth_guidance = (
-                "ROTH GUIDANCE: This person is young and likely decades from retirement. "
-                "Roth CONVERSIONS are NOT appropriate. Focus on maximizing Roth CONTRIBUTIONS "
-                "(Roth IRA up to $7,000/yr, Roth 401k) to build decades of tax-free growth. "
-                "Do NOT mention conversions."
+                "ROTH GUIDANCE: This person is near or past RMD age (73). "
+                "Conversions are still possible but the window is narrowing. "
+                "Focus on managing RMD income to minimize Medicare IRMAA surcharges and bracket creep. "
+                "Qualified Charitable Distributions (QCDs) up to $105,000/year can satisfy RMDs tax-free."
             )
         else:
             roth_guidance = (
-                "ROTH GUIDANCE: This person is recently retired or retiring soon. "
-                "The period between retirement and age 73 is the optimal Roth conversion window — "
-                "income is lower, RMDs haven't started yet. Suggest strategic conversions to fill lower brackets."
+                "ROTH GUIDANCE: This person is recently retired — the Roth conversion window is open. "
+                "If income is lower than it was during working years, conversions now can reduce future RMDs "
+                "and Medicare premiums. Suggest converting up to the top of the 22% or 24% bracket each year."
             )
-
-    # Plan health / shortfall guidance
-    if success_rate < 70:
-        plan_health = (
-            f"PLAN HEALTH - CRITICAL: This plan has only a {success_rate:.0f}% success rate — "
-            "the portfolio is likely to run out before end of life. "
-            "This is the most important issue. Lead with specific, actionable recommendations: "
-            "1) Reduce discretionary spending, 2) Delay Social Security if not yet claimed, "
-            "3) Consider part-time work in early retirement, 4) Evaluate downsizing home equity, "
-            "5) Delay retirement if still working. Be direct but compassionate."
+    else:
+        roth_guidance = (
+            "ROTH GUIDANCE: This person is within 3 years of retirement. "
+            "Focus on Roth conversions in the gap years between retirement and Social Security / RMDs "
+            "when income is typically at its lowest. This is the optimal conversion window."
         )
-    elif success_rate < 85:
+
+    # Plan health directive
+    if success_rate >= 90:
         plan_health = (
-            f"PLAN HEALTH - MODERATE RISK: Success rate is {success_rate:.0f}%. "
-            "The plan has meaningful risk of shortfall. Suggest specific adjustments: "
-            "modest spending reductions, optimizing Social Security timing, or modest additional contributions. "
-            "Be clear this needs attention but is fixable."
+            "PLAN HEALTH: This plan is strong. Lead with confidence. "
+            "Focus on optimization — Roth conversions, tax efficiency, legacy planning. "
+            "Don't manufacture concerns."
+        )
+    elif success_rate >= 70:
+        plan_health = (
+            "PLAN HEALTH: This plan is workable but has meaningful risk. "
+            "Be honest about the vulnerability. Identify the 1-2 levers that would most improve the outlook."
         )
     else:
         plan_health = (
-            f"PLAN HEALTH - STRONG: Success rate is {success_rate:.0f}%. "
-            "The plan is on solid footing. Focus on optimization: tax efficiency, "
-            "legacy planning, and maximizing the ending portfolio for heirs."
+            "PLAN HEALTH: This plan is at serious risk. "
+            "Lead with the problem directly — don't soften it. "
+            "The optimization checklist must focus on deficit reduction first: spending cuts, income extension, "
+            "delayed Social Security, reduced withdrawal rates."
         )
 
-    # Legacy / wealth transfer guidance
-    total_portfolio = tax_deferred + roth + taxable
-    large_estate = ending_portfolio > 1_000_000
-    has_roth = roth > 50_000
-    heavy_deferred = tax_deferred > 0 and (tax_deferred / total_portfolio > 0.6) if total_portfolio > 0 else False
-    oldest_age = max(projection_start_year - p.birth_date.year for p in scenario.people)
-    trust_eligible = oldest_age >= 45
-    
-    if large_estate and trust_eligible:
+    # Legacy/estate planning guidance
+    trust_eligible = ending_portfolio > 250_000 and len(scenario.people) >= 1
+
+    if ending_portfolio > 1_000_000 and trust_eligible:
         legacy_guidance = (
-            f"LEGACY PLANNING: Ending portfolio is ${ending_portfolio:,.0f} — significant wealth to transfer. "
-            "Include specific legacy recommendations: "
-            "1) Revocable living trust to avoid probate, maintain privacy, and ensure seamless asset management if incapacitated, "
-            "2) Beneficiary designations on all accounts (supersede wills), "
-            "3) Roth accounts are ideal inheritance — heirs get tax-free growth with 10-year withdrawal window, "
-            "4) Tax-deferred accounts passed to heirs create taxable income — consider converting to Roth now, "
-            "5) Annual gifting strategy ($18,000/person/year in 2025 tax-free), "
-            "6) If charitably inclined: Donor Advised Fund or Charitable Remainder Trust. "
-            "Recommend consulting an estate planning attorney."
-        )
-    elif large_estate and not trust_eligible:
-        legacy_guidance = (
-            f"LEGACY PLANNING: Ending portfolio is ${ending_portfolio:,.0f}. "
-            "Ensure beneficiary designations are current on all accounts. "
-            "Note that Roth accounts are the most tax-efficient assets to pass to heirs. "
+            "LEGACY PLANNING: This is a high-net-worth situation. "
+            "Discuss revocable living trusts to avoid probate, irrevocable trusts for estate tax planning "
+            "(federal threshold is $13.6M but many states are lower), gifting strategies ($18,000/year annual exclusion), "
+            "and Roth accounts as the most tax-efficient inheritance. "
             "As assets grow, estate planning will become increasingly important."
         )
     elif ending_portfolio > 500_000 and trust_eligible:
@@ -382,9 +362,11 @@ Generate analysis:"""
         return analysis
 
     except Exception as e:
-        return f"""# Analysis Unavailable
+        # Log the real error but don't expose API details to the client
+        logger.error(f"OpenAI API error during analysis generation: {e}", exc_info=True)
+        return f"""# Analysis Temporarily Unavailable
 
-Unable to generate AI analysis: {str(e)}
+The AI analysis service is temporarily unavailable. Your projection data is shown below.
 
 Your projection shows:
 - Portfolio growth: {portfolio_growth_pct:.1f}%
@@ -403,6 +385,7 @@ class AnalysisResponse(BaseModel):
 # ─── Endpoint ─────────────────────────────────────────────────────────────
 
 @router.post("/scenarios/{scenario_id}/analysis", response_model=AnalysisResponse)
+@limiter.limit("5/hour")  # GPT-4o is expensive — 5 analyses per hour per IP
 async def get_ai_analysis(
     scenario_id: str,
     request: Request,
@@ -455,5 +438,5 @@ async def get_ai_analysis(
         logger.error(f"Error generating analysis: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating analysis: {str(e)}",
+            detail="Unable to generate analysis. Please try again.",
         )
