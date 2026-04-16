@@ -18,6 +18,24 @@ export interface ReleaseNote {
 
 export const RELEASES: ReleaseNote[] = [
   {
+    version: '1.8.0',
+    date:    '2026-04-16',
+    title:   'Security Hardening',
+    summary: 'Comprehensive security enhancements before public release',
+    tag:     'update',
+    features: [
+      'Scenario data encryption now enforced at startup — app refuses to run in production without a valid encryption key',
+      'Session security hardened — session secret key now required in production, preventing cookie forgery',
+      'Google OAuth permissions reduced to the minimum required — Drive access scope removed',
+      'API documentation disabled in production — endpoint schemas no longer publicly browsable',
+      'CSRF protection added — all state-changing requests validate origin before processing',
+      'Rate limiting on AI endpoints — Analysis (5/hr), Monte Carlo (15/hr), Financial Feed (5/hr)',
+      'OAuth tokens no longer stored in session cache — reduces data exposure if cache is compromised',
+      'One-time login tokens now expire in 60 seconds instead of 5 minutes',
+      'Error responses scrubbed — internal details and API exceptions no longer exposed to clients',
+    ],
+  },
+  {
     version: '1.7.0',
     date:    '2026-03-01',
     title:   'Financial Intelligence Feed',
