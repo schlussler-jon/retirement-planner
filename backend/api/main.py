@@ -19,6 +19,7 @@ import logging
 
 from .endpoints import projections, health, auth, drive, analysis, montecarlo, roth_strategy, financial_feed
 from .endpoints import scenarios_db as scenarios  # PostgreSQL-backed scenarios
+from .endpoints import starter_scenario
 from auth.oauth import configure_oauth
 from auth.config import get_oauth_settings
 from starlette.middleware.sessions import SessionMiddleware
@@ -105,6 +106,7 @@ async def csrf_origin_check(request: Request, call_next):
 # ── Routers ───────────────────────────────────────────────────────────────
 app.include_router(health.router,          prefix="/api",       tags=["Health"])
 app.include_router(auth.router,            prefix="/api/auth",  tags=["Authentication"])
+app.include_router(starter_scenario.router,  prefix="/api", tags=["Starter"])  
 app.include_router(scenarios.router,       prefix="/api",       tags=["Scenarios"])
 app.include_router(projections.router,     prefix="/api",       tags=["Projections"])
 app.include_router(drive.router,           prefix="/api/drive", tags=["Google Drive"])
