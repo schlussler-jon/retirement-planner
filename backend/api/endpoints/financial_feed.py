@@ -10,13 +10,13 @@ import os
 import json
 import time
 import logging
-import hashlib
 from typing import List, Optional
-from xmlrpc import client
 from fastapi import APIRouter, HTTPException, Request, Depends
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 from openai import OpenAI
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from db.models import get_db, ScenarioModel
 from auth.session import get_user_from_session
@@ -26,6 +26,11 @@ from models import Scenario
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+# Rate limiter — feed generation calls GPT-4o with max_tokens=2000
+# The 24-hour cache means normal users rarely hit this limit,
+# but it prevents the ?refresh=true param from being abused.
+limiter = Limiter(key_func=get_remote_address)
 
 # ─── Simple in-memory cache (24 hours per user) ───────────────────────────────
 _cache: dict = {}  # user_id -> {"ts": float, "data": list}
@@ -134,7 +139,7 @@ class InsightCard(BaseModel):
     headline:    str
     insight:     str
     action:      Optional[str] = None
-    source_hint: Optional[str] = None  # e.g. "Current as of March 2026"
+    source_hint: Optional[str] = None
 
 class FeedResponse(BaseModel):
     cards:      List[InsightCard]
@@ -146,6 +151,8 @@ class FeedResponse(BaseModel):
 # ─── Endpoint ─────────────────────────────────────────────────────────────────
 
 @router.get("/financial-feed", response_model=FeedResponse)
+@limiter.limit("5/hour")  # GPT-4o at 2000 tokens — cache handles normal use,
+                           # limit stops ?refresh=true from being hammered
 async def financial_feed(
     request: Request,
     refresh: bool = False,
@@ -153,7 +160,7 @@ async def financial_feed(
 ):
     user_id = get_current_user_id(request)
 
-    # Check cache
+    # Check cache — serve cached result if still fresh and not forcing refresh
     cached_entry = _cache.get(user_id)
     if cached_entry and not refresh:
         age = time.time() - cached_entry["ts"]
@@ -200,32 +207,18 @@ Respond ONLY with a valid JSON array of exactly 6 objects. No markdown, no pream
     try:
         client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-        # Use web search via responses API if available, otherwise standard
-        try:
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": "You are a financial intelligence system. Always respond with valid JSON only. Include specific current rates and data points."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=2000,
-            )
-            raw = response.choices[0].message.content
-        except Exception:
-            # Fallback to standard chat completions
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=[
-                    {"role": "system", "content": "You are a financial intelligence system. Always respond with valid JSON only. Search for current information and include specific rates and data points."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.7,
-                max_tokens=2000,
-            )
-            raw = response.choices[0].message.content
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {"role": "system", "content": "You are a financial intelligence system. Always respond with valid JSON only. Include specific current rates and data points."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7,
+            max_tokens=2000,
+        )
+        raw = response.choices[0].message.content
 
-        # Parse JSON
+        # Parse JSON — strip markdown fences if present
         raw = raw.strip()
         if raw.startswith("```"):
             raw = raw.split("```")[1]
@@ -260,5 +253,8 @@ Respond ONLY with a valid JSON array of exactly 6 objects. No markdown, no pream
         )
 
     except Exception as e:
-        logger.error(f"Financial feed error: {e}")
-        raise HTTPException(status_code=500, detail=f"Feed generation failed: {str(e)}")
+        logger.error(f"Financial feed error: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail="Financial feed is temporarily unavailable. Please try again later.",
+        )
