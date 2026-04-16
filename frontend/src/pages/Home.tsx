@@ -474,8 +474,21 @@ export default function Home() {
   const qc             = useQueryClient()
   const scenarios      = scenariosQuery.data?.scenarios ?? []
 
-  const [dupStatus,    setDupStatus]    = useState<Record<string, 'loading' | 'done' | 'error'>>({})
-  const [importStatus, setImportStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [dupStatus,      setDupStatus]      = useState<Record<string, 'loading' | 'done' | 'error'>>({})
+  const [importStatus,   setImportStatus]   = useState<'idle' | 'success' | 'error'>('idle')
+  const [starterStatus,  setStarterStatus]  = useState<'idle' | 'loading' | 'error'>('idle')
+
+  const handleLoadStarter = async () => {
+    setStarterStatus('loading')
+    try {
+      await client.post('/scenarios/starter')
+      await qc.invalidateQueries({ queryKey: qk.scenarios() })
+      setStarterStatus('idle')
+    } catch {
+      setStarterStatus('error')
+      setTimeout(() => setStarterStatus('idle'), 3000)
+    }
+  }
 
   const hour     = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
@@ -574,11 +587,46 @@ export default function Home() {
                 A scenario models your retirement cash flow — income streams, investment accounts,
                 taxes, and spending — projected month by month over your timeline.
               </p>
+
+              {/* Primary CTA */}
               <Link to="/scenarios/new"
                 className="inline-flex items-center gap-2 mt-5 bg-gold-600 hover:bg-gold-500 text-slate-950 font-sans font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors duration-150">
                 <span className="text-lg leading-none">+</span>
                 Create Your First Scenario
               </Link>
+
+              {/* Divider */}
+              <div className="flex items-center gap-3 mt-5 max-w-xs mx-auto">
+                <div className="flex-1 h-px bg-slate-800" />
+                <span className="font-sans text-slate-500 text-xs">or</span>
+                <div className="flex-1 h-px bg-slate-800" />
+              </div>
+
+              {/* Sample scenario loader */}
+              <div className="mt-4">
+                <button
+                  onClick={handleLoadStarter}
+                  disabled={starterStatus === 'loading'}
+                  className="inline-flex items-center gap-2 font-sans text-slate-300 hover:text-white text-sm border border-violet-800 hover:border-violet-600 px-5 py-2.5 rounded-lg transition-colors duration-150 disabled:opacity-50"
+                >
+                  {starterStatus === 'loading' ? (
+                    <>
+                      <svg className="animate-spin w-4 h-4 text-violet-400" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                      </svg>
+                      Loading sample…
+                    </>
+                  ) : starterStatus === 'error' ? (
+                    '✗ Failed — try again'
+                  ) : (
+                    <>✦ Load Sample Scenario</>
+                  )}
+                </button>
+                <p className="font-sans text-slate-600 text-xs mt-2">
+                  Pre-filled with two people, mixed accounts, and realistic income — edit to match your situation
+                </p>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
