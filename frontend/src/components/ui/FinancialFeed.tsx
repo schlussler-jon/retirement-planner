@@ -204,10 +204,30 @@ export default function FinancialFeed() {
         </div>
       )}
 
-      {/* Loading skeletons */}
+      {/* Loading state — spinner + message + skeletons */}
       {loading && !error && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+        <div>
+          <div className="flex flex-col items-center justify-center gap-3 py-6 mb-4">
+            {/* Spinner */}
+            <div className="relative w-10 h-10">
+              <div className="absolute inset-0 rounded-full border-2 border-violet-900/40" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-violet-400 animate-spin" />
+              <div className="absolute inset-1 rounded-full border-2 border-transparent border-t-gold-400 animate-spin" style={{ animationDuration: '1.5s', animationDirection: 'reverse' }} />
+            </div>
+            {/* Message */}
+            <div className="text-center">
+              <p className="font-sans text-slate-300 text-sm font-medium">
+                Generating your personalized insights…
+              </p>
+              <p className="font-sans text-slate-500 text-xs mt-1">
+                Searching current rates, market data, and tax rules
+              </p>
+            </div>
+          </div>
+          {/* Skeleton cards beneath so layout doesn't jump */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+          </div>
         </div>
       )}
 
