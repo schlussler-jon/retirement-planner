@@ -1,8 +1,9 @@
 """
 Scenario management endpoints with PostgreSQL storage.
 
-Scenario data is encrypted at rest using AES-256 (Fernet) before being
-written to the database. See backend/utils/encryption.py for details.
+Scenario data is encrypted at rest using Fernet (AES-128-CBC + HMAC-SHA256)
+before being written to the database. See backend/utils/encryption.py for
+details.
 
 Scenario IDs are UUIDs generated on the frontend; backend generates one as
 a safety net if none is provided.
@@ -12,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 import json
 import uuid
+import logging
 
 from models.scenario import Scenario
 from db.models import get_db, ScenarioModel
@@ -20,6 +22,7 @@ from auth.config import get_oauth_settings
 from api.utils.encryption import encrypt_data, decrypt_data
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 def get_current_user_id(request: Request) -> str:
@@ -103,16 +106,35 @@ def list_scenarios(request: Request, db: Session = Depends(get_db)):
                 "people_count":         len(data.get("people", [])),
                 "income_streams_count": len(data.get("income_streams", [])),
                 "accounts_count":       len(data.get("accounts", [])),
-                "income_stream_labels":  [
-                    s.get("name") or (s.get("type", "").replace("_", " ").title() + " · " + next((p.get("name", "") for p in data.get("people", []) if p.get("person_id") == s.get("owner_person_id")), ""))
+                "income_stream_labels": [
+                    s.get("name") or (s.get("type", "").replace("_", " ").title() + " · " + next(
+                        (p.get("name", "") for p in data.get("people", [])
+                         if p.get("person_id") == s.get("owner_person_id")), ""
+                    ))
                     for s in data.get("income_streams", [])
                 ],
                 "account_names": [a.get("name", "") for a in data.get("accounts", [])],
-                "tax_bucket_balances": {b: sum(a.get("starting_balance", 0) for a in data.get("accounts", []) if a.get("tax_bucket") == b) for b in ["tax_deferred", "roth", "taxable"]},
-                "total_monthly_contributions": sum(a.get("monthly_contribution", 0) for a in data.get("accounts", [])),
-                "has_working_people": any(p.get("employment_status") in ["working_full_time", "working_part_time", "self_employed"] for p in data.get("people", [])),
+                "tax_bucket_balances": {
+                    b: sum(a.get("starting_balance", 0) for a in data.get("accounts", [])
+                           if a.get("tax_bucket") == b)
+                    for b in ["tax_deferred", "roth", "taxable"]
+                },
+                "total_monthly_contributions": sum(
+                    a.get("monthly_contribution", 0) for a in data.get("accounts", [])
+                ),
+                "has_working_people": any(
+                    p.get("employment_status") in ["working_full_time", "working_part_time", "self_employed"]
+                    for p in data.get("people", [])
+                ),
             })
-        except Exception:
+        except Exception as e:
+            # Log the error so data corruption is visible in Railway logs,
+            # but continue so one bad scenario doesn't break the whole list.
+            logger.error(
+                f"Failed to deserialize scenario {db_s.scenario_id} "
+                f"for user {user_id}: {e}",
+                exc_info=True,
+            )
             continue
 
     return {"scenarios": scenarios, "count": len(scenarios)}

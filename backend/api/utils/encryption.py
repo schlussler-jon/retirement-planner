@@ -1,12 +1,16 @@
 """
 Encryption utility for scenario data.
 
-Uses AES-256 (via Fernet) to encrypt scenario JSON before writing to
-PostgreSQL. The encryption key is loaded from the SCENARIO_ENCRYPTION_KEY
-environment variable and never touches the database.
+Uses AES-128-CBC with HMAC-SHA256 (Fernet) to encrypt scenario JSON before
+writing to PostgreSQL. The encryption key is loaded from the
+SCENARIO_ENCRYPTION_KEY environment variable and never touches the database.
 
 Generating a key (run once, save to Railway env vars):
     python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+IMPORTANT: If SCENARIO_ENCRYPTION_KEY is not set and ENVIRONMENT=production,
+the application will refuse to start. This prevents silent data exposure in
+the event of a misconfigured deployment.
 """
 
 import os
@@ -18,22 +22,45 @@ logger = logging.getLogger(__name__)
 # ── key loading ──────────────────────────────────────────────────────────────
 
 def _load_key() -> Fernet | None:
-    """Load the Fernet key from environment. Returns None if not configured."""
+    """
+    Load the Fernet key from environment.
+
+    - Production (ENVIRONMENT=production): raises RuntimeError if key is absent.
+      A missing key in production means data would be stored in plaintext —
+      this is a misconfiguration that must be caught at startup, not silently
+      tolerated.
+    - Development: warns and returns None (app runs without encryption).
+    """
     key = os.environ.get("SCENARIO_ENCRYPTION_KEY", "").strip()
+    is_production = os.environ.get("ENVIRONMENT", "development").lower() == "production"
+
     if not key:
+        if is_production:
+            raise RuntimeError(
+                "SCENARIO_ENCRYPTION_KEY is not set. "
+                "This environment variable is required in production. "
+                "Generate a key with: "
+                "python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\""
+                " and add it to your Railway environment variables."
+            )
         logger.warning(
             "SCENARIO_ENCRYPTION_KEY not set — scenario data will be stored "
             "unencrypted. Set this variable in Railway to enable encryption."
         )
         return None
+
     try:
         return Fernet(key.encode())
     except Exception as e:
+        if is_production:
+            raise RuntimeError(f"Invalid SCENARIO_ENCRYPTION_KEY: {e}") from e
         logger.error(f"Invalid SCENARIO_ENCRYPTION_KEY: {e}")
         return None
 
 
-# Module-level singleton — loaded once at startup
+# Module-level singleton — loaded once at startup.
+# In production, a missing or invalid key raises RuntimeError here,
+# which prevents the FastAPI app from starting at all.
 _fernet: Fernet | None = _load_key()
 
 
@@ -43,8 +70,8 @@ def encrypt_data(plaintext: str) -> str:
     """
     Encrypt a JSON string for storage.
 
-    If no encryption key is configured, returns the plaintext unchanged
-    so the app continues to work without encryption.
+    If no encryption key is configured (development only), returns the
+    plaintext unchanged so the app continues to work locally.
     """
     if _fernet is None:
         return plaintext
